@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: 'zookeeper'
+    ports:
+      - '2181:2181'
+    restart: always
+    networks:
+      - backend
+  
+  kafka:
+    image: 'confluentinc/cp-kafka'
+    ports:
+      - '9092:9092'
+    restart: always
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "${ZOOKEEPER_HOST}:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_HOST}:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - backend
+      /Users/oscaroguledo/Documents/projects/dowell_projects/workflowai-education/run_docker.sh
+  userservice:
+    image: userservice:latest
+    container_name: userservice
+    build:
+      context: ./userservice
+    ports:
+      - "${USERPORT}:${USERPORT}"
+    restart: always
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - USERPORT=${USERPORT}
+      - USERIP=${USERIP}
+      - USER_REGISTERED_TOPIC=${USER_REGISTERED_TOPIC}
+      - USER_VERIFIED_TOPIC=${USER_VERIFIED_TOPIC}
+      - USER_LOGIN_TOPIC=${USER_LOGIN_TOPIC}
+      - USER_LOGOUT_TOPIC=${USER_LOGOUT_TOPIC}
+      - USER_PASSWORD_CHANGED_TOPIC=${USER_PASSWORD_CHANGED_TOPIC}
+      - USER_PROFILE_UPDATED_TOPIC=${USER_PROFILE_UPDATED_TOPIC}
+      - USER_DEACTIVATED_TOPIC=${USER_DEACTIVATED_TOPIC}
+      - USER_ACTIVATED_TOPIC=${USER_ACTIVATED_TOPIC}
+      - USER_DELETED_TOPIC=${USER_DELETED_TOPIC}
+      - USER_EMAIL_CHANGED_TOPIC=${USER_EMAIL_CHANGED_TOPIC}
+      - USER_BANNED_TOPIC=${USER_BANNED_TOPIC}
+      - USER_REWARD_POINTS_EARNED_TOPIC=${USER_REWARD_POINTS_EARNED_TOPIC}
+      - USER_PURCHASE_HISTORY_TOPIC=${USER_PURCHASE_HISTORY_TOPIC}
+      - USER_ACTIVITY_LOG_TOPIC=${USER_ACTIVITY_LOG_TOPIC}
+    env_file:
+      - .env  # This loads the variables from your .env file
+    volumes:
+      - ./userservice:/usr/src/app
+      - /usr/src/app/venv
+    networks:
+      - backend
+    depends_on:
+      - kafka
+  
+  user-service-db:
+    image: postgres:16-alpine3.20
+    container_name: user-service-db
+    restart: always
+    environment:
+      POSTGRES_USER: "${POSTGRESQL_USER}"
+      POSTGRES_PASSWORD: "${POSTGRESQL_PASSWORD}"
+      POSTGRESQL_SERVER: "${POSTGRESQL_SERVER}"
+      POSTGRESQL_PORT: "${POSTGRESQL_PORT}"
+      POSTGRESQL_DB: "${POSTGRESQL_DB}"
+      DOMAIN: "${DOMAIN}"
+      ENVIRONMENT: "${ENVIRONMENT}"
+      BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS}"
+      SQLITE_DB_PATH: "${SQLITE_DB_PATH}"
+    volumes:
+      - user-service-db-data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+networks:
+  backend:
+    external: true
+
+volumes:
+  user-service-db-data:
+    external: true

@@ -27,31 +27,41 @@ class RideStatus(enum.Enum):
     COMPLETED = "Completed"
     CANCELED = "Canceled"
 
-# Ride Model
+# Ride Modelx
 class Ride(Base):
     __tablename__ = "ride"
 
-    # Ride Status ID (UUID as the primary key)
+    # Ride ID (UUID as the primary key)
     id: mapped_column[UUID] = mapped_column(UUIDType, primary_key=True, default=default)
-    status: mapped_column[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)  # Ride status (Assigned, Ongoing, Completed, Canceled)
-    driver_id: mapped_column[UUID] = mapped_column(ForeignKey("drivers.id"), nullable=False)  # Foreign key referencing Driver (UUID)
-    trip_fare: mapped_column[Float] = mapped_column(Float, nullable=False)  # Fare amount for the trip
-    passengers: mapped_column[Integer] = mapped_column(Integer, default=0)  # Number of passengers
 
-    # Storing location as a JSON object (latitude, longitude, and address)
-    startlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # Location (can store JSON object like {latitude: float, longitude: float, address: str})
-    endlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # Location (can store JSON object like {latitude: float, longitude: float, address: str})
+    # Ride Status (Assigned, Ongoing, Completed, Canceled)
+    status: mapped_column[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)
+
+    # Foreign key referencing the Driver table (UUID)
+    driver_id: mapped_column[UUID] = mapped_column(ForeignKey("drivers.id"), nullable=False)
+    bus_id: mapped_column[UUID] = mapped_column(ForeignKey("bus.id"), nullable=False)
+    # Fare amount for the trip
+    trip_fare: mapped_column[Float] = mapped_column(Float, nullable=False)
+
+    # Number of passengers on the ride
+    passengers: mapped_column[Integer] = mapped_column(Integer, default=0)
+
+    # Locations stored as JSON objects (latitude, longitude, and address)
+    startlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # Start location
+    currentlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # Current location during the ride
+    endlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # End location
 
     # Timestamps
-    starts_at: mapped_column[datetime] = mapped_column(DateTime)  # Start time of the ride
-    ends_at: mapped_column[datetime] = mapped_column(DateTime)  # End time of the ride
-    
+    starts_at: mapped_column[datetime] = mapped_column(DateTime, nullable=False)  # Start time of the ride
+    ends_at: mapped_column[datetime] = mapped_column(DateTime, nullable=True)  # End time of the ride
+
     created_at: mapped_column[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Created timestamp (UTC)
     updated_at: mapped_column[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Updated timestamp (auto updates)
 
-    suitcase: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for suitcase weight')  # Weight of suitcase
-    handluggage: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for hand luggage weight')  # Weight of hand luggage
-    otherluggage: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for other luggage weight')  # Weight of other luggage
+    # Luggage weights
+    suitcase: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for suitcase weight')
+    handluggage: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for hand luggage weight')
+    otherluggage: mapped_column[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for other luggage weight')
 
     __table_args__ = (
         CheckConstraint(suitcase >= 0, name="check_suitcase_weight_positive"),

@@ -1,74 +1,169 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from datetime import datetime
-from app.rides.schemas.rides import Ride, RideStatus
-from typing import List, Optional
+from app.rides.schemas.models import Ride, RideStatus, RideCreate, RideUpdate
+# from app.rides.schemas.models import Bus  # Assuming Bus model exists
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.exc import SQLAlchemyError
 from uuid import UUID
+from datetime import datetime
+import asyncio
 
 class RideService:
+
     @staticmethod
-    def create_ride(db: Session, driver_id: UUID, trip_fare: float, startlocation: dict, endlocation: dict, starts_at: datetime, ends_at: datetime, suitcase: float = 0.0, handluggage: float = 0.0, otherluggage: float = 0.0, passengers: int = 0):
-        # Ensure latitude, longitude, and address are present
-        location = ride_status.location
-        if 'latitude' not in startlocation or 'longitude' not in startlocation or 'address' not in startlocation:
-            raise HTTPException(status_code=400, detail="Start Location must include latitude, longitude, and address.")
-        if 'latitude' not in endlocation or 'longitude' not in endlocation or 'address' not in endlocation:
-            raise HTTPException(status_code=400, detail="End Location must include latitude, longitude, and address.")
+    async def create_ride(db: AsyncSession, ride_data: RideCreate):
+        """Creates a new ride in the database."""
+        try:
+            ride = Ride(
+                status=ride_data.status,
+                driver_id=ride_data.driver_id,
+                bus_id=ride_data.bus_id,
+                trip_fare=ride_data.trip_fare,
+                passengers=ride_data.passengers,
+                startlocation=ride_data.startlocation,
+                currentlocation=ride_data.currentlocation,
+                endlocation=ride_data.endlocation,
+                starts_at=ride_data.starts_at,
+                ends_at=ride_data.ends_at,
+                suitcase=ride_data.suitcase,
+                handluggage=ride_data.handluggage,
+                otherluggage=ride_data.otherluggage,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(ride)
+            await db.commit()  # Async commit
+            await db.refresh(ride)  # Async refresh
+            return ride
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error creating ride: {str(e)}")
+
+    @staticmethod
+    async def get_ride(db: AsyncSession, ride_id: UUID):
+        """Fetches a ride by its ID."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            return result.scalars().first()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching ride: {str(e)}")
+
+    @staticmethod
+    async def get_all_rides(db: AsyncSession, skip: int = 0, limit: int = 100):
+        """Fetches all rides, paginated by skip and limit."""
+        try:
+            result = await db.execute(select(Ride).offset(skip).limit(limit))
+            return result.scalars().all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching rides: {str(e)}")
+
+    @staticmethod
+    async def update_ride_status(db: AsyncSession, ride_id: UUID, status: RideStatus):
+        """Updates the status of a ride."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            ride = result.scalars().first()
+            if ride:
+                ride.status = status
+                ride.updated_at = datetime.utcnow()
+                await db.commit()  # Async commit
+                await db.refresh(ride)  # Async refresh
+                return ride
+            return None
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error updating ride status: {str(e)}")
+
+    
+    @staticmethod
+    async def update_ride_bus(db: AsyncSession, ride_id: UUID, bus_id: UUID):
+        """Updates the bus of a ride (if applicable, such as for buses or vehicles)."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            ride = result.scalars().first()
+            if ride:
+                ride.bus_id = bus_id
+                await db.commit()  # Async commit
+                await db.refresh(ride)  # Async refresh
+                return ride
+            return None
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error updating ride bus: {str(e)}")
+
+    @staticmethod
+    async def update_ride_location(db: AsyncSession, ride_id: UUID, location: dict, is_start_location: bool = False):
+        """Updates the start or end location of a ride."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            ride = result.scalars().first()
+            if ride:
+                if is_start_location:
+                    ride.startlocation = location
+                else:
+                    ride.endlocation = location
+                ride.updated_at = datetime.utcnow()
+                await db.commit()  # Async commit
+                await db.refresh(ride)  # Async refresh
+                return ride
+            return None
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error updating ride location: {str(e)}")
+
+    @staticmethod
+    async def delete_ride(db: AsyncSession, ride_id: UUID):
+        """Deletes a ride by its ID."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            ride = result.scalars().first()
+            if ride:
+                await db.delete(ride)  # Async delete
+                await db.commit()  # Async commit
+                return ride
+            return None
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error deleting ride: {str(e)}")
+
+    @staticmethod
+    async def calculate_ride_fare(ride: Ride):
+        """Calculates the total fare for the ride, including luggage charges."""
+        # Simulating a non-blocking operation (even though it's inherently synchronous)
+        await asyncio.to_thread(RideService._calculate_fare, ride)
         
-        ride = Ride(
-            driver_id=driver_id,
-            trip_fare=trip_fare,
-            startlocation=startlocation,
-            endlocation=endlocation,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            suitcase=suitcase,
-            handluggage=handluggage,
-            otherluggage=otherluggage,
-            passengers=passengers,
-            status=RideStatus.ASSIGNED  # Initial status is assigned
-        )
-        db.add(ride)
-        db.commit()
-        db.refresh(ride)
-        return ride
+    @staticmethod
+    def _calculate_fare(ride: Ride):
+        """Synchronous helper function to calculate fare"""
+        luggage_fare = 0.02 * (ride.suitcase + ride.handluggage + ride.otherluggage)
+        total_fare = ride.trip_fare + luggage_fare
+        return total_fare
 
     @staticmethod
-    def get_ride(db: Session, ride_id: UUID):
-        return db.query(Ride).filter(Ride.id == ride_id).first()
+    async def get_ride_duration(ride: Ride):
+        """Calculates the duration of the ride in seconds."""
+        # Simulating a non-blocking operation (even though it's inherently synchronous)
+        return await asyncio.to_thread(RideService._get_duration, ride)
 
     @staticmethod
-    def get_rides_by_status(db: Session, status: RideStatus, skip: int = 0, limit: int = 100) -> List[Ride]:
-        return db.query(Ride).filter(Ride.status == status).offset(skip).limit(limit).all()
-
-    @staticmethod
-    def update_ride_status(db: Session, ride_id: UUID, new_status: RideStatus):
-        ride = db.query(Ride).filter(Ride.id == ride_id).first()
-        if ride:
-            ride.status = new_status
-            db.commit()
-            db.refresh(ride)
-            return ride
+    def _get_duration(ride: Ride):
+        """Synchronous helper function to calculate duration"""
+        if ride.starts_at and ride.ends_at:
+            return (ride.ends_at - ride.starts_at).total_seconds()
         return None
 
-    @staticmethod
-    def update_ride_location(db: Session, ride_id: UUID, startlocation: Optional[dict] = None, endlocation: Optional[dict] = None):
-        ride = db.query(Ride).filter(Ride.id == ride_id).first()
-        if ride:
-            if startlocation:
-                ride.startlocation = startlocation
-            if endlocation:
-                ride.endlocation = endlocation
-            db.commit()
-            db.refresh(ride)
-            return ride
-        return None
-
-    @staticmethod
-    def delete_ride(db: Session, ride_id: UUID):
-        ride = db.query(Ride).filter(Ride.id == ride_id).first()
-        if ride:
-            db.delete(ride)
-            db.commit()
-            return ride
-        return None
+    # @staticmethod
+    # def assign_bus_to_ride(db: AsyncSession, ride_id: UUID, bus_id: UUID):
+    #     """Assign a bus to a ride."""
+    #     try:
+    #         ride = db.query(Ride).filter(Ride.id == ride_id).first()
+    #         bus = db.query(Bus).filter(Bus.id == bus_id).first()
+    #         if ride and bus:
+    #             # Assuming a relationship between Ride and Bus exists, we can add the bus_id to ride
+    #             ride.bus_id = bus.id  # If ride model has bus_id column for relation
+    #             db.commit()
+    #             db.refresh(ride)
+    #             return ride
+    #         return None
+    #     except SQLAlchemyError as e:
+    #         db.rollback()
+    #         raise Exception(f"Error assigning bus to ride: {str(e)}")

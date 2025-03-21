@@ -1,67 +1,74 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from app.rides.models.rides import RideStatus
-from app.rides.schemas.rides import RideStatusCreate
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from datetime import datetime
+from app.rides.schemas.rides import Ride, RideStatus
+from typing import List, Optional
 from uuid import UUID
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
 
-# Service to create a new ride status
-async def create_ride_status(db: AsyncSession, ride_status: RideStatusCreate) -> RideStatus:
-    try:
-        # Check if location is provided and validated by Pydantic
-        if ride_status.location:
-            # Ensure latitude, longitude, and address are present
-            location = ride_status.location
-            if 'latitude' not in location or 'longitude' not in location or 'address' not in location:
-                raise HTTPException(status_code=400, detail="Location must include latitude, longitude, and address.")
+class RideService:
+    @staticmethod
+    def create_ride(db: Session, driver_id: UUID, trip_fare: float, startlocation: dict, endlocation: dict, starts_at: datetime, ends_at: datetime, suitcase: float = 0.0, handluggage: float = 0.0, otherluggage: float = 0.0, passengers: int = 0):
+        # Ensure latitude, longitude, and address are present
+        location = ride_status.location
+        if 'latitude' not in startlocation or 'longitude' not in startlocation or 'address' not in startlocation:
+            raise HTTPException(status_code=400, detail="Start Location must include latitude, longitude, and address.")
+        if 'latitude' not in endlocation or 'longitude' not in endlocation or 'address' not in endlocation:
+            raise HTTPException(status_code=400, detail="End Location must include latitude, longitude, and address.")
         
-        new_ride_status = RideStatus(
-            booking_id=ride_status.booking_id,
-            ride_status=ride_status.ride_status,
-            location=ride_status.location  # Save the location if provided
+        ride = Ride(
+            driver_id=driver_id,
+            trip_fare=trip_fare,
+            startlocation=startlocation,
+            endlocation=endlocation,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            suitcase=suitcase,
+            handluggage=handluggage,
+            otherluggage=otherluggage,
+            passengers=passengers,
+            status=RideStatus.ASSIGNED  # Initial status is assigned
         )
-        db.add(new_ride_status)
-        await db.commit()
-        await db.refresh(new_ride_status)
-        return new_ride_status
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.add(ride)
+        db.commit()
+        db.refresh(ride)
+        return ride
 
-# Service to get all ride statuses
-async def get_ride_statuses(db: AsyncSession) -> list[RideStatus]:
-    try:
-        result = await db.execute(select(RideStatus))
-        return result.scalars().all()
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    @staticmethod
+    def get_ride(db: Session, ride_id: UUID):
+        return db.query(Ride).filter(Ride.id == ride_id).first()
 
-# Service to get a ride status by ID
-async def get_ride_status_by_id(db: AsyncSession, ride_status_id: UUID) -> RideStatus:
-    try:
-        result = await db.execute(select(RideStatus).filter(RideStatus.id == ride_status_id))
-        ride_status = result.scalars().first()
-        if not ride_status:
-            raise HTTPException(status_code=404, detail="Ride Status not found")
-        return ride_status
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    @staticmethod
+    def get_rides_by_status(db: Session, status: RideStatus, skip: int = 0, limit: int = 100) -> List[Ride]:
+        return db.query(Ride).filter(Ride.status == status).offset(skip).limit(limit).all()
 
-# Service to update the status of a ride
-async def update_ride_status(db: AsyncSession, ride_status_id: UUID, status: str, location: Optional[dict] = None) -> RideStatus:
-    try:
-        result = await db.execute(select(RideStatus).filter(RideStatus.id == ride_status_id))
-        ride_status = result.scalars().first()
-        if not ride_status:
-            raise HTTPException(status_code=404, detail="Ride Status not found")
-        
-        ride_status.ride_status = status
-        if location:
-            ride_status.location = location  # Update the location if provided
-        
-        db.add(ride_status)
-        await db.commit()
-        await db.refresh(ride_status)
-        return ride_status
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    @staticmethod
+    def update_ride_status(db: Session, ride_id: UUID, new_status: RideStatus):
+        ride = db.query(Ride).filter(Ride.id == ride_id).first()
+        if ride:
+            ride.status = new_status
+            db.commit()
+            db.refresh(ride)
+            return ride
+        return None
+
+    @staticmethod
+    def update_ride_location(db: Session, ride_id: UUID, startlocation: Optional[dict] = None, endlocation: Optional[dict] = None):
+        ride = db.query(Ride).filter(Ride.id == ride_id).first()
+        if ride:
+            if startlocation:
+                ride.startlocation = startlocation
+            if endlocation:
+                ride.endlocation = endlocation
+            db.commit()
+            db.refresh(ride)
+            return ride
+        return None
+
+    @staticmethod
+    def delete_ride(db: Session, ride_id: UUID):
+        ride = db.query(Ride).filter(Ride.id == ride_id).first()
+        if ride:
+            db.delete(ride)
+            db.commit()
+            return ride
+        return None

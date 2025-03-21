@@ -11,7 +11,7 @@ class RideStatusEnum(str, Enum):
     CANCELED = "Canceled"
 
 # Ride Status Create Schema
-class RideStatusCreate(BaseModel):
+class RideCreate(BaseModel):
     booking_id: uuid.UUID  # The ID of the booking
     ride_status: RideStatusEnum  # The status of the ride (Assigned, Ongoing, etc.)
     location: Optional[Dict[str, float]] = None  # Location data, optional
@@ -31,13 +31,13 @@ class RideStatusCreate(BaseModel):
         return v
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Ride Status Read Schema (used for responses)
-class RideStatusRead(RideStatusCreate):
+class RideRead(RideStatusCreate):
     id: uuid.UUID  # The ID of the ride status
     status_update_time: datetime  # The time when the status was updated
 
     class Config:
-        orm_mode = True
+        from_attributes = True

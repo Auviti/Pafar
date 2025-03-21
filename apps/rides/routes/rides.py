@@ -1,29 +1,47 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.rides.schemas.rides import RideStatusCreate, RideStatusRead
-from app.rides.services.rides import create_ride_status, get_ride_statuses, get_ride_status_by_id, update_ride_status
+from app.rides.schemas.rides import Ride, RideStatus
+from app.rides.services.rides import RideCreate , RideRead
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
+from core.database import get_db1
 from uuid import UUID
-from typing import Optional
+from typing import Optional,List
 
 router = APIRouter()
 
-# Route to create a new ride status
-@router.post("/rides/", response_model=RideStatusRead)
-async def create_ride_status_route(ride_status: RideStatusCreate, db: AsyncSession = Depends(get_db)):
-    return await create_ride_status(db=db, ride_status=ride_status)
+@router.post("/rides/", response_model=Ride)
+def create_ride(driver_id: UUID, trip_fare: float, startlocation: dict, endlocation: dict, starts_at: datetime, ends_at: datetime, db: Session = Depends(get_db1)):
+    ride = RideService.create_ride(db, driver_id, trip_fare, startlocation, endlocation, starts_at, ends_at)
+    return ride
 
-# Route to get all ride statuses
-@router.get("/rides/", response_model=list[RideStatusRead])
-async def get_all_ride_statuses_route(db: AsyncSession = Depends(get_db)):
-    return await get_ride_statuses(db)
+@router.get("/rides/{ride_id}", response_model=Ride)
+def get_ride(ride_id: UUID, db: Session = Depends(get_db1)):
+    ride = RideService.get_ride(db, ride_id)
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    return ride
 
-# Route to get a ride status by ID
-@router.get("/rides/{ride_status_id}", response_model=RideStatusRead)
-async def get_ride_status_by_id_route(ride_status_id: UUID, db: AsyncSession = Depends(get_db)):
-    return await get_ride_status_by_id(db=db, ride_status_id=ride_status_id)
+@router.get("/rides/", response_model=List[Ride])
+def get_rides_by_status(status: RideStatus, skip: int = 0, limit: int = 100, db: Session = Depends(get_db1)):
+    rides = RideService.get_rides_by_status(db, status, skip, limit)
+    return rides
 
-# Route to update ride status
-@router.put("/rides/{ride_status_id}/status", response_model=RideStatusRead)
-async def update_ride_status_route(ride_status_id: UUID, status: str, location: Optional[dict] = None, db: AsyncSession = Depends(get_db)):
-    return await update_ride_status(db=db, ride_status_id=ride_status_id, status=status, location=location)
+@router.put("/rides/{ride_id}/status", response_model=Ride)
+def update_ride_status(ride_id: UUID, new_status: RideStatus, db: Session = Depends(get_db1)):
+    ride = RideService.update_ride_status(db, ride_id, new_status)
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    return ride
+
+@router.put("/rides/{ride_id}/location", response_model=Ride)
+def update_ride_location(ride_id: UUID, startlocation: Optional[dict] = None, endlocation: Optional[dict] = None, db: Session = Depends(get_db1)):
+    ride = RideService.update_ride_location(db, ride_id, startlocation, endlocation)
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    return ride
+
+@router.delete("/rides/{ride_id}", response_model=Ride)
+def delete_ride(ride_id: UUID, db: Session = Depends(get_db1)):
+    ride = RideService.delete_ride(db, ride_id)
+    if not ride:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    return ride

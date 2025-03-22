@@ -1,87 +1,119 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from uuid import UUID
 from datetime import datetime
-from app.payments.models.payments import Payment, PaymentMethod, PaymentStatus
 from app.products.models.currency import Currency
-from app.products.models.order import Order
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.future import select
+from app.payments.models.payments import PaymentMethod, Payment, PaymentStatus
+from app.payments.schemas.payments import PaymentMethodCreate, PaymentMethodOut, PaymentCreate, PaymentOut
 from fastapi import HTTPException
+from typing import List
 
-# Service to create a new payment
-async def create_payment(db: AsyncSession, order_id: UUID, amount: float, payment_method: PaymentMethod, payment_status: PaymentStatus,
-                         payment_gateway: str, transaction_id: str, currency: str, billing_address: str,
-                         discount_code: str, ip_address: str) -> Payment:
-    try:
-        # Create the payment instance
-        payment = Payment(
-            order_id=order_id,
-            amount=amount,
-            payment_method=payment_method,
-            payment_status=payment_status,
-            payment_gateway=payment_gateway,
-            transaction_id=transaction_id,
-            currency=currency,
-            billing_address=billing_address,
-            discount_code=discount_code,
-            ip_address=ip_address,
-            created_at=datetime.utcnow()
-        )
+# Service for PaymentMethod
+class PaymentMethodService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-        # Add payment to the database
-        db.add(payment)
-        await db.commit()
-        await db.refresh(payment)
-        return payment
-    except SQLAlchemyError as e:
-        # Handle the error if something goes wrong
-        raise HTTPException(status_code=400, detail=str(e))
+    async def create_payment_method(self, payment_method: PaymentMethodCreate) -> PaymentMethodOut:
+        """Create a new payment method."""
+        try:
+            db_payment_method = PaymentMethod(
+                name=payment_method.name,
+                description=payment_method.description
+            )
+            self.db.add(db_payment_method)
+            await self.db.commit()
+            await self.db.refresh(db_payment_method)
+            return PaymentMethodOut.from_orm(db_payment_method)
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
 
-# Service to get a payment by its ID
-async def get_payment_by_id(db: AsyncSession, payment_id: UUID) -> Payment:
-    try:
-        result = await db.execute(select(Payment).filter(Payment.id == payment_id))
-        payment = result.scalars().first()
-        if not payment:
-            raise HTTPException(status_code=404, detail="Payment not found")
-        return payment
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    async def get_payment_methods(self) -> List[PaymentMethodOut]:
+        """Fetch all payment methods."""
+        try:
+            result = await self.db.execute(select(PaymentMethod))
+            payment_methods = result.scalars().all()
+            return [PaymentMethodOut.from_orm(pm) for pm in payment_methods]
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-# Service to get all payments for a specific order
-async def get_payments_by_order(db: AsyncSession, order_id: UUID) -> list[Payment]:
-    try:
-        result = await db.execute(select(Payment).filter(Payment.order_id == order_id))
-        payments = result.scalars().all()
-        return payments
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    async def get_payment_method_by_id(self, payment_method_id: UUID) -> PaymentMethodOut:
+        """Fetch a payment method by ID."""
+        try:
+            result = await self.db.execute(select(PaymentMethod).filter(PaymentMethod.id == payment_method_id))
+            payment_method = result.scalar_one_or_none()
+            if not payment_method:
+                raise HTTPException(status_code=404, detail=f"PaymentMethod with ID {payment_method_id} not found")
+            return PaymentMethodOut.from_orm(payment_method)
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-# Service to update payment status
-async def update_payment_status(db: AsyncSession, payment_id: UUID, payment_status: PaymentStatus) -> Payment:
-    try:
-        payment = await get_payment_by_id(db, payment_id)
-        payment.payment_status = payment_status
-        await db.commit()
-        await db.refresh(payment)
-        return payment
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
-# Service to refund a payment
-async def refund_payment(db: AsyncSession, payment_id: UUID, refunded_amount: float) -> Payment:
-    try:
-        payment = await get_payment_by_id(db, payment_id)
-        if payment.is_refunded:
-            raise HTTPException(status_code=400, detail="Payment already refunded")
-        
-        # Update the refunded amount and mark as refunded
-        payment.refunded_amount = refunded_amount
-        payment.is_refunded = True
-        payment.payment_status = PaymentStatus.REFUNDED
-        await db.commit()
-        await db.refresh(payment)
-        return payment
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# Service for Payment
+class PaymentService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create_payment(self, payment: PaymentCreate) -> PaymentOut:
+        """Create a new payment."""
+        try:
+            db_payment = Payment(
+                booking_id=payment.booking_id,
+                reason=payment.reason,
+                amount=payment.amount,
+                payment_method_id=payment.payment_method_id,
+                payment_status=payment.payment_status,
+                payment_gateway=payment.payment_gateway,
+                transaction_id=payment.transaction_id,
+                currency=payment.currency,
+                billing_address=payment.billing_address,
+                discount_code=payment.discount_code,
+                refunded_amount=payment.refunded_amount,
+                is_refunded=payment.is_refunded,
+                ip_address=payment.ip_address
+            )
+            self.db.add(db_payment)
+            await self.db.commit()
+            await self.db.refresh(db_payment)
+            return PaymentOut.from_orm(db_payment)
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_payments(self) -> List[PaymentOut]:
+        """Fetch all payments."""
+        try:
+            result = await self.db.execute(select(Payment))
+            payments = result.scalars().all()
+            return [PaymentOut.from_orm(payment) for payment in payments]
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_payment_by_id(self, payment_id: UUID) -> PaymentOut:
+        """Fetch a payment by ID."""
+        try:
+            result = await self.db.execute(select(Payment).filter(Payment.id == payment_id))
+            payment = result.scalar_one_or_none()
+            if not payment:
+                raise HTTPException(status_code=404, detail=f"Payment with ID {payment_id} not found")
+            return PaymentOut.from_orm(payment)
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def update_payment_status(self, payment_id: UUID, status: PaymentStatus) -> PaymentOut:
+        """Update the status of a payment."""
+        try:
+            result = await self.db.execute(select(Payment).filter(Payment.id == payment_id))
+            payment = result.scalar_one_or_none()
+            if not payment:
+                raise HTTPException(status_code=404, detail=f"Payment with ID {payment_id} not found")
+
+            payment.payment_status = status
+            await self.db.commit()
+            await self.db.refresh(payment)
+            return PaymentOut.from_orm(payment)
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            raise HTTPException(status_code=500, detail=str(e))

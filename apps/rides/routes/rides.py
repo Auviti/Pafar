@@ -31,6 +31,14 @@ async def get_all_rides(skip: int = 0, limit: int = 100, db: AsyncSession = Depe
     rides = await RideService.get_all_rides(db, skip=skip, limit=limit)  # Await async method
     return rides
 
+# Update the ride
+@router.put("/rides/{ride_id}", response_model=RideUpdate)
+async def update_ride_details(ride_id: UUID, ride_data: RideUpdate, db: AsyncSession = Depends(get_db1)):
+    updated_ride = await RideService.update_ride(db, ride_id, ride_data)  # Await async method
+    if updated_ride is None:
+        raise HTTPException(status_code=404, detail="Ride not found")
+    return updated_ride
+
 # Update the status of a ride
 @router.put("/rides/{ride_id}/status", response_model=RideUpdate)
 async def update_ride_status(ride_id: UUID, status: RideStatus, db: AsyncSession = Depends(get_db1)):

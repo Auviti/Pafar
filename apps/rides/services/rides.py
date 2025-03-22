@@ -1,4 +1,4 @@
-from app.rides.schemas.models import Ride, RideStatus, RideCreate, RideUpdate
+from app.rides.schemas.models import Ride, RideStatus, RideCreate, RideUpdate,Location
 # from app.rides.schemas.models import Bus  # Assuming Bus model exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -14,11 +14,11 @@ class RideService:
         """Creates a new ride in the database."""
         try:
             ride = Ride(
+                name = ride_data.name,
                 status=ride_data.status,
                 driver_id=ride_data.driver_id,
                 bus_id=ride_data.bus_id,
                 trip_fare=ride_data.trip_fare,
-                passengers=ride_data.passengers,
                 startlocation=ride_data.startlocation,
                 currentlocation=ride_data.currentlocation,
                 endlocation=ride_data.endlocation,
@@ -73,6 +73,40 @@ class RideService:
             await db.rollback()  # Async rollback
             raise Exception(f"Error updating ride status: {str(e)}")
 
+    @staticmethod
+    async def update_ride(db: AsyncSession, ride_id: UUID, ride_data: RideUpdate):
+        """Updates the status of a ride."""
+        try:
+            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
+            ride = result.scalars().first()
+            if ride:
+                ride.name = ride_data.name
+                ride.status = ride_data.status
+                ride.updated_at = datetime.utcnow()
+                ride.status = ride_data.status
+                ride.bus_id = ride_data.bus_id
+                ride.trip_fare = ride_data.trip_fare
+
+                # Ensure the startlocation, currentlocation, and endlocation are valid Location instances
+                ride.startlocation = Location(**ride_data.startlocation)
+                ride.currentlocation = Location(**ride_data.currentlocation)
+                ride.endlocation = Location(**ride_data.endlocation)
+
+                ride.suitcase = ride_data.suitcase
+                ride.handluggage = ride_data.handluggage
+                ride.otherluggage = ride_data.otherluggage
+
+                # Ensure starts_at and ends_at are valid datetime objects
+                ride.starts_at = datetime.fromisoformat(ride_data.starts_at)
+                ride.ends_at = datetime.fromisoformat(ride_data.ends_at)
+
+                await db.commit()  # Async commit
+                await db.refresh(ride)  # Async refresh
+                return ride
+            return None
+        except SQLAlchemyError as e:
+            await db.rollback()  # Async rollback
+            raise Exception(f"Error updating ride status: {str(e)}")
     
     @staticmethod
     async def update_ride_bus(db: AsyncSession, ride_id: UUID, bus_id: UUID):

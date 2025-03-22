@@ -14,6 +14,7 @@ async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
             driver_id=booking.driver_id,
             pick_up_location=booking.pick_up_location,
             drop_off_location=booking.drop_off_location,
+            isprotected=False,
             booking_time=booking.booking_time or datetime.utcnow(),  # Default to current time if not provided
             fare_amount=booking.fare_amount
         )
@@ -51,7 +52,22 @@ async def update_booking_status(db: AsyncSession, booking_id: UUID, status: str)
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        booking.booking_status = status
+        booking.isprotected = isprotected
+        db.add(booking)
+        await db.commit()
+        await db.refresh(booking)
+        return booking
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+# Service to update the status of a booking
+async def protect_booking(db: AsyncSession, booking_id: UUID, isprotected: bool) -> Booking:
+    try:
+        result = await db.execute(select(Booking).filter(Booking.id == booking_id))
+        booking = result.scalars().first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        booking.isprotected = isprotected
         db.add(booking)
         await db.commit()
         await db.refresh(booking)

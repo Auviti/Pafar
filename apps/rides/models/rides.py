@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from core.database import Base, CHAR_LENGTH
 from sqlalchemy.orm import mapped_column
 from datetime import datetime
-import enum
+from enum import Enum 
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 import sys
@@ -20,12 +20,23 @@ else:
     mappeditem = str
     default = lambda: str(uuid.uuid4())
 
+class Location(BaseModel):
+    latitude: float
+    longitude: float
+    address: str
 # Enum for Ride Status
-class RideStatus(enum.Enum):
+class RideStatus(Enum):
+    UPCOMING = "UpComing"
     ASSIGNED = "Assigned"
     ONGOING = "Ongoing"
     COMPLETED = "Completed"
     CANCELED = "Canceled"
+
+class RideClass(Enum):
+    ECONOMY = "economy"
+    BUSINESS = "business"
+    FIRST_CLASS = "first_class"
+    PREMIUM_ECONOMY = "premium_economy"
 
 # Ride Modelx
 class Ride(Base):
@@ -33,18 +44,15 @@ class Ride(Base):
 
     # Ride ID (UUID as the primary key)
     id: mapped_column[UUID] = mapped_column(UUIDType, primary_key=True, default=default)
-
+    name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     # Ride Status (Assigned, Ongoing, Completed, Canceled)
     status: mapped_column[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)
-
+    ride_class: mapped_column[RideClass] = mapped_column(Enum(RideClass), default=RideClass.ECONOMY)  # Class of the trip (Economy, Business, etc.)
+    
     # Foreign key referencing the Driver table (UUID)
-    driver_id: mapped_column[UUID] = mapped_column(ForeignKey("drivers.id"), nullable=False)
     bus_id: mapped_column[UUID] = mapped_column(ForeignKey("bus.id"), nullable=False)
     # Fare amount for the trip
     trip_fare: mapped_column[Float] = mapped_column(Float, nullable=False)
-
-    # Number of passengers on the ride
-    passengers: mapped_column[Integer] = mapped_column(Integer, default=0)
 
     # Locations stored as JSON objects (latitude, longitude, and address)
     startlocation: mapped_column[dict] = mapped_column(JSON, nullable=True)  # Start location

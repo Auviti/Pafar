@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.bookings.schemas.bookings import BookingCreate, BookingRead
-from app.bookings.services.bookings import create_booking, get_bookings, get_booking_by_id, update_booking_status
+from app.bookings.services.bookings import create_booking, get_bookings, get_booking_by_id, update_booking_status,protect_booking
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from uuid import UUID
@@ -26,3 +26,7 @@ async def get_booking_by_id_route(booking_id: UUID, db: AsyncSession = Depends(g
 @router.put("/bookings/{booking_id}/status", response_model=BookingRead)
 async def update_booking_status_route(booking_id: UUID, status: str, db: AsyncSession = Depends(get_db)):
     return await update_booking_status(db=db, booking_id=booking_id, status=status)
+# Route to protect booking
+@router.put("/bookings/{booking_id}/protect", response_model=BookingRead)
+async def protect_booking_route(booking_id: UUID, isprotected: bool, db: AsyncSession = Depends(get_db)):
+    return await protect_booking(db=db, booking_id=booking_id, isprotected=isprotected)

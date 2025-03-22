@@ -13,11 +13,11 @@ class RideStatus(str, Enum):
 
 # Pydantic Schema for Ride
 class RideBase(BaseModel):
+    name: Optional[str] = None
     status: RideStatus
     driver_id: UUID
     bus_id:UUID
     trip_fare: float
-    passengers: int = 0
     startlocation: Optional[dict] = None
     currentlocation: Optional[dict] = None
     endlocation: Optional[dict] = None
@@ -55,10 +55,10 @@ class RideCreate(RideBase):
     pass  # Used when creating a new ride (no ride id)
 
 class RideUpdate(RideBase):
+    
     status: Optional[RideStatus] = None
     bus_id: Optional[UUID] = None
     trip_fare: Optional[float] = None
-    passengers: Optional[int] = None
     startlocation: Optional[dict] = None
     currentlocation: Optional[dict] = None
     endlocation: Optional[dict] = None

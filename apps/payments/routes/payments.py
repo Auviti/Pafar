@@ -1,47 +1,54 @@
 from fastapi import APIRouter, Depends, HTTPException
 from uuid import UUID
-from app.models.payment import PaymentCreate, PaymentRead, PaymentStatus
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.payment.services.payments import create_payment, get_payment_by_id, get_payments_by_order, update_payment_status, refund_payment
 from core.database import get_db1  # Assume get_db provides AsyncSession
-
+from app.payments.schemas.payments import PaymentMethodCreate, PaymentMethodOut, PaymentCreate, PaymentOut
+from app.payments.services.payments import PaymentMethodService, PaymentService
+from app.payments.models.payments import PaymentStatus
 
 router = APIRouter()
 
-# Route to create a new payment
-@router.post("/payments/", response_model=PaymentRead)
-async def create_payment_route(payment: PaymentCreate, db: AsyncSession = Depends(get_d1b)):
-    created_payment = await create_payment(
-        db=db,
-        order_id=payment.order_id,
-        amount=payment.amount,
-        payment_method=payment.payment_method,
-        payment_status=payment.payment_status,
-        payment_gateway=payment.payment_gateway,
-        transaction_id=payment.transaction_id,
-        currency=payment.currency,
-        billing_address=payment.billing_address,
-        discount_code=payment.discount_code,
-        ip_address=payment.ip_address
-    )
-    return created_payment
+# Routes for PaymentMethod
+@router.post("/payment_methods/", response_model=PaymentMethodOut)
+async def create_payment_method(payment_method: PaymentMethodCreate, db: AsyncSession = Depends(get_db1)):
+    """Create a new payment method."""
+    service = PaymentMethodService(db)
+    return await service.create_payment_method(payment_method)
 
-# Route to get a payment by its ID
-@router.get("/payments/{payment_id}", response_model=PaymentRead)
-async def get_payment_route(payment_id: UUID, db: AsyncSession = Depends(get_db1)):
-    return await get_payment_by_id(db=db, payment_id=payment_id)
+@router.get("/payment_methods/", response_model=List[PaymentMethodOut])
+async def get_payment_methods(db: AsyncSession = Depends(get_db1)):
+    """Get all payment methods."""
+    service = PaymentMethodService(db)
+    return await service.get_payment_methods()
 
-# Route to get payments by order ID
-@router.get("/payments/order/{order_id}", response_model=list[PaymentRead])
-async def get_payments_by_order_route(order_id: UUID, db: AsyncSession = Depends(get_db1)):
-    return await get_payments_by_order(db=db, order_id=order_id)
+@router.get("/payment_methods/{payment_method_id}", response_model=PaymentMethodOut)
+async def get_payment_method(payment_method_id: UUID, db: AsyncSession = Depends(get_db1)):
+    """Get a payment method by ID."""
+    service = PaymentMethodService(db)
+    return await service.get_payment_method_by_id(payment_method_id)
 
-# Route to update the payment status
-@router.put("/payments/{payment_id}/status", response_model=PaymentRead)
-async def update_payment_status_route(payment_id: UUID, payment_status: PaymentStatus, db: AsyncSession = Depends(get_db1)):
-    return await update_payment_status(db=db, payment_id=payment_id, payment_status=payment_status)
 
-# Route to refund a payment
-@router.put("/payments/{payment_id}/refund", response_model=PaymentRead)
-async def refund_payment_route(payment_id: UUID, refunded_amount: float, db: AsyncSession = Depends(get_db1)):
-    return await refund_payment(db=db, payment_id=payment_id, refunded_amount=refunded_amount)
+# Routes for Payment
+@router.post("/payments/", response_model=PaymentOut)
+async def create_payment(payment: PaymentCreate, db: AsyncSession = Depends(get_db1)):
+    """Create a new payment."""
+    service = PaymentService(db)
+    return await service.create_payment(payment)
+
+@router.get("/payments/", response_model=List[PaymentOut])
+async def get_payments(db: AsyncSession = Depends(get_db1)):
+    """Get all payments."""
+    service = PaymentService(db)
+    return await service.get_payments()
+
+@router.get("/payments/{payment_id}", response_model=PaymentOut)
+async def get_payment(payment_id: UUID, db: AsyncSession = Depends(get_db1)):
+    """Get a payment by ID."""
+    service = PaymentService(db)
+    return await service.get_payment_by_id(payment_id)
+
+@router.put("/payments/{payment_id}/status", response_model=PaymentOut)
+async def update_payment_status(payment_id: UUID, status: PaymentStatus, db: AsyncSession = Depends(get_db1)):
+    """Update the status of a payment."""
+    service = PaymentService(db)
+    return await service.update_payment_status(payment_id, status)

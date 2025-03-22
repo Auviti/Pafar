@@ -1,18 +1,23 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel
 from uuid import UUID
-from enum import Enum
 from typing import Optional
+from datetime import datetime
+from enum import Enum
 
-# Enum for Payment Methods
-class PaymentMethodEnum(str, Enum):
-    CREDIT_CARD = "Credit Card"
-    PAYPAL = "PayPal"
-    BANK_TRANSFER = "Bank Transfer"
-    CASH_ON_DELIVERY = "Cash on Delivery"
-    GIFT_CARD = "Gift Card"
+class PaymentMethodBase(BaseModel):
+    name: str
+    description: Optional[str] = None  # Optional field for description
 
-# Enum for Payment Status
+class PaymentMethodCreate(PaymentMethodBase):
+    pass
+
+class PaymentMethodOut(PaymentMethodBase):
+    id: UUID  # This field will be used for the response output
+
+    class Config:
+        from_attributes = True  # Allows interaction with SQLAlchemy models to auto-map fields # Ensure the ORM model can be serialized
+
+
 class PaymentStatusEnum(str, Enum):
     PENDING = "Pending"
     COMPLETED = "Completed"
@@ -20,32 +25,30 @@ class PaymentStatusEnum(str, Enum):
     REFUNDED = "Refunded"
     CANCELLED = "Cancelled"
 
-# Pydantic model for Payment
 class PaymentBase(BaseModel):
-    order_id: UUID
+    booking_id: UUID
+    reason: str
     amount: float
-    payment_method: PaymentMethodEnum
+    payment_method_id: UUID
     payment_status: PaymentStatusEnum
     payment_gateway: str
     transaction_id: str
-    currency: str
+    currency: str  # You might need to adjust this based on how your `Currency` model is structured
     billing_address: Optional[str] = None
     discount_code: Optional[str] = None
     refunded_amount: float = 0.0
     is_refunded: bool = False
     ip_address: str
-    created_at: Optional[datetime] = None  # Automatically set if not provided
 
-    class Config:
-        from_attributes = True  # Allows interaction with SQLAlchemy models to auto-map fields  # Tells Pydantic to treat ORM models (like SQLAlchemy models) as dictionaries
-
-# Schema for creating a new Payment
 class PaymentCreate(PaymentBase):
     pass
 
-# Schema for reading Payment data (with an id)
-class PaymentRead(PaymentBase):
+class PaymentOut(PaymentBase):
     id: UUID
+    payment_date: datetime
+    created_at: datetime
 
     class Config:
         from_attributes = True  # Allows interaction with SQLAlchemy models to auto-map fields # Ensure the ORM model can be serialized
+
+

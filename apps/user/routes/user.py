@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 from typing import Dict
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.utils.reponse import Response
 from core.database import get_db1
 from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
-from apps.user.services.user import get_users, create_user,create_seller,create_buyer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User
+from apps.user.services.user import get_users, create_user,create_seller,create_buyer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User, on_booking, on_payment, on_bus, on_ride
 import json
 
 router = APIRouter()
@@ -350,3 +350,32 @@ async def refresh_user_access_token(user_auth: UserAuth, db: AsyncSession = Depe
 
     except Exception as error:
         return Response(message=str(error),success=False,code=500)
+
+
+user_websocket_router = APIRouter()
+
+# WebSocket endpoint for a specific user
+@user_websocket_router.websocket("/users/{user_id}/notify")
+async def user_websocket_endpoint(websocket: WebSocket, user_id: UUID):
+    await websocket.accept()
+    try:
+        while True:
+            # Handle real-time events here, like receiving a message or sending updates
+            data = await websocket.receive_text()
+            # Parse the received JSON string into a Python dictionary
+            data_dict = json.loads(data)
+            data_dict.update({'user_id': f'{user_id}'})
+            response_data = data_dict
+            if not 'event' in data_dict.keys():
+                Response(message="'event' not in recieve data keys",success=False,code=400)
+            if data_dict['event'] == 'booking':
+                await on_booking(websocket, user_id,json.dumps(response_data))
+            if data_dict['event'] == 'payment':
+                await on_payment(websocket, user_id,json.dumps(response_data))
+            if data_dict['event'] == 'ride':
+                await on_ride(websocket, user_id,json.dumps(response_data))
+            if data_dict['event'] == 'bus':
+                await on_bus(websocket, user_id,json.dumps(response_data))
+            
+    except WebSocketDisconnect as error:
+        return Response(message=f"User {user_id} disconnected. {str(error)}",success=False,code=500)

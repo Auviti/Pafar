@@ -31,19 +31,20 @@ class UserRole(str, Enum):
     Moderator = "Moderator"
     Support = "Support"
     Manager = "Manager"
-
+class UserGender(str, Enum):
+    Male = 'Male'
+    Female = "Female"
 # Pydantic schema for User View (includes relationships and additional fields)
 class UserBase(BaseModel):
     # Base schema containing common fields for a User, used in both creation and updates
     firstname: str  # User's first name
     lastname: str   # User's last name
     email: str      # User's email address
-    picture: Optional[int] = None
-    totalorders: Optional[int] = None  # Optional field to track total orders placed by the user
+    picture: Optional[str] = None
     phone_number: Optional[str] = None  # Optional field for user's phone number
     phone_number_pre: Optional[str] = None  # Optional field for phone number prefix (e.g., country code)
-    tags: Optional[str] = None  # Optional tags associated with the user (e.g., "VIP", "Premium")
-    notes: Optional[str] = None  # Optional field for additional notes on the user
+    age: int
+    gender: UserGender
     access_token: Optional[str] = None  # Optional field for storing the access token (JWT)
     refresh_token: Optional[str] = None  # Optional field for storing the refresh token (JWT)
 

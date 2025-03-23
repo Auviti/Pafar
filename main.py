@@ -6,7 +6,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 # from apps.user.routes.oauth2.google import router as google_router
-# from apps.user.routes.user import router as user_router
+from apps.user.routes.user import router as user_router
+from apps.user.routes.user import user_websocket_router
 # from apps.products.routes.product import router as product_router
 # from apps.products.routes.category import router as category_router
 # from apps.products.routes.market import router as market_router
@@ -35,7 +36,8 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
         
 # Include the routers
-# app.include_router(user_router, prefix='/api/v1')
+app.include_router(user_router, prefix='/api/v1')
+app.include_router(user_websocket_router)
 # app.include_router(product_router, prefix='/api/v1')
 # app.include_router(category_router, prefix='/api/v1')
 # app.include_router(market_router, prefix='/api/v1')
@@ -100,67 +102,45 @@ async def get_redis_key(key: str):
     except aioredis.RedisError as e:
         raise HTTPException(status_code=500, detail=f"Redis error: {str(e)}")
     
-# List of active connections (can be used for broadcasting messages)
-active_connections: List[WebSocket] = []
+# user, rides,bus
+# # List of active connections (can be used for broadcasting messages)
+# active_connections: List[WebSocket] = []
 
 
-# Custom event handlers
-async def on_join(websocket: WebSocket):
-    await websocket.send_text("Welcome! You have successfully joined the chat.")
 
-async def on_message(websocket: WebSocket, data: str):
-    # Handle received message
-    print(f"Message received: {data}")
-    await websocket.send_text(f"Message received: {data}")
-
-async def on_update(websocket: WebSocket, data: str):
-    # Handle an update event (e.g., a status update or data refresh)
-    print(f"Update received: {data}")
-    await websocket.send_text(f"Update received: {data}")
-
-async def on_leave(websocket: WebSocket):
-    # Handle client leaving (e.g., notifying others, cleanup, etc.)
-    await websocket.send_text("You have left the chat.")
-    print("Client left the chat")
-
-async def on_custom_event(websocket: WebSocket, event: str):
-    # Handle a custom event
-    await websocket.send_text(f"Custom event triggered: {event}")
-    print(f"Custom event triggered: {event}")
-
-@app.websocket("/wss")
-async def websocket_endpoint(websocket: WebSocket):
-    # Accept the WebSocket connection
-    await websocket.accept()  # "on_open" - connection established
-    print(f"Client connected--{websocket}")
+# @app.websocket("/wss")
+# async def websocket_endpoint(websocket: WebSocket):
+#     # Accept the WebSocket connection
+#     await websocket.accept()  # "on_open" - connection established
+#     print(f"Client connected--{websocket}")
     
-    # Add the new WebSocket connection to the list
-    active_connections.append(websocket)
+#     # Add the new WebSocket connection to the list
+#     active_connections.append(websocket)
     
-    try:
-        while True:
-            # Receive a message from the client
-            data = await websocket.receive_text() # Receive message
-            print(f"Message sent: {data}")
-            # You can implement your own logic to determine the event type.
-            # For instance, check if the message is a command like "update" or "custom_event"
-            if data == "update":
-                await on_update(websocket, data)
-            elif data == "leave":
-                await on_leave(websocket)
-                break
-            elif data.startswith("custom:"):
-                event = data.split(":", 1)[1]  # Get the custom event message
-                await on_custom_event(websocket, event)
-            else:
-                await on_message(websocket, data)
+#     try:
+#         while True:
+#             # Receive a message from the client
+#             data = await websocket.receive_text() # Receive message
+#             print(f"Message sent: {data}")
+#             # You can implement your own logic to determine the event type.
+#             # For instance, check if the message is a command like "update" or "custom_event"
+#             if data == "update":
+#                 await on_update(websocket, data)
+#             elif data == "leave":
+#                 await on_leave(websocket)
+#                 break
+#             elif data.startswith("custom:"):
+#                 event = data.split(":", 1)[1]  # Get the custom event message
+#                 await on_custom_event(websocket, event)
+#             else:
+#                 await on_message(websocket, data)
 
-            # Broadcast the message to all active connections
-            for connection in active_connections:
-                if connection != websocket:
-                    await connection.send_text(f"Broadcast message: {data}")
+#             # Broadcast the message to all active connections
+#             for connection in active_connections:
+#                 if connection != websocket:
+#                     await connection.send_text(f"Broadcast message: {data}")
     
-    except WebSocketDisconnect:
-        # Remove the connection when the client disconnects
-        active_connections.remove(websocket)
-        print("Client disconnected")
+#     except WebSocketDisconnect:
+#         # Remove the connection when the client disconnects
+#         active_connections.remove(websocket)
+#         print("Client disconnected")

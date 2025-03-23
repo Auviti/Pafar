@@ -18,18 +18,24 @@ else:
     mappeditem = str
     default = lambda: str(uuid4())
 
+class PaymentType(enum.Enum):
+    CASH = "Cash"
+    PAYNOW = "Paynow"
+    EWALLET = "EWallet"
+    CRYPTO = "Crypto"
 class PaymentMethod(Base):
     __tablename__ = 'payment_methods'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(String(255), nullable=True)  # Optional description of the payment method
-
+    payment_type: Mapped[str] = mapped_column(Enum(PaymentType), nullable=False)  # Payment type
+    
     # Relationship back to Payment model
     payments: Mapped["Payment"] = relationship("Payment", back_populates="payment_method")
 
     def __repr__(self):
-        return f"<PaymentMethod(id={self.id}, name={self.name}, description={self.description})>"
+        return f"<PaymentMethod(id={self.id}, name={self.name}, description={self.description} payment_type={self.payment_type})>"
 
 
 # Enum for Payment Status

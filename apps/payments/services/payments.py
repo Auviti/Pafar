@@ -20,7 +20,8 @@ class PaymentMethodService:
         try:
             db_payment_method = PaymentMethod(
                 name=payment_method.name,
-                description=payment_method.description
+                description=payment_method.description,
+                payment_type=payment_method.payment_type
             )
             self.db.add(db_payment_method)
             await self.db.commit()

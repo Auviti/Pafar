@@ -4,11 +4,12 @@ from sqlalchemy.orm import Session, selectinload
 from apps.user.models.user import User, UUID
 from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword, SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
 from uuid import UUID
-from fastapi import HTTPException
+from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from core.utils.auth.jwt_auth import JWTManager
 from core.utils.reponse import Response
 from core.utils.encryption import PasswordManager
 import sys, json
+import websockets
 
 # Define a custom exception for user not found
 class UserNotFoundException(Exception):
@@ -66,7 +67,7 @@ async def create_user(db: AsyncSession, user: UserCreate):
     
     # Convert user to json (if needed for JWT generation)
     jsonuser = json.loads(user.json())
-
+    print('===\n',jsonuser,'\n===')
     # Set role dynamically
     db_user = User(
         firstname=user.firstname,
@@ -78,8 +79,8 @@ async def create_user(db: AsyncSession, user: UserCreate):
         phone_number=user.phone_number,
         phone_number_pre=user.phone_number_pre,
         active=False,
-        tags=user.tags,
-        notes=user.notes,
+        age=user.age,
+        gender=user.gender,
         access_token=jwt_manager.create_access_token(jsonuser),
         refresh_token=jwt_manager.create_refresh_token(jsonuser)
     )
@@ -159,10 +160,10 @@ async def update_user(db: AsyncSession, user_update: UserUpdate, user_id: UUID):
         db_user.phone_number = user_update.phone_number
     if user_update.phone_number_pre:
         db_user.phone_number_pre = user_update.phone_number_pre
-    if user_update.tags:
-        db_user.tags = user_update.tags
-    if user_update.notes:
-        db_user.notes = user_update.notes
+    if user_update.age:
+        db_user.age = user_update.age
+    if user_update.gender:
+        db_user.gender = user_update.gender
     if user_update.access_token:
         db_user.access_token = user_update.access_token
     if user_update.refresh_token:
@@ -272,4 +273,32 @@ async def user_refresh_token(db: AsyncSession, user: UserUpdate):
         # auth is needed
         return False
     
-    
+# web socket event handlers
+async def on_booking(websocket: WebSocket, user_id: UUID, data: str):
+    # Handle received message
+    print(f"booking received: {data}")
+    await websocket.send_text(data)
+
+async def on_payment(websocket: WebSocket, user_id: UUID, data: str):
+    # Handle an update event (e.g., a status update or data refresh)
+    print(f"payment received: {data}")
+    await websocket.send_text(data)
+
+async def on_ride(websocket: WebSocket, user_id: UUID, data: str):
+    # Handle an update event (e.g., a status update or data refresh)
+    print(f"bus received: {data}")
+    await websocket.send_text(data)
+
+async def on_bus(websocket: WebSocket, user_id: UUID, data: str):
+    # Handle an update event (e.g., a status update or data refresh)
+    print(f"bus received: {data}")
+    await websocket.send_text(data)
+
+
+async def send_to_websocket(user_id: str, message: str):
+    url = f"ws://localhost:8000/ws/user/{user_id}"  # Replace with your WebSocket URL
+    async with websockets.connect(url) as websocket:
+        await websocket.send(message)
+        response = await websocket.recv()
+        return response
+

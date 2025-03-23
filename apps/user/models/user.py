@@ -81,7 +81,7 @@ class User(Base):
     lastname: Mapped[str] = mapped_column(String(CHAR_LENGTH))  # Last name as string
     password: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Password as string
     email: Mapped[str] = mapped_column(String(CHAR_LENGTH), unique=True, index=True)  # Email as unique string
-    picture: Mapped[str] = mapped_column(String(CHAR_LENGTH))  # picture as string 
+    picture: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # picture as string 
     # Role as Enum with a non-nullable constraint
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)  # User role as Enum
     
@@ -90,13 +90,10 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Updated timestamp (auto updates)
     
     # Additional fields
-    totalorders: Mapped[int] = mapped_column(Integer, default=0)  # Total orders as integer
     active: Mapped[bool] = mapped_column(Boolean, default=False)
     phone_number: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Phone number as string (nullable)
     phone_number_pre: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Phone number prefix (nullable)
-    tags: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Tags as string (nullable)
-    notes: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Notes as string (nullable)
-    age: Mapped[int] = mapped_column(Integer, nullable=True)  # Tags as string (nullable)
+    age: Mapped[int] = mapped_column(Integer, nullable=False)  # Tags as string (nullable)
     gender: Mapped[str] = mapped_column(Enum(UserGender), nullable=False)  # Tags as string (nullable)
     
     # Relationship with Address model
@@ -132,11 +129,10 @@ class User(Base):
             "active": self.active,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "totalorders": self.totalorders,
             "phone_number": self.phone_number,
             "phone_number_pre": self.phone_number_pre,
-            "tags": self.tags,
-            "notes": self.notes,
+            "gender": self.gender.value,
+            "age": self.age,
             'addresses':self.addresses,
             "access_token": self.access_token,
             "refresh_token": self.refresh_token

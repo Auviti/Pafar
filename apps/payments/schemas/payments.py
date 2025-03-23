@@ -4,9 +4,16 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 
+class PaymentTypeEnum(str, Enum):
+    CASH = "Cash"
+    PAYNOW = "Paynow"
+    EWALLET = "EWallet"
+    CRYPTO = "Crypto"
+
 class PaymentMethodBase(BaseModel):
     name: str
     description: Optional[str] = None  # Optional field for description
+    payment_type:PaymentTypeEnum
 
 class PaymentMethodCreate(PaymentMethodBase):
     pass

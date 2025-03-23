@@ -22,12 +22,11 @@ services:
       - zookeeper
     networks:
       - backend
-      /Users/oscaroguledo/Documents/projects/dowell_projects/workflowai-education/run_docker.sh
-  userservice:
-    image: userservice:latest
-    container_name: userservice
+  users:
+    image: users:latest
+    container_name: users
     build:
-      context: ./userservice
+      context: ./apps/user
     ports:
       - "${USERPORT}:${USERPORT}"
     restart: always
@@ -52,16 +51,16 @@ services:
     env_file:
       - .env  # This loads the variables from your .env file
     volumes:
-      - ./userservice:/usr/src/app
+      - ./apps/user:/usr/src/app
       - /usr/src/app/venv
     networks:
       - backend
     depends_on:
       - kafka
   
-  user-service-db:
+  users-db:
     image: postgres:16-alpine3.20
-    container_name: user-service-db
+    container_name: users-db
     restart: always
     environment:
       POSTGRES_USER: "${POSTGRESQL_USER}"
@@ -74,7 +73,7 @@ services:
       BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS}"
       SQLITE_DB_PATH: "${SQLITE_DB_PATH}"
     volumes:
-      - user-service-db-data:/var/lib/postgresql/data
+      - users-db-data:/var/lib/postgresql/data
     networks:
       - backend
 
@@ -83,5 +82,5 @@ networks:
     external: true
 
 volumes:
-  user-service-db-data:
+  users-db-data:
     external: true

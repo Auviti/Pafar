@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, DateTime, Enum, Float, Boolean
+from sqlalchemy import Integer, String, ForeignKey, DateTime, Enum, Float, Boolean, JSON
 from sqlalchemy.orm import relationship
 from core.database import Base, CHAR_LENGTH
 from sqlalchemy.orm import mapped_column
@@ -45,9 +45,10 @@ class Booking(Base):
     booking_status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)  # Booking status (Pending, Completed, etc.)
     fare_amount: Mapped[Float] = mapped_column(Float, nullable=False)  # Fare amount for the trip
     isprotected: Mapped[Boolean] = mapped_column(Boolean, default=False)  # Fare amount for the trip
+    seats: Mapped[List[dict]] = mapped_column(JSON, nullable=False)
 
     # Relationship to Payment (One Booking can have multiple payments)
-    payments: relationship('Payment', back_populates='bookings')
+    payments: Mapped[List["Payment"]] = relationship('Payment', back_populates='bookings')
     # Relationships
     user = relationship("User", back_populates="bookings")  # Link to the user who created the booking
     

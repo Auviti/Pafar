@@ -16,7 +16,8 @@ async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
             drop_off_location=booking.drop_off_location,
             isprotected=False,
             booking_time=booking.booking_time or datetime.utcnow(),  # Default to current time if not provided
-            fare_amount=booking.fare_amount
+            fare_amount=booking.fare_amount,
+            seats=booking.seats
         )
         db.add(new_booking)
         await db.commit()

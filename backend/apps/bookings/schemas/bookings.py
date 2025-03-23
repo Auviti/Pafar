@@ -12,7 +12,7 @@ class BookingCreate(BaseModel):
     isprotected: bool
     booking_time: Optional[datetime] = None  # Optional, defaults to current time
     fare_amount: float  # Fare for the trip
-
+    seats: dict
     class Config:
         from_attributes = True  # Enable ORM mapping for SQLAlchemy models
 

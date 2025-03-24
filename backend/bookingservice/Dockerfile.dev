@@ -1,0 +1,26 @@
+# pull official base image
+FROM python:3.12-slim
+
+# Create a directory where our app will be placed
+RUN mkdir -p /usr/src/app/venv && chown -R node:node /usr/src/app
+
+# Switch to the root user
+USER root
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements.txt
+COPY requirements*.txt ./
+
+# Install project dependencies
+RUN pip install --upgrade pip &&  pip install gunicorn && pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port your app runs on
+EXPOSE 8000
+
+# Command to run your app
+CMD ["uvicorn", "main:app", "--reload"]

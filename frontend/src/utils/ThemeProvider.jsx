@@ -20,12 +20,12 @@ const ThemeProvider = ({ children }) => {
 
   return (
     <div>
-      <button
+      {/* <button
         onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         className="btn btn-secondary"
       >
         Switch to {theme === 'light' ? 'Dark' : 'Light'} Theme
-      </button>
+      </button> */}
       {children}
     </div>
   );

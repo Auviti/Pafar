@@ -23,7 +23,7 @@ import redis.asyncio as aioredis
 app = FastAPI()
 settings = Settings()
 
-KAFKA_BROKER = ["localhost:9092"]
+KAFKA_BROKER = "kafka:9092"
 KAFKA_TOPIC = "test-topic"
 KAFKA_GROUP = "test-group"
 
@@ -84,21 +84,23 @@ async def validation_exception_handler(request, exc: RequestValidationError):
 @app.on_event("startup")
 async def startup():
     try:
-        # Start the Kafka producer
-        await kafka_producer.start()
-        print('kafka producer started')
-    except Exception as e:
-        print(f"Error connecting to Kafka producer: {e}")
-        raise HTTPException(status_code=500, detail="Kafka producer connection failed")
-
-    try:
-        # Start Kafka consumer in background
-        asyncio.create_task(kafka_consumer.start())
-        asyncio.create_task(kafka_consumer.consume())
-        print('Kafka consumer started')
+        # Start Kafka consumer in the background
+        print("Starting Kafka consumer...")
+        await kafka_consumer.start()  # Await the connection to Kafka
+        asyncio.create_task(kafka_consumer.consume())  # Start consuming in the background
+        print("Kafka consumer started")
     except Exception as e:
         print(f"Error connecting to Kafka consumer: {e}")
-        raise HTTPException(status_code=500, detail="Kafka consumer connection failed")
+        # raise HTTPException(status_code=500, detail="Kafka consumer connection failed")
+    
+    try:
+        # Start the Kafka producer
+        print("Starting Kafka producer...")
+        await kafka_producer.start()
+        print("Kafka producer started")
+    except Exception as e:
+        print(f"Error connecting to Kafka producer: {e}")
+        # raise HTTPException(status_code=500, detail="Kafka producer connection failed")
     
 
     try:

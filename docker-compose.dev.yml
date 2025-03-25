@@ -1,58 +1,44 @@
-version: '3.8'
 
 services:
   zookeeper:
     image: 'zookeeper'
+    container_name: zookeeper
     ports:
       - '2181:2181'
     restart: always
     env_file:
-      - ./backend/.env
+      - ./backend/userservice/.env  # This loads the variables from your .env file
     networks:
       - webnet
   
   kafka:
     image: 'confluentinc/cp-kafka'
+    container_name: kafka
     ports:
       - '9092:9092'
     restart: always
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "${ZOOKEEPER_HOST}:2181"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_HOST}:9092"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
     env_file:
-      - ./backend/.env
+      - ./backend/userservice/.env  # This loads the variables from your .env file
     networks:
       - webnet
+
 
   userservice:
     image: userservice:latest
     container_name: userservice
     build:
       context: ./backend/userservice
+      dockerfile: Dockerfile.dev
     ports:
-      - "${USERPORT}:${USERPORT}"
+      - "8000:8000"
     restart: always
-    environment:
-      - KAFKA_HOST=${KAFKA_HOST}
-      - USERPORT=${USERPORT}
-      - USERIP=${USERIP}
-      - USER_REGISTERED_TOPIC=${USER_REGISTERED_TOPIC}
-      - USER_VERIFIED_TOPIC=${USER_VERIFIED_TOPIC}
-      - USER_LOGIN_TOPIC=${USER_LOGIN_TOPIC}
-      - USER_LOGOUT_TOPIC=${USER_LOGOUT_TOPIC}
-      - USER_PASSWORD_CHANGED_TOPIC=${USER_PASSWORD_CHANGED_TOPIC}
-      - USER_PROFILE_UPDATED_TOPIC=${USER_PROFILE_UPDATED_TOPIC}
-      - USER_DEACTIVATED_TOPIC=${USER_DEACTIVATED_TOPIC}
-      - USER_ACTIVATED_TOPIC=${USER_ACTIVATED_TOPIC}
-      - USER_DELETED_TOPIC=${USER_DELETED_TOPIC}
-      - USER_EMAIL_CHANGED_TOPIC=${USER_EMAIL_CHANGED_TOPIC}
-      - USER_BANNED_TOPIC=${USER_BANNED_TOPIC}
-      - USER_REWARD_POINTS_EARNED_TOPIC=${USER_REWARD_POINTS_EARNED_TOPIC}
-      - USER_PURCHASE_HISTORY_TOPIC=${USER_PURCHASE_HISTORY_TOPIC}
-      - USER_ACTIVITY_LOG_TOPIC=${USER_ACTIVITY_LOG_TOPIC}
+    
     env_file:
       - ./backend/userservice/.env  # This loads the variables from your .env file
     volumes:
@@ -62,25 +48,28 @@ services:
       - webnet
     depends_on:
       - kafka
+      - users-db
   
   users-db:
     image: postgres:16-alpine3.20
     container_name: users-db
     restart: always
     environment:
-      POSTGRES_USER: "${POSTGRESQL_USER}"
-      POSTGRES_PASSWORD: "${POSTGRESQL_PASSWORD}"
-      POSTGRESQL_SERVER: "${POSTGRESQL_SERVER}"
-      POSTGRESQL_PORT: "${POSTGRESQL_PORT}"
-      POSTGRESQL_DB: "${POSTGRESQL_DB}"
-      DOMAIN: "${DOMAIN}"
-      ENVIRONMENT: "${ENVIRONMENT}"
-      BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS}"
-      SQLITE_DB_PATH: "${SQLITE_DB_PATH}"
+      POSTGRES_USER: your_username
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: your_db
+      # POSTGRES_HOST_AUTH_METHOD: trust to allow all connections without a password. This is *not* recommended.
     volumes:
       - users-db-data:/var/lib/postgresql/data
     networks:
       - webnet
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "your_username", "-d", "your_db"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
   # bookingservice:
   #   image: bookingservice:latest
@@ -185,12 +174,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: pafar-frontend
+    container_name: frontend
     ports:
-      - "4173:4173"
+      - "5173:5173"
     restart: always
-    env_file:
-      - ./backend/.env
+    # env_file:
+    #   - ./frontend/env
     networks:
       - webnet
 

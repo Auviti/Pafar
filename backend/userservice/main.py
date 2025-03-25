@@ -5,6 +5,7 @@ import json
 import asyncio
 from typing import List
 from core.config import Settings
+from core.utils.kafka import KafkaProducer,KafkaConsumer
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
@@ -22,7 +23,7 @@ import redis.asyncio as aioredis
 app = FastAPI()
 settings = Settings()
 
-KAFKA_BROKER = "localhost:9092"
+KAFKA_BROKER = ["localhost:9092"]
 KAFKA_TOPIC = "test-topic"
 KAFKA_GROUP = "test-group"
 
@@ -31,6 +32,7 @@ kafka_producer = KafkaProducer(broker=KAFKA_BROKER, topic=KAFKA_TOPIC)
 
 # Kafka Consumer - Run as a background task for continuous listening
 kafka_consumer = KafkaConsumer(broker=KAFKA_BROKER, topic=KAFKA_TOPIC, group_id=KAFKA_GROUP)
+
 
 
 # Add CORS middleware if configured
@@ -122,7 +124,9 @@ async def send_message(message: Dict):
     # Send a message to Kafka topic
     await kafka_producer.send(message)
     return {"message": "Message sent to Kafka"}
+    
 # Example endpoint to set a key-value pair in Redis
+
 @app.post("/set_key/")
 async def set_redis_key(key: str, value: str):
     try:
@@ -184,3 +188,8 @@ async def get_redis_key(key: str):
 #         # Remove the connection when the client disconnects
 #         active_connections.remove(websocket)
 #         print("Client disconnected")
+
+
+if __name__ == "__main__":
+    # The host is set to 0.0.0.0 to allow connections from external sources
+    uvicorn.run(app, host="0.0.0.0", port=8000)

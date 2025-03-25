@@ -18,7 +18,8 @@ RUN pip install --upgrade pip &&  pip install gunicorn && pip install --no-cache
 
 # Copy the rest of the application code
 COPY . .
-
+RUN chmod +x run_migrations && \ 
+    ./run_migrations.sh
 # Expose the port your app runs on
 EXPOSE 8000
 

@@ -108,6 +108,7 @@ async def startup():
         print(f"Error connecting to Redis: {e}")
         raise HTTPException(status_code=500, detail="Redis connection failed")
 
+
 # Close Redis connection when FastAPI shuts down
 @app.on_event("shutdown")
 async def shutdown():

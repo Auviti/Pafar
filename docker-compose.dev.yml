@@ -1,30 +1,36 @@
 
 services:
-  zookeeper:
-    image: 'zookeeper'
-    container_name: zookeeper
-    ports:
-      - '2181:2181'
-    restart: always
-    env_file:
-      - ./backend/userservice/.env  # This loads the variables from your .env file
-    networks:
-      - webnet
+  # zookeeper:
+  #   image: 'confluentinc/cp-zookeeper'
+  #   container_name: zookeeper
+  #   ports:
+  #     - '2181:2181'
+  #   restart: always
+  #   environment:   
+  #     - ZOOKEEPER_CLIENT_PORT=2181  # Add the required environment variable for Zookeeper client port
+  #     - ZOOKEEPER_TICK_TIME=2000
+  #     - ZOOKEEPER_INIT_LIMIT=5
+  #     - ZOOKEEPER_SYNC_LIMIT=2
+  #   healthcheck:
+  #     test: ["CMD", "nc", "-z", "localhost", "2181"]  # Health check for Zookeeper client port
+  #     interval: 30s
+  #     retries: 3
+  #     start_period: 10s
+  #     timeout: 5s
+  #   networks:
+  #     - webnet
   
   kafka:
-    image: 'confluentinc/cp-kafka'
-    container_name: kafka
-    ports:
-      - '9092:9092'
-    restart: always
+    image: bitnami/kafka:latest
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    depends_on:
-      - zookeeper
-    env_file:
-      - ./backend/userservice/.env  # This loads the variables from your .env file
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    restart: always
+   
     networks:
       - webnet
 

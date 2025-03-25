@@ -4,7 +4,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from fastapi import Depends
-
 from core.config import settings
 
 Base = declarative_base()

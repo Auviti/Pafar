@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo  } from 'react';
 import reactLogo from './assets/react.svg'
+import travelBg from './assets/pafar-bg.jpeg'
 import viteLogo from '/vite.svg'
 import { Icon } from '@iconify/react';
 import './App.css'
@@ -11,6 +12,8 @@ import Bottom from './components/NavBar/Bottom/Bottom';
 import Avatar from './components/Avatar/Avatar';
 import Button from './components/Button/Button';
 import useDeviceType from './hooks/useDeviceType';
+import Card from './components/Card/Card';
+import {FormCheckBox, FormInput, FormRadioButton, } from './components/Form/FormInput';
 function App() {
   const [count, setCount] = useState(0)
   const [messages, setMessages] = useState([]);
@@ -35,9 +38,8 @@ function App() {
     setNewMessage('');
   };
   const navlinks = [
-    { name: 'DashBoard', icon:<Icon icon='mdi:home' width={24} height={24} />, active: true, onClick: () => alert('Home clicked'),badgeContent: 'New'},
-    { name: 'Inbox', icon:<Icon icon='mdi:inbox' width={24} height={24} />, active: false, onClick: () => alert('About clicked'),badgeContent: 500  },
-    { name: 'Calender', icon:<Icon icon='mdi:calendar' width={24} height={24} />, active: false, onClick: () => alert('Calender clicked') },
+    { name: 'Home', icon:<Icon icon='mdi:home' width={24} height={24} />, active: true, onClick: () => alert('Home clicked')},
+    { name: 'Places', icon:<Icon icon='mdi:map-marker-outline' width={24} height={24} />, active: false, onClick: () => alert('About clicked'),badgeContent: 'New'  },
     { name: 'About', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
     { name: 'Contact Us', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
   ];
@@ -45,77 +47,29 @@ function App() {
   return (
     <ThemeProvider>
       <Top navlinks={navlinks} isMobile={isMobile}/>
-      <div className="container-fluid" style={{height:'70px'}}>
+      <div className="container-fluid" style={{height:'66px'}}>
         </div>
-      <div className="container-fluid">
-        <div className={`row ${!isMobile?'mx-5':''}`}>
-          <div className="col-12">
-            <div class="row">
-              <div className="col-12 col-sm-8">
-                
-              </div>
-              <div className="col-12 col-sm-4">
-                <span className='d-flex justify-content-end gap-2'>
-                  <Button >clichghff</Button>
-                  <Button >clichghff</Button>
-                </span>
-              </div>
+        <div class="container px-4 py-5" style={{ backgroundImage: `url(${travelBg})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '8px' }}>
+          <div class="row align-items-center g-lg-3 py-4">
+            <div class="col-lg-7 text-center text-lg-start text-white">
+              <h1 class="display-4 fw-bold lh-1 mb-3">Revolutionizing Urban Mobility</h1>
+              <p class="col-lg-10 fs-7">Pafar is an innovative, technology-driven company committed to reshaping the way people commute across cities in Africa. With our cutting-edge platform, we offer a seamless and efficient travel experience that empowers commuters, making transportation simpler, safer, and more reliable.</p>
+            </div>
+            <div class="col-md-10 mx-auto col-lg-5">
+              <form class="p-4 p-md-5 border rounded-3 bg-light">
+                <FormInput type="email" label="Email address" placeholder="name@example.com"/>
+                <div class="form-floating mb-3">
+                  <input type="password" class="form-control" id="floatingPassword" placeholder="Password" />
+                  <label for="floatingPassword">Password</label>
+                </div>
+                <FormCheckBox value="remember-me" label={'Remember me'}/>
+                <button class="w-100 btn btn-lg btn-primary" type="submit">Sign up</button>
+                <hr class="my-4"/>
+                <small class="text-muted">By clicking Sign up, you agree to the terms of use.</small>
+              </form>
             </div>
           </div>
-          <div class="col-12 py-2">
-            <div class="row">
-              <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 p-1">
-              <div class="card" style={{width: "18rem;"}}>
-  <div class="card-body">
-    <h5 class="card-title">Card title</h5>
-    <h6 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" class="card-link">Card link</a>
-    <a href="#" class="card-link">Another link</a>
-  </div>
-</div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 p-1">
-              <div class="card" style={{width: "18rem;"}}>
-  <div class="card-body">
-    <h5 class="card-title">Card title</h5>
-    <h6 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" class="card-link">Card link</a>
-    <a href="#" class="card-link">Another link</a>
-  </div>
-</div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 p-1">
-              <div class="card" style={{width: "18rem;"}}>
-  <div class="card-body">
-    <h5 class="card-title">Card title</h5>
-    <h6 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" class="card-link">Card link</a>
-    <a href="#" class="card-link">Another link</a>
-  </div>
-</div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 p-1">
-              <div class="card" style={{width: "18rem;"}}>
-  <div class="card-body">
-    <h5 class="card-title">Card title</h5>
-    <h6 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" class="card-link">Card link</a>
-    <a href="#" class="card-link">Another link</a>
-  </div>
-</div>
-              </div>
-            </div>
-
-          </div>
-          <div class="col-12">
-            Column
-          </div>
         </div>
-      </div>
         {/* <div className="container-fluid">
           
           <header className="App-header">

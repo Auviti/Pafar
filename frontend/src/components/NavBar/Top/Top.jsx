@@ -28,7 +28,7 @@ const Top = ({ isMobile, navlinks = [], onActiveLink }) => {
                         height="24"
                         className="d-inline-block align-text-top mx-2"
                     />
-                    Bootstrap
+                    Pafar
                 </a>
 
                 {!isMobile && (

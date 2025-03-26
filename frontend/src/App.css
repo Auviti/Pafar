@@ -1,0 +1,20 @@
+.card-info {
+    z-index: 2; /* Corrected to use ':' instead of ';' */
+    width: 16rem; /* Corrected to remove the quotes around '16rem' */
+    position: absolute; /* Corrected with the proper syntax */
+    bottom: 10px; /* Corrected to remove the quotes */
+    left: 8px; /* Corrected to remove the quotes */
+    color: white; /* Optional: for visibility depending on the background */
+    font-weight: bold; /* Corrected to use the proper syntax for 'font-weight' */
+    background-color: rgba(141, 140, 140, 0.5); /* Slight background for text contrast */
+    padding: 5px; /* Optional padding around the text */
+    border-radius: 8px; /* Optional: rounded corners */
+    cursor: pointer; /* Optional: makes the text clickable */
+}
+
+.card-info:hover {
+    background-color: var(--primary-transparent); /* Assuming --primary is in rgb format */
+}
+.card-info-small {
+    width: 14rem; /* Corrected to remove the quotes around '16rem' */
+}

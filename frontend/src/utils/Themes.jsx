@@ -5,6 +5,7 @@ export const themes = {
     '--text-light': '#6c757d',
     '--primary': 'rgb(21, 127, 46)', // String format for CSS rgb
     '--primary-light': 'rgb(225, 233, 225)', // String format for CSS rgb
+    '--primary-transparent': 'rgba(21, 127, 46, 0.5)', /* Transparent version */
     '--success': 'rgb(54, 13, 153)', // String format for CSS rgb
     '--success-light': 'rgb(235, 228, 253)', // String format for CSS rgb
     '--danger': 'rgb(127, 43, 38)', // String format for CSS rgb

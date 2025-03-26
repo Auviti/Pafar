@@ -12,7 +12,6 @@ import Bottom from './components/NavBar/Bottom/Bottom';
 import Avatar from './components/Avatar/Avatar';
 import Button from './components/Button/Button';
 import useDeviceType from './hooks/useDeviceType';
-import Card from './components/Card/Card';
 import {FormCheckBox, FormInput, FormRadioButton, } from './components/Form/FormInput';
 function App() {
   const [count, setCount] = useState(0)
@@ -47,16 +46,15 @@ function App() {
   return (
     <ThemeProvider>
       <Top navlinks={navlinks} isMobile={isMobile}/>
-      <div className="container-fluid" style={{height:'66px'}}>
-        </div>
-        <div class="container px-4 py-5" style={{ backgroundImage: `url(${travelBg})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '8px' }}>
-          <div class="row align-items-center g-lg-3 py-4">
-            <div class="col-lg-7 text-center text-lg-start text-white">
-              <h1 class="display-4 fw-bold lh-1 mb-3">Revolutionizing Urban Mobility</h1>
-              <p class="col-lg-10 fs-7">Pafar is an innovative, technology-driven company committed to reshaping the way people commute across cities in Africa. With our cutting-edge platform, we offer a seamless and efficient travel experience that empowers commuters, making transportation simpler, safer, and more reliable.</p>
+      <div className="container-fluid" style={{height:'66px'}}></div>
+        <div className="container px-4 py-5" style={{ backgroundImage: `url(${travelBg})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '8px' }}>
+          <div className="row align-items-center g-lg-3 py-4">
+            <div className="col-lg-7 text-center text-lg-start text-white">
+              <h1 className="display-4 fw-bold lh-1 mb-3">Revolutionizing Urban Mobility</h1>
+              <p className="col-lg-10 fs-7">Pafar is an innovative, technology-driven company committed to reshaping the way people commute across cities in Africa. With our cutting-edge platform, we offer a seamless and efficient travel experience that empowers commuters, making transportation simpler, safer, and more reliable.</p>
             </div>
-            <div class="col-md-10 mx-auto col-lg-5">
-              <form class="p-4 p-md-5 border rounded-3 bg-light">
+            <div className="col-md-10 mx-auto rounded-3 col-lg-5" style={{backgroundColor: 'rgba(141, 140, 140, 0.5)', borderColor:'rgba(141, 140, 140)'}}>
+              <form class="p-4 p-md-5 bg-light">
                 <FormInput type="email" label="Email address" placeholder="name@example.com"/>
                 <div class="form-floating mb-3">
                   <input type="password" class="form-control" id="floatingPassword" placeholder="Password" />
@@ -70,66 +68,113 @@ function App() {
             </div>
           </div>
         </div>
-        {/* <div className="container-fluid">
-          
-          <header className="App-header">
-          <div>
-              <a href="https://vite.dev" target="_blank">
-                <img src={viteLogo} className="logo" alt="Vite logo" />
-              </a>
-              <a href="https://react.dev" target="_blank">
-                <img src={reactLogo} className="logo react" alt="React logo" />
-              </a>
+        <div className="container-fluid" style={{height:'20px'}}></div>
+        <div className="container px-5 py-2 " style={{backgroundColor: 'rgba(141, 140, 140, 0.5)', borderColor:'rgba(141, 140, 140)', borderRadius: '8px' }}>
+          <div className='row align-items-center m-2'>
+            <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
+              Column 1
             </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-              <button onClick={() => setCount((count) => count + 1)}>
-                count is {count}
-              </button>
-              <p>
-                Edit <code>src/App.jsx</code> and save to test HMR
-              </p>
+
+            <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
+              Column 2
             </div>
-            <p className="read-the-docs">
-              Click on the Vite and React logos to learn more
-            </p>
-          </header>
-          <h1 className="text-center mt-5">React WebSocket App</h1>
-          <div className="row mt-4">
-            <div className="col-12">
-              <div className="list-group">
-                {messages.map((msg, index) => (
-                  <div className="list-group-item" key={index}>
-                    {msg}
-                  </div>
-                ))}
-              </div>
+            <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
+              Column 3
+            </div>
+
+            <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white">
+              <button className="w-100 btn btn-lg btn-primary" type="submit">Sign up</button>
             </div>
           </div>
-          <div className="row mt-3">
-            <div className="col-12">
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Type a message"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                />
-                <div className="input-group-append">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSendMessage}
+        </div>
+        <div className="container mx-auto py-2" style={{borderRadius: '8px' }}>
+          <span className='d-block text-center my-3'>Top 9 Popular Destinations</span>
+          <div className='row align-items-center'>
+            
+            {[1,2,3,4,5,6,7,8,9].map((destination, index)=>(
+              <div key={index} className="col-lg-4 col-md-6 col-12 my-4">
+                <div className="p-2 shadow-lg mx-auto" style={{ width: '18rem', height: '14rem', borderRadius: '10px' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      backgroundImage: `url(${travelBg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderRadius: '10px', // Ensures the image has the same border-radius as the container
+                      position: 'relative', // To make sure the inner content can be placed above the image
+                    }}
                   >
-                    Send
-                  </button>
+                    <div
+                      className="card-info"
+                      style={{
+                        
+                      }}
+                    >
+                      <div className='d-flex justify-content-between'>
+                        <div>
+                          Lagos
+                          <br/><small style={{fontSize:'10px'}}>Ikeja <span className='ms-2'>4/5 ⭐</span></small>
+                        </div>
+                        <span>
+                          --d-
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
+
           </div>
-        </div> */}
-      <div className="container-fluid" style={{height:'70px'}}>
-      </div>
+        </div>
+        <div className="container mx-auto py-2" style={{borderRadius: '8px' }}>
+          <div className='d-flex justify-content-between px-5'>
+                        <span>
+                          
+                        </span>
+                        <div>
+                          <span className='d-block text-center ms-4'>What Our Clients say</span>
+                        </div>
+                        <Icon icon='mdi:home' width={24} height={24}/>
+                        
+                      </div>
+          <div className='row align-items-center'>
+            
+            {[1,2,3,4].map((destination, index)=>(
+              <div key={index} className="col-lg-3 col-md-6 col-12 my-4">
+                <div className="p-2 shadow-lg mx-auto" style={{ width: '16rem', height: '12rem', borderRadius: '10px' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      backgroundImage: `url(${travelBg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderRadius: '10px', // Ensures the image has the same border-radius as the container
+                      position: 'relative', // To make sure the inner content can be placed above the image
+                    }}
+                  >
+                    <div
+                      className="card-info card-info-small"
+                      
+                    >
+                      <div className='d-flex justify-content-between'>
+                        <div>
+                          Lagos
+                          <br/><small style={{fontSize:'10px'}}>Ikeja <span className='ms-2'>4/5 ⭐</span></small>
+                        </div>
+                        <span>
+                          --d-
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+          </div>
+        </div>
+      <div className="container-fluid" style={{height:'70px'}}></div>
       <Bottom navlinks={navlinks} isMobile={isMobile}/>
     </ThemeProvider>
     

@@ -6,6 +6,11 @@
     align-self: center;
     transition: background-color 0.2s, border-color 0.2s; /* Smooth hover transitions */
 }
+.btn-round {
+    border-radius: 50%;
+    height: 30px;
+    width: 30px;
+}
 
 /* Custom Button Color Classes */
 .btn-primary {

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo  } from 'react';
 import reactLogo from './assets/react.svg'
 import travelBg from './assets/pafar-bg.jpeg'
 import NewsLetterBg from './assets/newsletter-bg.jpg'
+import AbujaBg from './assets/abuja-img.jpg'
+import LagosBg from './assets/lagos-img.avif'
 import viteLogo from '/vite.svg'
 import { Icon } from '@iconify/react';
 import './App.css'
@@ -73,6 +75,17 @@ function App() {
       { title: "Reservation status", content: <div>Content 4</div> },
       // { title: "Tab 3", content: <div>Content 5</div> },
   ];
+  const destinations = [
+    { name: "Zuma Rock", location: "FCT", city: "Abuja", rating: "4.5", imageUrl: AbujaBg },
+    { name: "Olumo Rock", location: "Abeokuta", city: "Ogun", rating: "4.7", imageUrl: travelBg },
+    { name: "Erin Ijesha Waterfall", location: "Osun", city: "Osun", rating: "4.6", imageUrl: travelBg },
+    { name: "Sukur Cultural Landscape", location: "Adamawa", city: "Adamawa", rating: "4.8", imageUrl: travelBg },
+    { name: "Ogbunike Caves", location: "Anambra", city: "Anambra", rating: "4.4", imageUrl: travelBg },
+    { name: "Lekki Conservation Centre", location: "Lagos", city: "Lekki", rating: "4.5", imageUrl: LagosBg },
+    { name: "Badagry", location: "Lagos", city: "Badagry", rating: "4.3", imageUrl: travelBg },
+    { name: "Ngorongoro Crater", location: "Cross River", city: "Calabar", rating: "4.6", imageUrl: travelBg },
+    { name: "Yankari National Park", location: "Bauchi", city: "Bauchi", rating: "4.7", imageUrl: travelBg },
+  ];
 
   return (
     <ThemeProvider>
@@ -131,55 +144,46 @@ function App() {
           <h3 className='text-center border-bottom pb-3 pt-4'>Top 9 Popular Destinations</h3>
           
           <div className='row align-items-center'>
-            
-            {[1,2,3,4,5,6,7,8,9].map((destination, index)=>(
+            {destinations.map((destination, index) => (
               <div key={index} className="col-lg-4 col-md-6 col-12 my-4">
-                <div className="p-0 shadow-lg mx-auto " style={{ width: '18rem', height: '14rem', borderColor:'rgba(141, 140, 140)',borderRadius: '10px' }}>
+                <div className="p-0 shadow-lg mx-auto" style={{ width: '18rem', height: '14rem', borderColor: 'rgba(141, 140, 140)', borderRadius: '10px' }}>
                   <div
                     style={{
                       height: '100%',
-                      backgroundImage: `url(${travelBg})`,
+                      backgroundImage: `url(${destination.imageUrl})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
-                      borderRadius: '10px', // Ensures the image has the same border-radius as the container
-                      position: 'relative', // To make sure the inner content can be placed above the image
+                      borderRadius: '10px',
+                      position: 'relative',
                     }}
                   >
-                    <div
-                      className="card-info"
-                      style={{
-                        
-                      }}
-                    >
+                    <div className="card-info" style={{ position: 'absolute', bottom: '10px', left: '10px', color: 'white' }}>
                       <div className='d-flex justify-content-between'>
-                        <div style={{lineHeight: 1}}>
-                          <small>Lagos</small>
-                          <br/><small style={{fontSize:'10px',lineHeight: 0}}>Ikeja <span className='ms-2'>4/5 ⭐</span></small>
+                        <div style={{ lineHeight: 1 }}>
+                          <small>{destination.location}</small>
+                          <br />
+                          <small style={{ fontSize: '10px', lineHeight: 0 }}>
+                            {destination.city} <span className='ms-2'>{destination.rating} ⭐</span>
+                          </small>
                         </div>
-                        
+
                         <div>
                           <IconButton variant='primary' outline rotate={45}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
+                              <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}></path>
+                            </svg>
                           </IconButton>
-                          
-                          <IconButton  className='ms-1' variant='primary' outline rotate={45}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
+
+                          <IconButton className='ms-1' variant='primary' outline>
+                            <Icon icon="mdi-light:bookmark" width="21" height="21" />
                           </IconButton>
                         </div>
                       </div>
-                      
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-
           </div>
         </div>
         <div className="container mx-auto py-2" style={{borderRadius: '8px' }}>

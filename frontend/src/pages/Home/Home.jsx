@@ -24,7 +24,8 @@ import Footer from './components/Footer/Footer';
 import Pagination from './components/Pagination/Pagination';
 import Login from './components/Auth/Login';
 import Tabs from './components/Tabs/Tabs';
-function App({}) {
+
+function Home({}) {
   const [count, setCount] = useState(0)
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -340,5 +341,5 @@ function App({}) {
   );
 }
 
-export default App;
+export default Home;
 

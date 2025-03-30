@@ -1,0 +1,10 @@
+.notfound-bg {
+    background: linear-gradient(to right, #e2e8f0, #e5e7eb);
+}
+
+@media (prefers-color-scheme: dark) {
+    .notfound {
+        background: linear-gradient(to right, #1f2937, #111827);
+        color: white !important;
+    }
+}

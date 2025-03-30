@@ -5,7 +5,7 @@ import RadioButton from '../Input/RadioBox';
 
 const FormInput = ({ label, placeholder, className, type, style, onClick, ...props }) => {
     return (
-        <div className="form-floating mb-3">
+        <div className="form-floating">
             <Input
                 type={type}
                 label={label}
@@ -20,7 +20,7 @@ const FormInput = ({ label, placeholder, className, type, style, onClick, ...pro
 };
 const FormCheckBox = ({ label, value, className, style,checked, onClick,disabled, ...props }) => {
     return (
-        <div className="form-check checkbox mb-3">
+        <div className="form-check checkbox">
             <CheckBox
                 label={label}
                 value={value}

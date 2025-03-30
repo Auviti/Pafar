@@ -15,26 +15,31 @@ const Bottom = ({ isMobile, navlinks = [], onActiveLink }) => {
             onActiveLink({'activeIndex':activeIndex,'link':link})
         }
     };
-
+    
     return (
-        <nav className="navbar fixed-bottom navbar-expand-lg bg-body-tertiary border-bottom">
+        <>
             {isMobile && (
-                <div className="container-fluid d-flex justify-content-between gap-2">
-                    {/* Render navlinks */}
-                    {navlinks.map((link, index) => (
-                        <NavLink
-                            key={index}
-                            active={activeIndex === index} // Check if this link is active
-                            onClick={() => handleLinkClick(index,link)} // Set active link on click
-                            badgeContent={link?.badgeContent}
-                            isMobile={isMobile}
-                        >
-                            {link?.icon}
-                        </NavLink>
-                    ))}
-                </div>
-            )}
-        </nav>
+                <nav className="navbar fixed-bottom navbar-expand-lg bg-body-tertiary border-bottom">
+                
+                    <div className="container-fluid d-flex justify-content-between gap-2">
+                        {/* Render navlinks */}
+                        {navlinks.map((link, index) => (
+                            <NavLink
+                                key={index}
+                                active={activeIndex === index} // Check if this link is active
+                                onClick={() => handleLinkClick(index,link)} // Set active link on click
+                                badgeContent={link?.badgeContent}
+                                isMobile={isMobile}
+                            >
+                                {link?.icon}
+                            </NavLink>
+                        ))}
+                    </div>
+                
+                </nav>
+        )}
+        </>
+        
     );
 };
 

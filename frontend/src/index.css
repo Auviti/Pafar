@@ -88,8 +88,9 @@ body {
 .bg-warning-light { background-color: var(--warning-light) !important; }
 .bg-muted { background-color: var(--muted) !important; }
 .bg-muted-light { background-color: var(--muted-light) !important; }
-.bg-light { background-color: var(--light) !important; }
-.bg-dark { background-color: var(--dark) !important; }
+.bg-light { background-color: var(--bg-light) !important; }
+.bg-dark { background-color: var(--bg-dark) !important; }
+.bg-transparent {background-color: transparent !important;}
 
 /* Override Bootstrap Border Colors */
 .border-primary { border-color: var(--border-primary) !important; }

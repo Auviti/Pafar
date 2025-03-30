@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import './Input.css';
+
 const Input = ({ label, placeholder, className, type, style, onClick, ...props }) => {
     return (
         <>
@@ -12,7 +13,7 @@ const Input = ({ label, placeholder, className, type, style, onClick, ...props }
                 onClick={onClick} // Click event handler
                 {...props} // Spread operator to handle additional props
             />
-            <label htmlFor="floatingInput">{label}</label>
+            {label && <label htmlFor="floatingInput">{label}</label>}
         </>
     );
 };

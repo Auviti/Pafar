@@ -1,6 +1,7 @@
-.form-control {
+.form-control{
     padding: 4px 18px !important;
     border-color: white !important;
+    font-size: medium !important;
     outline: 0 !important;
 }
 input:focus, .form-control:focus {

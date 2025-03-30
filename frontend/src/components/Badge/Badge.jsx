@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Badge = ({ children, badgeContent, background = 'danger', isDot = false, size = 'small'  }) => {
+const Badge = ({ children, badgeContent, background = 'danger', isDot = false, size = 'small',color  }) => {
   if (isDot) {
     return (
       <span
@@ -26,14 +26,14 @@ const Badge = ({ children, badgeContent, background = 'danger', isDot = false, s
       return content > 100 ? '99+' : content;
     }
     // If the content is a string, truncate it if it's longer than 4 characters
-    if (typeof content === 'string' && content.length > 4) {
-      return `${content.substring(0, 4)}...`; // Truncate and append "..."
+    if (typeof content === 'string' && content.length > 5) {
+      return `${content.substring(0, 5)}...`; // Truncate and append "..."
     }
     return content;
   };
 
   return (
-    <span className={`badge badge-rounded bg-${background} ms-2`}>
+    <span className={`badge badge-rounded bg-${background} ms-2`} style={{color:color || 'white'}}>
       {children ? formatBadgeContent(children) : formatBadgeContent(badgeContent)}
     </span>
   );

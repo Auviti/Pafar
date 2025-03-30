@@ -1,21 +1,29 @@
 /* Base button styling */
 .btn {
-    border-radius: 50px;
-    padding: 4px 18px;
+    border-radius: 6px;
+    padding: 8px 18px;
     cursor: pointer;
     align-self: center;
+    font-size: medium;
     transition: background-color 0.2s, border-color 0.2s; /* Smooth hover transitions */
 }
 .btn-round {
     border-radius: 50%;
-    height: 30px;
-    width: 30px;
+}
+.btn-round-lg {
+    padding: 8px 10px;
+}
+.btn-round-md {
+    padding: 4px 6px;
+}
+.btn-round-sm {
+    padding: 2px 4px;
 }
 
 /* Custom Button Color Classes */
 .btn-primary {
     background-color: var(--primary) !important;
-    color: #fff !important;
+    color: var(--text) !important;
     border-color: var(--primary) !important;
 }
 
@@ -127,8 +135,8 @@
 
 /* Outline button styles */
 .btn-outline-primary {
-    background-color: var(--primary-light) !important;
-    color: var(--primary) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--primary) !important;
 }
 
@@ -141,8 +149,8 @@
 }
 
 .btn-outline-success {
-    background-color: var(--success-light) !important;
-    color: var(--success) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--success) !important;
 }
 
@@ -155,8 +163,8 @@
 }
 
 .btn-outline-danger {
-    background-color: var(--danger-light) !important;
-    color: var(--danger) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--danger) !important;
 }
 
@@ -169,8 +177,8 @@
 }
 
 .btn-outline-info {
-    background-color: var(--info-light) !important;
-    color: var(--info) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--info) !important;
 }
 
@@ -183,8 +191,8 @@
 }
 
 .btn-outline-warning {
-    background-color: var(--warning-light) !important;
-    color: var(--warning) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--warning) !important;
 }
 
@@ -197,8 +205,8 @@
 }
 
 .btn-outline-muted {
-    background-color: var(--muted-light) !important;
-    color: var(--muted) !important;
+    background-color: white !important;
+    color: var(--text) !important;
     border: 1px solid var(--muted) !important;
 }
 

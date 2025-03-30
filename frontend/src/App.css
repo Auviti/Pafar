@@ -1,20 +1,111 @@
 .card-info {
     z-index: 2; /* Corrected to use ':' instead of ';' */
-    width: 16rem; /* Corrected to remove the quotes around '16rem' */
+    min-width: 16rem; /* Corrected to remove the quotes around '16rem' */
     position: absolute; /* Corrected with the proper syntax */
-    bottom: 10px; /* Corrected to remove the quotes */
+    bottom: 8px; /* Corrected to remove the quotes */
     left: 8px; /* Corrected to remove the quotes */
-    color: white; /* Optional: for visibility depending on the background */
+    right: 8px; /* Corrected to remove the quotes */
+    
+    color: black; /* Optional: for visibility depending on the background */
     font-weight: bold; /* Corrected to use the proper syntax for 'font-weight' */
-    background-color: rgba(141, 140, 140, 0.5); /* Slight background for text contrast */
+    background-color: rgba(219, 219, 219, 0.5); /* Slight background for text contrast */
     padding: 5px; /* Optional padding around the text */
     border-radius: 8px; /* Optional: rounded corners */
     cursor: pointer; /* Optional: makes the text clickable */
 }
 
-.card-info:hover {
+.card-info:hover,
+.card-info-small:hover {
     background-color: var(--primary-transparent); /* Assuming --primary is in rgb format */
 }
 .card-info-small {
-    width: 14rem; /* Corrected to remove the quotes around '16rem' */
+    z-index: 2; /* Corrected to use ':' instead of ';' */
+    min-width: 8rem; /* Corrected to remove the quotes around '16rem' */
+    position: absolute; /* Corrected with the proper syntax */
+    bottom: 8px; /* Corrected to remove the quotes */
+    left: 8px; /* Corrected to remove the quotes */
+    right: 8px; /* Corrected to remove the quotes */
+    
+    color: black; /* Optional: for visibility depending on the background */
+    font-weight: bold; /* Corrected to use the proper syntax for 'font-weight' */
+    background-color: rgba(219, 219, 219, 0.5); /* Slight background for text contrast */
+    padding: 5px; /* Optional padding around the text */
+    border-radius: 8px; /* Optional: rounded corners */
+    cursor: pointer; /* Optional: makes the text clickable */
 }
+
+.card-body{
+    z-index: 2; /* Corrected to use ':' instead of ';' */
+    min-width: 16rem; /* Corrected to remove the quotes around '16rem' */
+    
+    font-size: medium;
+    font-style: italic;
+    color: white; /* Optional: for visibility depending on the background */
+    font-weight: bold; /* Corrected to use the proper syntax for 'font-weight' */
+    padding: 8px; /* Optional padding around the text */
+    border-radius: 8px; /* Optional: rounded corners */
+    text-overflow: ellipsis;
+}
+.card-body-small{
+    z-index: 2; /* Corrected to use ':' instead of ';' */
+    min-width: 8rem; /* Corrected to remove the quotes around '16rem' */
+    font-size: medium;
+    font-style: italic;
+    padding: 8px; /* Optional padding around the text */
+    border-radius: 8px; /* Optional: rounded corners */
+}
+/* Ensures that the text truncates after a certain number of lines */
+.truncate {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 3; /* Adjust the number of lines you want to show */
+    line-clamp: 3;
+    text-overflow: ellipsis;
+  }
+  
+/* Default cursor */
+.cursor-default {
+    cursor: default;
+  }
+  
+  /* Pointer cursor (hand) */
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  /* Not allowed cursor (disabled) */
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
+  
+  /* Crosshair cursor */
+  .cursor-crosshair {
+    cursor: crosshair;
+  }
+  
+  /* Help cursor */
+  .cursor-help {
+    cursor: help;
+  }
+  
+  /* Move cursor */
+  .cursor-move {
+    cursor: move;
+  }
+  
+  /* Text cursor (I-beam) */
+  .cursor-text {
+    cursor: text;
+  }
+  
+  /* Wait cursor */
+  .cursor-wait {
+    cursor: wait;
+  }
+  
+  /* Custom cursor example (replace with your own image URL) */
+  .cursor-custom {
+    cursor: url('path_to_cursor_image.png'), auto;
+  }
+  

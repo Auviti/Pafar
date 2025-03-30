@@ -18,12 +18,15 @@ import IconButton from './components/Button/Icon';
 import Badge from './components/Badge/Badge';
 import Input from './components/Input/Input';
 import Footer from './components/Footer/Footer';
+import Pagination from './components/Pagination/Pagination';
+import Login from './components/Auth/Login';
+import Tabs from './components/Tabs/Tabs';
 function App() {
   const [count, setCount] = useState(0)
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const {isMobile} = useDeviceType();
-
+  const {isMobile, isTablet, isDesktop} = useDeviceType();
+  const { isLoggedIn, user } = { isLoggedIn: true, user: {} };
   
   // Memoize the socket object so it's only created once and doesn't change on every render
   const socket = useMemo(() => new WebSocketService("ws://localhost:8000"), []);
@@ -52,6 +55,24 @@ function App() {
     { name: 'About', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
     { name: 'Contact Us', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
   ];
+  const [selectedIndex, setSelectedIndex] = useState(0);
+    const [selectedItem, setSelectedItem] = useState(null);
+
+    const handleIndexChange = (index) => {
+        console.log("Selected tab index:", index);
+        setSelectedIndex(index);
+    };
+
+    const handleItemChange = (item) => {
+        console.log("Selected tab item:", item);
+        setSelectedItem(item);
+    };
+  const tabs = [
+      { title: "Rent a bus", content: <div>Content 1</div> },
+      { title: "Reserve a seat", content: <div>Content 3</div> },
+      { title: "Reservation status", content: <div>Content 4</div> },
+      // { title: "Tab 3", content: <div>Content 5</div> },
+  ];
 
   return (
     <ThemeProvider>
@@ -64,17 +85,18 @@ function App() {
               <p className="col-lg-10 fs-7">Pafar is an innovative, technology-driven company committed to reshaping the way people commute across cities in Africa. With our cutting-edge platform, we offer a seamless and efficient travel experience that empowers commuters, making transportation simpler, safer, and more reliable.</p>
             </div>
             <div className="col-md-10 mx-auto rounded-3 col-lg-5" style={{backgroundColor: 'rgba(141, 140, 140, 0.5)', borderColor:'rgba(141, 140, 140)'}}>
-              <form class="p-4 p-md-5 bg-transparent">
-                <FormInput type="email" label="Email address" placeholder="name@example.com" className={' mb-3'}/>
-                <div class="form-floating mb-3">
-                  <input type="password" class="form-control" id="floatingPassword" placeholder="Password" />
-                  <label for="floatingPassword">Password</label>
-                </div>
-                <FormCheckBox value="remember-me" label={'Remember me'} className={' mb-3'}/>
-                <button class="w-100 btn btn-lg btn-primary" type="submit">Sign up</button>
-                <hr class="my-4"/>
-                <small class="text-muted">By clicking Sign up, you agree to the terms of use.</small>
-              </form>
+              {isLoggedIn?
+              <Tabs
+                  items={tabs}
+                  value={selectedIndex}
+                  onChangeIndex={handleIndexChange}
+                  onChangeItem={handleItemChange}
+              />
+              :
+              <Login />
+              }
+              
+              
             </div>
           </div>
         </div>
@@ -82,18 +104,24 @@ function App() {
         <div className='p-2'>
           <div className="container px-5 py-2" style={{backgroundColor: 'rgba(141, 140, 140, 0.5)', borderColor:'rgba(141, 140, 140)', borderRadius: '8px' }}>
             <div className='row align-items-center my-2'>
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
-                Column 1
+              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ borderRight: '1px solid #fff',...(!isDesktop && { borderBottom: '1px solid #fff' }) }}>
+                <span className='d-flex justify-content-start align-items-center'>
+                    <h3>1</h3> <span className='ms-2'>Trans Modes</span>
+                </span>
               </div>
 
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
-                Column 2
+              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ ...(!isMobile && { borderRight: '1px solid #fff' }),...(!isDesktop && { borderBottom: '1px solid #fff' })  }}>
+                <span className='d-flex justify-content-start align-items-center'>
+                    <h3>54k</h3> <span className='ms-2'>ADPs</span>
+                </span>
               </div>
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-white" style={{ borderRight: '1px solid #fff' }}>
-                Column 3
+              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ ...(!isTablet && { borderRight: '1px solid #fff' }),...(isTablet && { borderBottom: '1px solid #fff' })  }}>
+                <span className='d-flex justify-content-start align-items-center'>
+                  <h3 >54</h3> <span className='ms-2'>Branches</span>
+                </span>
               </div>
 
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start">
+              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start p-1" style={{ ...(isTablet && { borderRight: '1px solid #fff' }) }}>
                 <Button className="w-100" size='lg' variant='primary' type="submit" >Sign up</Button>
               </div>
             </div>
@@ -162,21 +190,10 @@ function App() {
                         <div>
                           <h3 className='text-center pb-3 pt-4'>What Our Clients say</h3>
                         </div>
-                        <div>
-                          <IconButton variant='primary' outline rotate={-90}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
-                          </IconButton>
+                        <span>
                           
-                          <IconButton  className='ms-1' variant='primary' outline rotate={90}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
-                          </IconButton>
-                        </div>
+                        </span>
+                        
                       </div>
                       
           <div className='row align-items-center'>
@@ -235,21 +252,7 @@ function App() {
                         <span>
                           
                         </span>
-                        <div>
-                          <IconButton variant='primary' outline rotate={-90}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
-                          </IconButton>
-                          
-                          <IconButton  className='ms-1' variant='primary' outline rotate={90}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width={21} height={21} viewBox="0 0 21 21">
-                                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m14.5 7.5l-4-4l-4.029 4m4.029-4v13" strokeWidth={1}>
-                                  </path>
-                                </svg>
-                          </IconButton>
-                        </div>
+                        <Pagination items={[1,2,3,4,5,6,7]} showranges/>
                       </div>
           </div>
           <div class="container px-4 py-5">

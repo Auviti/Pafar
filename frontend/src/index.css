@@ -37,7 +37,7 @@
 
   --bg-light: #f8f9fa !important;
   --bg-dark: #212529 !important;
-
+  --bg-muted: #6c757d !important;
   /* Border colors */
   --border-primary: var(--primary) !important;
   --border-success: var(--success) !important;

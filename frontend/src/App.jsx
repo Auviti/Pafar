@@ -62,6 +62,7 @@ function App({}) {
       Companyname={'Pafar'} 
       isLoggedIn={isLoggedIn}
       user={user}
+      currentUrl={currentUrl}
       header={<Top navlinks={navlinks} isLoggedIn={isLoggedIn} user={user} isMobile={isMobile} currentUrl={currentUrl} onActiveLink={handleActiveLink}/>}
       footer={<Footer isLoggedIn={isLoggedIn} user={user}/>}
       notfound={<NotFound onActiveLink={handleActiveLink} navlinks={navlinks}/>}

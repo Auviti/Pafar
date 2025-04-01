@@ -8,7 +8,7 @@ const Avatar = ({ src = null, alt = '',className, shape = 'square', size=32, onC
   return (
     <img 
       src={src || randomImageUrl } 
-      className={`mx-auto d-block ${shapeClass} ${className?className:''}`} 
+      className={`mx-auto d-block ${shapeClass} ${className?className:''} img-fluid`} 
       alt={alt}
       style={{ width: `${size}px`, height: `${size}px`, cursor:'pointer', borderRadius:shape==='circle'?'50%':'8px' }} // Adjust to desired size
       onClick={onClick} // Optionally handle click events

@@ -2,6 +2,7 @@ import React from 'react';
 import Input from "../Input/Input";
 import CheckBox from '../Input/CheckBox';
 import RadioButton from '../Input/RadioBox';
+import Select from '../Input/Select';
 
 const FormInput = ({ id,forId,label,value, placeholder, className, type, style, onClick, ...props }) => {
     return (
@@ -55,4 +56,12 @@ const FormRadioButton = ({ label, value,name, className, style,checked, onClick,
     );
 };
 
-export {FormInput,FormCheckBox, FormRadioButton};
+const FormSelect = ({ id,label,items, currentIndex=0,className, onChange, ...props }) => {
+    return (
+        <div className="form-floating">
+            <Select id={id} label={label} items={items} currentIndex={currentIndex} className={`form-select ${className?className:''}`} onChange={onChange} {...props} />
+        </div>
+    );
+};
+
+export {FormInput,FormCheckBox, FormRadioButton,FormSelect};

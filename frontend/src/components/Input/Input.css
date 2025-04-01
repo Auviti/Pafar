@@ -90,3 +90,18 @@ input[type="radio"]:checked::before {
     background-color: var(--primary) !important; /* Inner circle when checked (keeps it white) */
 }
 
+
+.form-select {
+    height: 38px !important;
+    font-size: medium !important;
+    outline: 0 !important;
+    cursor: pointer;
+    background-color: var(--bg-light) !important;
+}
+.form-select:focus,
+.form-select:hover {
+    border-color: var(--primary) !important;
+    background-color: white !important;
+    outline: none !important; /* Removes the outline when input is focused */
+    box-shadow: none !important; /* Removes the box-shadow if any is applied */
+  }

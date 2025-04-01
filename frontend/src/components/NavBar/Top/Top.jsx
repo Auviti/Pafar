@@ -13,6 +13,7 @@ const Top = ({ isMobile, navlinks = [],isLoggedIn, user,currentUrl, onActiveLink
 
     // Step 2: Handle click to change active link
     const handleLinkClick = (index,link) => {
+        console.log(index,link)
         setActiveIndex(index); // Set the clicked link as active
         if (onActiveLink){
             onActiveLink({'activeIndex':activeIndex,'link':link})

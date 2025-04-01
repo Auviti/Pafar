@@ -3,13 +3,13 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import NonAuthRoutes from './nonAuthRoutes';  // Import non-authenticated routes
 import AuthRoutes from './authRoutes';  // Import authenticated routes
 
-const Router = ({ API_URL,basename, Companyname,header, footer, bottomheader,notfound }) => {
+const Router = ({ API_URL,basename, Companyname,isLoggedIn,user,header, footer, bottomheader,notfound,currentUrl }) => {
   
   // Generate non-authenticated routes using the API_URL prop
-  const nonauthroutes = NonAuthRoutes({ API_URL, Companyname,header, footer, bottomheader });
+  const nonauthroutes = NonAuthRoutes({ API_URL, Companyname,isLoggedIn,user,header, footer, bottomheader,currentUrl });
 
   // Generate authenticated routes using the API_URL prop
-  const authroutes = AuthRoutes({ API_URL, Companyname,header, footer, bottomheader });
+  const authroutes = AuthRoutes({ API_URL, Companyname,isLoggedIn,user,header, footer, bottomheader,currentUrl });
 
   return (
     <HashRouter basename={basename}>

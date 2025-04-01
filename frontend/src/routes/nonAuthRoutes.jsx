@@ -1,7 +1,8 @@
 import React from 'react';
 import Home from '../pages/Home/Home';
 import Places from '../pages/Places/Places';
-import Profile from '../pages/Profile/Profile';
+import Profile from '../pages/Account/Profile';
+import Account from '../pages/Account/Account';
 // import About from '../pages/About';
 // import Signup from '../pages/Auth/SignUp';
 // import SignUpForSuppliers from '../pages/Auth/SignUpForSuppliers'
@@ -24,35 +25,35 @@ import Profile from '../pages/Profile/Profile';
 // import Test from '../pages/TestingPage';
 
 
-const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,header, footer, bottomheader }) => [
+const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,user,header, footer, bottomheader,currentUrl }) => [
   {
     path: "/",
-    element: <Home API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Home API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "home"
   },
   {
     path: "/places",
-    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "places"
   },
   {
     path: "/accounts/:id/profile",
-    element: <Profile API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Account API_URL={API_URL} Companyname={Companyname} index={0} isLoggedIn={isLoggedIn} currentUrl={currentUrl} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "profile"
   },
   {
     path: "/accounts/:id/billing",
-    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Account API_URL={API_URL} Companyname={Companyname} index={1} isLoggedIn={isLoggedIn} currentUrl={currentUrl} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "billing"
   },
   {
     path: "/accounts/:id/security",
-    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Account API_URL={API_URL} Companyname={Companyname} index={2} isLoggedIn={isLoggedIn} currentUrl={currentUrl} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "security"
   },
   {
     path: "/accounts/:id/notifications",
-    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    element: <Account API_URL={API_URL} Companyname={Companyname} index={3} isLoggedIn={isLoggedIn} currentUrl={currentUrl} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "notifications"
   },
   // {

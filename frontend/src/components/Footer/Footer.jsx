@@ -2,7 +2,7 @@ import React from 'react';
 import { FormInput } from '../Form/FormInput';
 import Button from '../Button/Button';
 import IconButton from '../Button/Icon';
-const Footer = () =>{
+const Footer = ({isLoggedIn, user}) =>{
     const startdate = '2024';
     // Get the current date
     const currentDate = new Date();

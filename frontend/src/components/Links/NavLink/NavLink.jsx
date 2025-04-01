@@ -2,12 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types'; // Add PropTypes for type checking
 import './NavLink.css';
 import Badge from '../../Badge/Badge';
+import { Link } from 'react-router-dom';
 
-const NavLink = ({ children,isMobile, className = '', active = false, onClick,badgeContent, ...props }) => {
+const NavLink = ({ to,children,isMobile, className = '', active = false, onClick,badgeContent, ...props }) => {
     const linkClass = active ? 'navlink navlink-active' : 'navlink'; // Add 'active' class if active is true
 
     return (
-        <span 
+        <Link 
+            to={to}
             className={`${linkClass} ${className}  d-flex align-items-center`} // Combine 'active' with any additional className passed
             onClick={onClick} // Optionally handle click events
             {...props}
@@ -17,7 +19,7 @@ const NavLink = ({ children,isMobile, className = '', active = false, onClick,ba
             {badgeContent && (
                 <Badge isDot={isMobile} >{badgeContent}</Badge>
             )}
-        </span>
+        </Link>
     );
 };
 

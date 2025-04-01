@@ -3,14 +3,17 @@ import Input from "../Input/Input";
 import CheckBox from '../Input/CheckBox';
 import RadioButton from '../Input/RadioBox';
 
-const FormInput = ({ label, placeholder, className, type, style, onClick, ...props }) => {
+const FormInput = ({ id,forId,label,value, placeholder, className, type, style, onClick, ...props }) => {
     return (
         <div className="form-floating">
             <Input
+                id={id}
+                forId={forId}
                 type={type}
                 label={label}
+                value={value}
                 placeholder={placeholder}
-                className={`form-control ${className}`} // Apply form-control class from Bootstrap
+                className={`form-control ${className?className:''}`} // Apply form-control class from Bootstrap
                 style={style}
                 onClick={onClick}
                 {...props} // Spread additional props to the Input component

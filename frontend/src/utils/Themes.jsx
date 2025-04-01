@@ -14,7 +14,7 @@ export const themes = {
     '--info-light': '#f1faee',
     '--warning': 'rgb(128, 77, 39)', // String format for CSS rgb
     '--warning-light': 'rgb(249, 229, 222)', // String format for CSS rgb
-
+    '--muted': 'rgb(228, 228, 228)',
     '--font-family': 'system-ui, Avenir, Helvetica, Roboto, sans-serif', // Light theme font
   },
   dark: {

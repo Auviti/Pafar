@@ -39,9 +39,7 @@
     min-width: 16rem; /* Corrected to remove the quotes around '16rem' */
     
     font-size: medium;
-    font-style: italic;
     color: white; /* Optional: for visibility depending on the background */
-    font-weight: bold; /* Corrected to use the proper syntax for 'font-weight' */
     padding: 8px; /* Optional padding around the text */
     border-radius: 8px; /* Optional: rounded corners */
     text-overflow: ellipsis;
@@ -50,7 +48,6 @@
     z-index: 2; /* Corrected to use ':' instead of ';' */
     min-width: 8rem; /* Corrected to remove the quotes around '16rem' */
     font-size: medium;
-    font-style: italic;
     padding: 8px; /* Optional padding around the text */
     border-radius: 8px; /* Optional: rounded corners */
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import './Button.css';
+import Spinner from '../Spinner/Spinner';
 
 const Button = ({ 
   type = 'button', 
@@ -11,7 +12,8 @@ const Button = ({
   variant = 'primary', 
   outline, 
   onClick, 
-  style={},
+  style = {},
+  loading = false,
   ...props 
 }) => {
   return (
@@ -20,9 +22,13 @@ const Button = ({
       className={`btn ${outline ? `btn-outline-${variant}` : `btn-${variant}`} btn-${size} ${className}`} 
       style={style}
       onClick={onClick} 
+      disabled={loading} // Disable the button when loading
       {...props}
     >
-      {children || text}
+        <span className='d-flex justify-content-space-between align-items-center'>
+          {loading && <Spinner outline={outline} size={'sm'} /> } 
+          <span>{children || text}</span>
+        </span>
     </button>
   );
 };
@@ -36,6 +42,7 @@ Button.propTypes = {
   variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'warning', 'success']),
   outline: PropTypes.bool,
   onClick: PropTypes.func,
+  loading: PropTypes.bool, // new prop for loading state
 };
 
 export default Button;

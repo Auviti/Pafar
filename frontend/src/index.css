@@ -18,7 +18,7 @@
   --text-danger: var(--danger) !important;
   --text-info: var(--info) !important;
   --text-warning: var(--warning) !important;
-  --text-muted: #6c757d !important;
+  --text-muted: var(--muted) !important;
   --text-light: #f8f9fa !important;
   --text-dark: #212529 !important;
 
@@ -37,14 +37,14 @@
 
   --bg-light: #f8f9fa !important;
   --bg-dark: #212529 !important;
-  --bg-muted: #6c757d !important;
+  --bg-muted: var(--muted) !important;
   /* Border colors */
   --border-primary: var(--primary) !important;
   --border-success: var(--success) !important;
   --border-danger: var(--danger) !important;
   --border-info: var(--info) !important;
   --border-warning: var(--warning) !important;
-  --border-muted: #6c757d !important;
+  --border-muted: var(--muted) !important;
   --border-light: #f8f9fa !important;
   --border-dark: #212529 !important;
 }

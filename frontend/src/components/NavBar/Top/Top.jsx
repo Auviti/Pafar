@@ -4,8 +4,10 @@ import NavLink from '../../Links/NavLink/NavLink';
 import { Icon } from "@iconify/react";
 import Avatar from '../../Avatar/Avatar';
 import Badge from '../../Badge/Badge';
+import Button from '../../Button/Button';
+import DropDown from '../../DropDown/DropDown';
 
-const Top = ({ isMobile, navlinks = [], onActiveLink }) => {
+const Top = ({ isMobile, navlinks = [],isLoggedIn, user,currentUrl, onActiveLink }) => {
     // Step 1: Track the active link index
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -16,7 +18,13 @@ const Top = ({ isMobile, navlinks = [], onActiveLink }) => {
             onActiveLink({'activeIndex':activeIndex,'link':link})
         }
     };
-
+    const menuitems = [
+        {name: 'Profile', link: '/profile'},
+        {name: 'Billing', link: '/billing'},
+        {name: 'Security', link: '/security'},
+        {name: 'Notifications', link: '/notifications'}
+      ];
+      
     return (
         <nav className="navbar fixed-top navbar-expand-lg bg-body-tertiary border-bottom">
             <div className="container-fluid d-flex justify-content-between">
@@ -36,10 +44,11 @@ const Top = ({ isMobile, navlinks = [], onActiveLink }) => {
                         {/* Render navlinks */}
                         {navlinks.map((link, index) => (
                             <NavLink
-                                key={index}
-                                active={activeIndex === index} // Check if this link is active
-                                onClick={() => handleLinkClick(index,link)} // Set active link on click
-                                badgeContent={link.badgeContent}
+                                key = {index}
+                                to = {link.link}
+                                active = {link.link === currentUrl} // Check if this link is active
+                                onClick = {() => handleLinkClick(index,link)} // Set active link on click
+                                badgeContent = {link.badgeContent}
                             >
                                 {link.name}
                             </NavLink>
@@ -52,13 +61,26 @@ const Top = ({ isMobile, navlinks = [], onActiveLink }) => {
                         <span className='d-flex align-items-center'>
                             <Icon icon="mynaui:search" width="24" height="24" />
                         </span>
-                        <span className='d-flex align-items-center'>
-                            <Icon icon="lets-icons:bell-light" width="24" height="24" style={{strokeWidth:1.5}}  />
-                            <Badge isDot={true} background="primary" /> 
-                        </span>
+                        {isLoggedIn?
+                        <>
+                            <span className='d-flex align-items-center'>
+                                <Icon icon="lets-icons:bell-light" width="24" height="24" style={{strokeWidth:1.5}}  />
+                                <Badge isDot={true} background="primary" /> 
+                            </span>
 
+                            
+                            
+                             <DropDown
+                                clickItem={<Avatar  shape='circle'/>}
+                                menuitems={menuitems}
+                                separator={[3]} // Dividers after 2nd and 4th items
+                                userDetails={user}
+                                onItemClick={(item) => handleLinkClick(1,item)}
+                            />
+                        </>:
+                        <Button>Sign In</Button>
+                        }
                         
-                        <Avatar  shape='circle'/>
                     </div>
             </div>
         </nav>

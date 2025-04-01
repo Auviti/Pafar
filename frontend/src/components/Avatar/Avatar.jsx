@@ -1,16 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Avatar = ({ src = null, alt = '', shape = 'square', size=32, onClick, ...props  }) => {
+const Avatar = ({ src = null, alt = '',className, shape = 'square', size=32, onClick, ...props  }) => {
   // Use Bootstrap's rounded-circle class to make it round or square
   const shapeClass = shape === 'circle' ? 'rounded-circle' : 'rounded';
   const randomImageUrl = `https://picsum.photos/${size}`;
   return (
     <img 
       src={src || randomImageUrl } 
-      className={`mx-auto d-block ${shapeClass}`} 
+      className={`mx-auto d-block ${shapeClass} ${className?className:''}`} 
       alt={alt}
-      style={{ width: `${size}px`, height: `${size}px`, cursor:'pointer' }} // Adjust to desired size
+      style={{ width: `${size}px`, height: `${size}px`, cursor:'pointer', borderRadius:shape==='circle'?'50%':'8px' }} // Adjust to desired size
       onClick={onClick} // Optionally handle click events
         {...props}
     />

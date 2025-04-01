@@ -1,16 +1,15 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import NotFound from '../pages/NotFound/NotFound';  // Import the NotFound page component
-import NonAuthRoutes from './nonauthroutes';  // Import non-authenticated routes
-import AuthRoutes from './authroutes';  // Import authenticated routes
+import NonAuthRoutes from './nonAuthRoutes';  // Import non-authenticated routes
+import AuthRoutes from './authRoutes';  // Import authenticated routes
 
-const Router = ({ API_URL,basename, Companyname }) => {
+const Router = ({ API_URL,basename, Companyname,header, footer, bottomheader,notfound }) => {
   
   // Generate non-authenticated routes using the API_URL prop
-  const nonauthroutes = NonAuthRoutes({ API_URL, Companyname });
+  const nonauthroutes = NonAuthRoutes({ API_URL, Companyname,header, footer, bottomheader });
 
   // Generate authenticated routes using the API_URL prop
-  const authroutes = AuthRoutes({ API_URL, Companyname });
+  const authroutes = AuthRoutes({ API_URL, Companyname,header, footer, bottomheader });
 
   return (
     <HashRouter basename={basename}>
@@ -35,7 +34,7 @@ const Router = ({ API_URL,basename, Companyname }) => {
           ))}
 
         {/* Catch-all route for 404 Not Found */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={notfound} />
       </Routes>
     </HashRouter>
   );

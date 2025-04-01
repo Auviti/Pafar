@@ -1,5 +1,7 @@
 import React from 'react';
-import Home from '../pages/Home';
+import Home from '../pages/Home/Home';
+import Places from '../pages/Places/Places';
+import Profile from '../pages/Profile/Profile';
 // import About from '../pages/About';
 // import Signup from '../pages/Auth/SignUp';
 // import SignUpForSuppliers from '../pages/Auth/SignUpForSuppliers'
@@ -22,11 +24,36 @@ import Home from '../pages/Home';
 // import Test from '../pages/TestingPage';
 
 
-const NonAuthRoutes = ({ API_URL,Companyname }) => [
+const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,header, footer, bottomheader }) => [
   {
     path: "/",
-    element: <Home API_URL={API_URL} Companyname={Companyname} />,
+    element: <Home API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "home"
+  },
+  {
+    path: "/places",
+    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "places"
+  },
+  {
+    path: "/accounts/:id/profile",
+    element: <Profile API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "profile"
+  },
+  {
+    path: "/accounts/:id/billing",
+    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "billing"
+  },
+  {
+    path: "/accounts/:id/security",
+    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "security"
+  },
+  {
+    path: "/accounts/:id/notifications",
+    element: <Places API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "notifications"
   },
   // {
   //   path: "/about",

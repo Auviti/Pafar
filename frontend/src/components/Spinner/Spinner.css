@@ -1,0 +1,27 @@
+
+/* Style for the loading spinner for solid buttons */
+.spinner-border {
+    margin-right: 8px; /* Space between the spinner and text */
+    width: 1.2em;
+    height: 1.2em;
+    border-width: 2px; /* Adjust spinner size */
+    border-radius: 50%;
+    animation: spin 1s linear infinite; /* Rotation animation */
+    border-color: white white white transparent; /* Solid button spinner (white) */
+    vertical-align: middle; /* Align the spinner vertically with text */
+  }
+  
+  /* Style for the loading spinner for outline buttons */
+  .spinner-outline-border {
+    border-color: var(--primary) var(--primary) var(--primary) transparent; /* Outline button spinner (blue) */
+  }
+  
+  /* Keyframe animation to rotate the spinner */
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg); /* Start at 0 degrees */
+    }
+    100% {
+      transform: rotate(360deg); /* End at 360 degrees */
+    }
+  }

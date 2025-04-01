@@ -1,11 +1,19 @@
 .form-control{
     padding: 4px 18px !important;
     border-color: white !important;
+    background-color: var(--bg-light) !important;
     font-size: medium !important;
     outline: 0 !important;
 }
+
+.form-floating>label {
+    top: -2px !important;
+    font-size: smaller;
+    
+}
 input:focus, .form-control:focus {
     padding-top: 18px !important;
+    background-color: white !important;
     border-color: var(--primary) !important;
     outline: none !important; /* Removes the outline when input is focused */
     box-shadow: none !important; /* Removes the box-shadow if any is applied */

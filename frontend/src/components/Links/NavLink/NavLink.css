@@ -5,6 +5,7 @@
     cursor: pointer;
     font-size: medium;
     align-self: center;
+    text-decoration: none !important;
 }
 .navlink:hover,
 .navlink:active,

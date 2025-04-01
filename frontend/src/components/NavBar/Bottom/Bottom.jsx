@@ -4,7 +4,7 @@ import NavLink from '../../Links/NavLink/NavLink';
 import { Icon } from "@iconify/react";
 import Avatar from '../../Avatar/Avatar';
 
-const Bottom = ({ isMobile, navlinks = [], onActiveLink }) => {
+const Bottom = ({ isMobile, navlinks = [],isLoggedIn, user,currentUrl, onActiveLink }) => {
     // Step 1: Track the active link index
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -26,7 +26,8 @@ const Bottom = ({ isMobile, navlinks = [], onActiveLink }) => {
                         {navlinks.map((link, index) => (
                             <NavLink
                                 key={index}
-                                active={activeIndex === index} // Check if this link is active
+                                to = {link.link}
+                                active={link.link === currentUrl} // Check if this link is active
                                 onClick={() => handleLinkClick(index,link)} // Set active link on click
                                 badgeContent={link?.badgeContent}
                                 isMobile={isMobile}

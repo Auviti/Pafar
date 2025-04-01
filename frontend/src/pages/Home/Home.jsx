@@ -1,31 +1,29 @@
 import React, { useState, useEffect, useMemo  } from 'react';
-import Router from './routes/router';  // Import the Router component that handles the app's routing
-import reactLogo from './assets/react.svg'
-import travelBg from './assets/pafar-bg.jpeg'
-import NewsLetterBg from './assets/newsletter-bg.jpg'
-import AbujaBg from './assets/abuja-img.jpg'
-import LagosBg from './assets/lagos-img.avif'
+import reactLogo from '../../assets/react.svg'
+import travelBg from '../../assets/pafar-bg.jpeg'
+import NewsLetterBg from '../../assets/newsletter-bg.jpg'
+import AbujaBg from '../../assets/abuja-img.jpg'
+import LagosBg from '../../assets/lagos-img.avif'
 import viteLogo from '/vite.svg'
 import { Icon } from '@iconify/react';
-import './App.css'
 
-import { WebSocketService } from './utils/webSockets';  // Import the WebSocketService
-import ThemeProvider from './utils/ThemeProvider'; // Import the ThemeProvider component
-import Top from './components/NavBar/Top/Top';
-import Bottom from './components/NavBar/Bottom/Bottom';
-import Avatar from './components/Avatar/Avatar';
-import Button from './components/Button/Button';
-import useDeviceType from './hooks/useDeviceType';
-import {FormCheckBox, FormInput, FormRadioButton, } from './components/Form/FormInput';
-import IconButton from './components/Button/Icon';
-import Badge from './components/Badge/Badge';
-import Input from './components/Input/Input';
-import Footer from './components/Footer/Footer';
-import Pagination from './components/Pagination/Pagination';
-import Login from './components/Auth/Login';
-import Tabs from './components/Tabs/Tabs';
+import { WebSocketService } from '../../utils/webSockets';  // Import the WebSocketService
+import ThemeProvider from '../../utils/ThemeProvider'; // Import the ThemeProvider component
+import Top from '../../components/NavBar/Top/Top';
+import Bottom from '../../components/NavBar/Bottom/Bottom';
+import Avatar from '../../components/Avatar/Avatar';
+import Button from '../../components/Button/Button';
+import useDeviceType from '../../hooks/useDeviceType';
+import {FormCheckBox, FormInput, FormRadioButton, } from '../../components/Form/FormInput';
+import IconButton from '../../components/Button/Icon';
+import Badge from '../../components/Badge/Badge';
+import Input from '../../components/Input/Input';
+import Footer from '../../components/Footer/Footer';
+import Pagination from '../../components/Pagination/Pagination';
+import Login from '../../components/Auth/Login';
+import Tabs from '../../components/Tabs/Tabs';
 
-function Home({}) {
+function Home({header, footer, bottomheader}) {
   const [count, setCount] = useState(0)
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -52,13 +50,6 @@ function Home({}) {
   };
   
   
-  const navlinks = [
-    { name: 'Home', icon:<Icon icon='mdi:home' width={24} height={24} />, active: true, onClick: () => alert('Home clicked')},
-    { name: 'Places', icon:<Icon icon='mdi:map-marker-outline' width={24} height={24} />, active: false, onClick: () => alert('About clicked'),badgeContent: 'New'  },
-    { name: 'Faqs', icon:<Icon icon="mdi:frequently-asked-questions" width={24} height={24} />, active: false, onClick: () => alert('faqs clicked') },
-    { name: 'About', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
-    { name: 'Contact Us', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
-  ];
   const [selectedIndex, setSelectedIndex] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
 
@@ -88,10 +79,27 @@ function Home({}) {
     { name: "Ngorongoro Crater", location: "Cross River", city: "Calabar", rating: "4.6", imageUrl: travelBg },
     { name: "Yankari National Park", location: "Bauchi", city: "Bauchi", rating: "4.7", imageUrl: travelBg },
   ];
-  // <Router API_URL={config.apiUrl} basename={"/web-frontend"}  Companyname={'Oahse'} />
+  const items = [1,2,3,4,5,6,7]
+  // State for pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(4);  // Number of items per page (this can be adjusted)
+    
+  
+    // Get the current cards to display based on the page number and items per page
+    const currentItems = items.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  
+    // Handle page selection from pagination
+    const handlePageSelect = (pageNumber) => {
+      setCurrentPage(pageNumber);
+    };
+  
+  
   return (
     <ThemeProvider>
-      <Top navlinks={navlinks} isMobile={isMobile}/>
+      {header}
       <div className="container-fluid" style={{height:'50px'}}></div>
         <div className="container px-4 py-5" style={{ backgroundImage: `url(${travelBg})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '8px' }}>
           <div className="row align-items-center g-lg-3 py-4">
@@ -205,7 +213,7 @@ function Home({}) {
                       
           <div className='row align-items-center'>
             
-            {[1,2,3,4].map((user, index)=>(
+            {currentItems.map((user, index)=>(
               <div key={index} className="col-lg-3 col-md-4 col-12 my-2">
                 <div className="shadow-lg mx-auto" style={{ minWidth: '9rem', height: '9rem', borderRadius: '10px' }}>
                   <div
@@ -252,15 +260,14 @@ function Home({}) {
             ))}
 
           </div>
-          <div className='d-flex justify-content-between align-items-center'>
-                        <span>
-                          
-                        </span>
-                        <span>
-                          
-                        </span>
-                        <Pagination items={[1,2,3,4,5,6,7]} showranges/>
-                      </div>
+          <Pagination 
+            items={items} 
+            showranges 
+            currentPage={currentPage} 
+            onSelect={handlePageSelect}
+            onPrev={handlePageSelect}
+            onNext={handlePageSelect}
+            itemsPerPage={itemsPerPage}/>
           </div>
           <div class="container px-4 py-5">
             <h2 class="pb-2 border-bottom">Make a Booking</h2>
@@ -334,8 +341,8 @@ function Home({}) {
             </div>
           </div>
           
-      <Footer/>
-      <Bottom navlinks={navlinks} isMobile={isMobile}/>
+      {footer}
+      {bottomheader}
     </ThemeProvider>
     
   );

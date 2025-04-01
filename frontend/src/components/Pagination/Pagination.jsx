@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 import './Pagination.css';
 
-
-const Pagination = ({ items = [], onSelect, onPrev, onNext }) => {
+const Pagination = ({ items = [], onSelect, onPrev, onNext, position = 'right', itemsPerPage = 12 }) => {
     const [currentPage, setCurrentPage] = useState(1); // Track the current page number
-    const [totalPages, setTotalPages] = useState(items.length); // Total pages are the length of items (1 item per page)
+    // Calculate total pages based on the cards length and items per page
+    const totalPages = Math.ceil(items.length / itemsPerPage);
     
     // Function to handle page selection
     const handlePageSelect = (pageNumber) => {
@@ -36,14 +37,14 @@ const Pagination = ({ items = [], onSelect, onPrev, onNext }) => {
 
     // Slice page numbers to display based on current page
     const displayPages = pageNumbers.slice(
-        Math.max(0, currentPage - 3), 
-        Math.min(currentPage + 2, totalPages)
+        Math.max(0, currentPage - 3), // Ensure the display is within bounds
+        Math.min(currentPage + 2, totalPages) // Ensure we don't go beyond total pages
     );
 
-    return (
+    const renderPagination = (
         <nav aria-label="pagination">
-            <div className='d-flex justify-content-between align-content-center'>
-                <ul className="pagination justify-content-end">
+            <div className={`d-flex justify-content-between align-items-center`}>
+                <ul className="pagination">
                     {/* Previous Button */}
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                         <a className="page-link" href="javascript:void(0)" onClick={handlePrevClick} aria-disabled={currentPage === 1}>
@@ -70,10 +71,32 @@ const Pagination = ({ items = [], onSelect, onPrev, onNext }) => {
                         </a>
                     </li>
                 </ul>
-                {/* {showranges && <Select items={['0-5','0-10','0-20','0-50','0-100']} onChange={handleSelectChange} />} */}
             </div>
         </nav>
     );
+
+    return (
+        <div className='d-flex justify-content-between align-items-center p-2'>
+            {position === 'left' ? renderPagination : <span></span>}
+            {position === 'center' ? renderPagination : <span></span>}
+            {position === 'right' ? renderPagination : <span></span>}
+        </div>
+    );
+};
+
+// Define prop types
+Pagination.propTypes = {
+    items: PropTypes.array.isRequired, // Expected an array of items
+    onSelect: PropTypes.func,  // Expected a function for selecting a page
+    onPrev: PropTypes.func,    // Expected a function for previous page action
+    onNext: PropTypes.func,    // Expected a function for next page action
+    position: PropTypes.oneOf(['left', 'center', 'right']),  // Expected 'left', 'center', or 'right' for position
+    itemsPerPage: PropTypes.number, // Expected a number for items per page (default 12)
+};
+
+// Default props
+Pagination.default = {
+    itemsPerPage: 12, // Default to 12 items per page
 };
 
 export default Pagination;

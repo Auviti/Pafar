@@ -76,7 +76,7 @@ const Security = ({ isLoggedIn, user }) => {
     };
 
     return (
-        <div className="container-xl px-4 mt-4">
+        <>
             <hr className="mt-0 mb-4" />
             <div className="row">
                 <div className="col-lg-8">
@@ -231,7 +231,7 @@ const Security = ({ isLoggedIn, user }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

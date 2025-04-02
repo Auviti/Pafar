@@ -145,7 +145,7 @@ const Billings = ({ isLoggedIn, user }) => {
     ];
 
     return (
-        <div className="container-fluid px-4 mt-4">
+        <>
             <div className="card-header d-flex justify-content-between">
                 Billing Details
                 <span className="ms-auto">
@@ -255,7 +255,7 @@ const Billings = ({ isLoggedIn, user }) => {
                     <Button type="submit" loading={loading}>{loading ? 'Saving ...' : 'Save changes'}</Button>
                 )}
             </form>
-        </div>
+        </>
     );
 };
 

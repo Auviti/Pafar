@@ -78,13 +78,11 @@ const Account = ({ header, footer, index, bottomheader, isLoggedIn, user }) => {
         <ThemeProvider>
             {header}
             <div className="container-fluid" style={{ height: '50px' }}></div>
-            <div className="container-xl px-4 mt-4">
-                <Tabs
+            <Tabs
                     items={tabs}
                     value={selectedIndex}
                     onChangeIndex={handleIndexChange}  // Handles tab index change
                 />
-            </div>
             {footer}
             {bottomheader}
         </ThemeProvider>

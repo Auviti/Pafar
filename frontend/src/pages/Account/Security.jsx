@@ -1,103 +1,238 @@
-
-import React, { useState, useEffect } from 'react';
-import { FormInput, FormSelect } from '../../components/Form/FormInput';
+import React, { useState } from 'react';
+import { FormInput, FormRadioButton, FormCheckBox } from '../../components/Form/FormInput';
 import Button from '../../components/Button/Button';
-import Avatar from '../../components/Avatar/Avatar';
 
-const Security = ({ isLoggedIn, user, }) => {
-    // Array representing the card data with actual image URLs
-    const [edit, setEdit] = useState(false);
-    
-    
+const Security = ({ isLoggedIn, user }) => {
+    const [loading, setLoading] = useState(false);
+
+    // State for the password change form
+    const [passwords, setPasswords] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+
+    // State for privacy settings
+    const [privacySetting, setPrivacySetting] = useState('public');
+
+    // State for data sharing settings
+    const [dataSharing, setDataSharing] = useState('yes');
+
+    // State for two-factor authentication
+    const [twoFactor, setTwoFactor] = useState('on');
+    const [smsNumber, setSmsNumber] = useState('555-123-4567');
+
+    // Handle input changes for form fields
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setPasswords((prevState) => ({
+            ...prevState,
+            [name]: value
+        }));
+    };
+
+    const handlePrivacyChange = (e) => setPrivacySetting(e.target.value);
+    const handleDataSharingChange = (e) => setDataSharing(e.target.value);
+    const handleTwoFactorChange = (e) => setTwoFactor(e.target.value);
+    const handleSmsNumberChange = (e) => setSmsNumber(e.target.value);
+
+    // Handle form submission for saving password
+    const handleSavePassword = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            // Call API to update password here
+            console.log('Saving password...', passwords);
+            // Simulate API call with a delay
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            alert('Password updated successfully!');
+        } catch (error) {
+            console.error('Error saving password:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle saving security preferences
+    const handleSaveSecurityPreferences = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            // Call API to save security preferences here
+            console.log('Saving security preferences...', {
+                privacySetting,
+                dataSharing,
+                twoFactor,
+                smsNumber
+            });
+            // Simulate API call with a delay
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            alert('Security preferences saved successfully!');
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div class="container-xl px-4 mt-4">
-        
-        <hr class="mt-0 mb-4"/>
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header">Change Password</div>
-                    <div class="card-body">
-                        <form>
-                            <div class="mb-3">
-                                <label class="small mb-1" for="currentPassword">Current Password</label>
-                                <input class="form-control" id="currentPassword" type="password" placeholder="Enter current password"/>
+        <div className="container-xl px-4 mt-4">
+            <hr className="mt-0 mb-4" />
+            <div className="row">
+                <div className="col-lg-8">
+                    <div className="card mb-4">
+                        <div className="card-header">Change Password</div>
+                        <div className="card-body text-body-secondary">
+                            <form onSubmit={handleSavePassword}>
+                                <div className="mb-3">
+                                    <FormInput
+                                        label="Current Password"
+                                        id="currentPassword"
+                                        name="currentPassword"
+                                        type="password"
+                                        placeholder="Enter current password"
+                                        value={passwords.currentPassword}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <FormInput
+                                        label="New Password"
+                                        id="newPassword"
+                                        name="newPassword"
+                                        type="password"
+                                        placeholder="Enter new password"
+                                        value={passwords.newPassword}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <FormInput
+                                        label="Confirm Password"
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        type="password"
+                                        placeholder="Confirm new password"
+                                        value={passwords.confirmPassword}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <Button type="submit" loading={loading}>
+                                    {loading ? 'Saving...' : 'Save Password'}
+                                </Button>
+                            </form>
+                        </div>
+                    </div>
+                    <div className="card mb-4">
+                        <div className="card-header">Security Preferences</div>
+                        <div className="card-body text-body-secondary">
+                            <h5 className="mb-1">Account Privacy</h5>
+                            <p className="small text-body-secondary">
+                                By setting your account to private, your profile information and posts will not be visible to users outside of your user groups.
+                            </p>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="Public (posts are available to all users)"
+                                    id="radioPrivacy1"
+                                    name="privacySetting"
+                                    value="public"
+                                    checked={privacySetting === 'public'}
+                                    onChange={handlePrivacyChange}
+                                />
                             </div>
-                            <div class="mb-3">
-                                <label class="small mb-1" for="newPassword">New Password</label>
-                                <input class="form-control" id="newPassword" type="password" placeholder="Enter new password"/>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="Private (posts are available to only users in your groups)"
+                                    id="radioPrivacy2"
+                                    name="privacySetting"
+                                    value="private"
+                                    checked={privacySetting === 'private'}
+                                    onChange={handlePrivacyChange}
+                                />
                             </div>
-                            <div class="mb-3">
-                                <label class="small mb-1" for="confirmPassword">Confirm Password</label>
-                                <input class="form-control" id="confirmPassword" type="password" placeholder="Confirm new password"/>
+
+                            <hr className="my-4" />
+                            <h5 className="mb-1">Data Sharing</h5>
+                            <p className="small text-body-secondary">
+                                Sharing usage data can help us to improve our products and better serve our users as they navigate through our application.
+                            </p>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="Yes, share data and crash reports with app developers"
+                                    id="radioUsage1"
+                                    name="dataSharing"
+                                    value="yes"
+                                    checked={dataSharing === 'yes'}
+                                    onChange={handleDataSharingChange}
+                                />
                             </div>
-                            <button class="btn btn-primary" type="button">Save</button>
-                        </form>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="No, limit my data sharing with app developers"
+                                    id="radioUsage2"
+                                    name="dataSharing"
+                                    value="no"
+                                    checked={dataSharing === 'no'}
+                                    onChange={handleDataSharingChange}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card mb-4">
-                    <div class="card-header">Security Preferences</div>
-                    <div class="card-body">
-                        <h5 class="mb-1">Account Privacy</h5>
-                        <p class="small text-muted">By setting your account to private, your profile information and posts will not be visible to users outside of your user groups.</p>
-                        <form>
-                            <div class="form-check">
-                                <input class="form-check-input" id="radioPrivacy1" type="radio" name="radioPrivacy" checked=""/>
-                                <label class="form-check-label" for="radioPrivacy1">Public (posts are available to all users)</label>
+                <div className="col-lg-4">
+                    <div className="card mb-4">
+                        <div className="card-header">Two-Factor Authentication</div>
+                        <div className="card-body text-body-secondary">
+                            <p>
+                                Add another level of security to your account by enabling two-factor authentication. We will send you a text message to verify your login attempts on unrecognized devices and browsers.
+                            </p>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="On"
+                                    id="twoFactorOn"
+                                    name="twoFactor"
+                                    value="on"
+                                    checked={twoFactor === 'on'}
+                                    onChange={handleTwoFactorChange}
+                                />
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" id="radioPrivacy2" type="radio" name="radioPrivacy"/>
-                                <label class="form-check-label" for="radioPrivacy2">Private (posts are available to only users in your groups)</label>
+                            <div className="form-check">
+                                <FormRadioButton
+                                    label="Off"
+                                    id="twoFactorOff"
+                                    name="twoFactor"
+                                    value="off"
+                                    checked={twoFactor === 'off'}
+                                    onChange={handleTwoFactorChange}
+                                />
                             </div>
-                        </form>
-                        <hr class="my-4"/>
-                        <h5 class="mb-1">Data Sharing</h5>
-                        <p class="small text-muted">Sharing usage data can help us to improve our products and better serve our users as they navigation through our application. When you agree to share usage data with us, crash reports and usage analytics will be automatically sent to our development team for investigation.</p>
-                        <form>
-                            <div class="form-check">
-                                <input class="form-check-input" id="radioUsage1" type="radio" name="radioUsage" checked=""/>
-                                <label class="form-check-label" for="radioUsage1">Yes, share data and crash reports with app developers</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" id="radioUsage2" type="radio" name="radioUsage"/>
-                                <label class="form-check-label" for="radioUsage2">No, limit my data sharing with app developers</label>
-                            </div>
-                        </form>
+                            {twoFactor === 'on' && (
+                                <div className="mt-3">
+                                    <FormInput
+                                        label="SMS Number"
+                                        id="twoFactorSMS"
+                                        type="tel"
+                                        placeholder="Enter a phone number"
+                                        value={smsNumber}
+                                        onChange={handleSmsNumberChange}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card mb-4">
-                    <div class="card-header">Two-Factor Authentication</div>
-                    <div class="card-body">
-                        <p>Add another level of security to your account by enabling two-factor authentication. We will send you a text message to verify your login attempts on unrecognized devices and browsers.</p>
-                        <form>
-                            <div class="form-check">
-                                <input class="form-check-input" id="twoFactorOn" type="radio" name="twoFactor" checked=""/>
-                                <label class="form-check-label" for="twoFactorOn">On</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" id="twoFactorOff" type="radio" name="twoFactor"/>
-                                <label class="form-check-label" for="twoFactorOff">Off</label>
-                            </div>
-                            <div class="mt-3">
-                                <label class="small mb-1" for="twoFactorSMS">SMS Number</label>
-                                <input class="form-control" id="twoFactorSMS" type="tel" placeholder="Enter a phone number" value="555-123-4567" />
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="card mb-4">
-                    <div class="card-header">Delete Account</div>
-                    <div class="card-body">
-                        <p>Deleting your account is a permanent action and cannot be undone. If you are sure you want to delete your account, select the button below.</p>
-                        <button class="btn btn-danger-soft text-danger" type="button">I understand, delete my account</button>
+                    <div className="card mb-4">
+                        <div className="card-header">Delete Account</div>
+                        <div className="card-body text-body-secondary">
+                            <p>Deleting your account is a permanent action and cannot be undone. If you are sure you want to delete your account, select the button below.</p>
+                            <Button variant="danger">
+                                I understand, delete my account
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-        );
+    );
 };
 
 export default Security;

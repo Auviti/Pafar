@@ -2,67 +2,211 @@ import React, { useState, useEffect } from 'react';
 import { FormInput, FormSelect } from '../../components/Form/FormInput';
 import Button from '../../components/Button/Button';
 import Avatar from '../../components/Avatar/Avatar';
-
-const Profile = ({ isLoggedIn, user, }) => {
-    // Array representing the card data with actual image URLs
+import { Icon } from '@iconify/react';
+const Profile = ({ isLoggedIn, user}) => {
     const [edit, setEdit] = useState(false);
-    
-    
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        role: user?.role || '',
+        email: user?.email || '',
+        active: user?.active || false,
+        age: user?.age || '',
+        gender: user?.gender || '',
+        phone: user?.phone || '',
+        birthday: user?.birthday || '',
+        profilePic: user?.profilePic || '', // Store the profile picture URL
+    });
+
+    const [profilePic, setProfilePic] = useState(null); // State to store the selected profile picture
+
+    // Handle form data updates
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+
+    // Handle profile picture change
+    const handleProfilePicChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfilePic(URL.createObjectURL(file)); // Preview the uploaded image
+            setFormData((prevData) => ({
+                ...prevData,
+                profilePic: file, // Store the file itself for later use
+            }));
+        }
+    };
+
+    // Handle form submission
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        // Here you would handle the form submission, including uploading the new profile picture if it was changed
+        console.log('Form data submitted:', formData);
+        // If there's an API request to update the user's info, call it here
+        // setLoading(false);
+    };
+
     return (
-        <div class="row">
-            <div class="col-xl-4">
-                <div class="card mb-4 mb-xl-0">
-                    <div class="card-header">Profile Picture</div>
-                    <div class="card-body text-center">
-                        <Avatar src="http://bootdey.com/img/Content/avatar/avatar1.png" alt="" size={230} shape='circle'/>
-                        <div class="small font-italic text-dark mb-4 p-2">{edit?'JPG or PNG no larger than 5 MB':user?.id}</div>
-                        {edit && <Button type="button" >Upload new image</Button>}
+        <div className="row">
+            <div className="col-xl-4">
+                <div className="card mb-4 mb-xl-0">
+                    <div className="card-header">Profile Picture</div>
+                    <div className="card-body text-center">
+                        <Avatar
+                            src={profilePic || formData.profilePic || "http://bootdey.com/img/Content/avatar/avatar1.png"}
+                            alt="Profile"
+                            size={230}
+                            shape="circle"
+                        />
+                        <div className="small font-italic text-dark mb-4 p-2">
+                            {edit ? 'JPG or PNG no larger than 5 MB' : user?.id}
+                        </div>
+                        {edit && (
+                            <>
+                                <input
+                                    type="file"
+                                    className="form-control mb-2"
+                                    accept="image/*"
+                                    onChange={handleProfilePicChange}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
-            <div class="col-xl-8">
-                <div class="card mb-4">
-                    <div class="card-header">Account Details</div>
-                    <div class="card-body">
-                        <form>
-                            <div class="row gx-3">
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputFirstName" forId="inputFirstName" label={'First name'} type="text" placeholder="Enter your first name" value="Valerie/"/>
-                            
+
+            <div className="col-xl-8">
+                <div className="card mb-4">
+                <div className="card-header d-flex justify-content-between">
+                        Account Details 
+                        <span className="ms-auto"><Icon icon="mage:edit" width="24" height="24" onClick={()=>setEdit(!edit)}/></span>
+                </div>
+
+                    <div className="card-body">
+                        <form onSubmit={handleSubmit}>
+                            <div className="row gx-3">
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputFirstName"
+                                        name="firstName"
+                                        label={'First name'}
+                                        type="text"
+                                        placeholder="Enter your first name"
+                                        value={formData.firstName}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputLastName" forId="inputLastName" label={'Last name'} type="text" placeholder="Enter your last name" value="Luna"/>
-                                </div>
-                            </div>
-                            <div class="row gx-3">
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputRole" forId="inputRole" label={'Role'} type="text" value="dfdfdd"/>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputEmailAddress" forId="inputEmailAddress" label={'Email address'} type="email" placeholder="Enter your email address" value="name@example.com"/>
-                            
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <FormInput id="inputActive" forId="inputActive" label={'Active'} type="bool" value="Active"/>
-                            </div>
-                            <div class="row gx-3">
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputAge" forId="inputAge" label={'Age'} type="int" value="4"/>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <FormSelect id="inputGender" items={['Male', 'Female']} label={'Gender'}/>
-                                </div>
-                            </div>
-                            <div class="row gx-3">
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputPhone" forId="inputPhone" label={'Phone number'} type="tel" placeholder="Enter your phone number" value="555-123-4567"/>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <FormInput id="inputBirthday" forId="inputBirthday" label={'Birthday'} type="text" placeholder="Enter your birthday" value="06/10/1988"/>
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputLastName"
+                                        name="lastName"
+                                        label={'Last name'}
+                                        type="text"
+                                        placeholder="Enter your last name"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
                                 </div>
                             </div>
-                            <Button>Save changes</Button>
+
+                            <div className="row gx-3">
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputRole"
+                                        name="role"
+                                        label={'Role'}
+                                        type="text"
+                                        value={formData.role}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputEmailAddress"
+                                        name="email"
+                                        label={'Email address'}
+                                        type="email"
+                                        placeholder="Enter your email address"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mb-3">
+                                <FormInput
+                                    id="inputActive"
+                                    name="active"
+                                    label={'Active'}
+                                    type="text"
+                                    value={formData.active ? "Active" : "Inactive"}
+                                    onChange={handleChange}
+                                    disabled={!edit}
+                                />
+                            </div>
+
+                            <div className="row gx-3">
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputAge"
+                                        name="age"
+                                        label={'Age'}
+                                        type="number"
+                                        value={formData.age}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <FormSelect
+                                        id="inputGender"
+                                        name="gender"
+                                        items={['Male', 'Female']}
+                                        label={'Gender'}
+                                        value={formData.gender}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="row gx-3">
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputPhone"
+                                        name="phone"
+                                        label={'Phone number'}
+                                        type="tel"
+                                        placeholder="Enter your phone number"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <FormInput
+                                        id="inputBirthday"
+                                        name="birthday"
+                                        label={'Birthday'}
+                                        type="date"
+                                        value={formData.birthday}
+                                        onChange={handleChange}
+                                        disabled={!edit}
+                                    />
+                                </div>
+                            </div>
+
+                            <Button type="submit" loading={loading}>{loading?'Saving ...':'Save changes'}</Button>
                         </form>
                     </div>
                 </div>

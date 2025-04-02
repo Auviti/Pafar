@@ -56,7 +56,7 @@ const FormRadioButton = ({ label, value,name, className, style,checked, onClick,
     );
 };
 
-const FormSelect = ({ id,label,items, currentIndex=0,className, onChange, ...props }) => {
+const FormSelect = ({id,label,items,currentIndex=0,className,onChange,...props }) => {
     return (
         <div className="form-floating">
             <Select id={id} label={label} items={items} currentIndex={currentIndex} className={`form-select ${className?className:''}`} onChange={onChange} {...props} />

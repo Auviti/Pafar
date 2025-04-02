@@ -32,6 +32,7 @@ const Tabs = ({ items = [], value = 0, onChangeIndex, onChangeItem }) => {
                     </li>
                 ))}
             </ul>
+            
             <div className="p-2">
                 {currentItem?.content}
             </div>

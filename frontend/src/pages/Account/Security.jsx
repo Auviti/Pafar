@@ -127,7 +127,7 @@ const Security = ({ isLoggedIn, user }) => {
                         <div className="card-header">Security Preferences</div>
                         <div className="card-body text-body-secondary">
                             <h5 className="mb-1">Account Privacy</h5>
-                            <p className="small text-body-secondary">
+                            {/* <p className="small text-body-secondary">
                                 By setting your account to private, your profile information and posts will not be visible to users outside of your user groups.
                             </p>
                             <div className="form-check">
@@ -151,7 +151,7 @@ const Security = ({ isLoggedIn, user }) => {
                                 />
                             </div>
 
-                            <hr className="my-4" />
+                            <hr className="my-4" /> */}
                             <h5 className="mb-1">Data Sharing</h5>
                             <p className="small text-body-secondary">
                                 Sharing usage data can help us to improve our products and better serve our users as they navigate through our application.

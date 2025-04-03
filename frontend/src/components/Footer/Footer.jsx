@@ -2,6 +2,8 @@ import React from 'react';
 import { FormInput } from '../Form/FormInput';
 import Button from '../Button/Button';
 import IconButton from '../Button/Icon';
+import { Link } from 'react-router-dom';
+import NavLink from '../Links/NavLink/NavLink';
 const Footer = ({isLoggedIn, user}) =>{
     const startdate = '2024';
     // Get the current date
@@ -16,21 +18,21 @@ const Footer = ({isLoggedIn, user}) =>{
                 <div className="col-6 col-md-2 mb-3">
                     <h5>Section</h5>
                     <ul className="nav flex-column">
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">Home</a></li>
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">Features</a></li>
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">FAQs</a></li>
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">About</a></li>
+                    <li className="nav-item mb-2"><NavLink to="#" className='py-0'>Home</NavLink></li>
+                    <li className="nav-item mb-2"><NavLink to="#features" className='py-0'>Features</NavLink></li>
+                    <li className="nav-item mb-2"><NavLink to="#faqs" className='py-0'>FAQs</NavLink></li>
+                    <li className="nav-item mb-2"><NavLink to="#about" className='py-0'>About</NavLink></li>
                     </ul>
                 </div>
 
                 <div className="col-6 col-md-2 mb-3">
                     <h5>Section</h5>
                     <ul className="nav flex-column">
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">Profile</a></li>
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">Settings</a></li>
-                    {/* <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-body-secondary">Subscriptions</a></li> */}
-                    <li className="nav-item mb-2"><a href="#" className="nav-link p-0 text-body-secondary">Contact Us</a></li>
-                    <li className='nav-item mb-2'><a href='#' className="nav-link p-0 text-body-secondary">Legal Compliance</a></li>
+                    <li className="nav-item mb-2"><NavLink to='/profile' className='py-0'>Profile</NavLink></li>
+                    <li className="nav-item mb-2"><NavLink to='/places' className='py-0'>Make a Booking</NavLink></li>
+                    <li className="nav-item mb-2"><NavLink to="#testimonials" className='py-0'>Testimonials</NavLink></li>
+                    {/* <li class="nav-item mb-2"><a href="#"  className='py-0'>Subscriptions</a></li> */}
+                    <li className="nav-item mb-2"><NavLink to="#contactus" className='py-0'>Contact Us</NavLink></li>
                     </ul>
                 </div>
 

@@ -218,20 +218,25 @@ const Billings = ({ isLoggedIn, user }) => {
                     <div className="card-header d-flex align-items-center justify-content-between">
                         Payment Methods
                         <span>
-                            <Button onClick={handleAddPaymentMethod}>Add Payment Method</Button>
+                            <Button onClick={handleAddPaymentMethod}>Add</Button>
                         </span>
                     </div>
                     <div className="card-body px-0 text-body-secondary">
                         {formData.paymentMethods.map((method, index) => (
-                            <div key={index} className={`d-flex align-items-center justify-content-between px-4 py-2 mb-2 ${index === formData.paymentMethods.length - 1 ? '' : 'border-bottom'}`}>
+                        <div 
+                            key={index} 
+                            className={`d-flex flex-column flex-sm-row align-items-center justify-content-between px-4 py-2 mb-2 ${index === formData.paymentMethods.length - 1 ? '' : 'border-bottom'} 
+                              flex-column flex-sm-row`} 
+                            >
                                 <div className="d-flex align-items-center">
-                                    {method.icon}
-                                    <div className="ms-4 text-body-secondary">
-                                        <div className="small">{`${method.type} ending in ${method.lastDigits}`}</div>
-                                        <div className="text-xs text-body-secondary">Expires {method.expiry}</div>
-                                    </div>
+                                {method.icon}
+                                <div className="ms-4 text-body-secondary">
+                                    <div className="small">{`${method.type} ending in ${method.lastDigits}`}</div>
+                                    <div className="text-xs text-body-secondary">Expires {method.expiry}</div>
                                 </div>
-                                <div className="ms-4 small">
+                                </div>
+                            
+                                <div className="ms-auto small d-flex align-items-center">
                                     {method.isDefault ? (
                                         <div className="badge bg-primary text-dark">Default</div>
                                     ) : (
@@ -239,7 +244,8 @@ const Billings = ({ isLoggedIn, user }) => {
                                     )}
                                     <Button outline variant="secondary" className="ms-2">Edit</Button>
                                 </div>
-                            </div>
+                          </div>
+                          
                         ))}
                     </div>
                 </div>

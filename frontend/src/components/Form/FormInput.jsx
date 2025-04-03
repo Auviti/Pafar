@@ -3,6 +3,7 @@ import Input from "../Input/Input";
 import CheckBox from '../Input/CheckBox';
 import RadioButton from '../Input/RadioBox';
 import Select from '../Input/Select';
+import Toggle from '../Input/Toggle';
 
 const FormInput = ({ id,forId,label,value, placeholder, className, type, style, onClick, ...props }) => {
     return (
@@ -63,5 +64,22 @@ const FormSelect = ({id,label,items,currentIndex=0,className,onChange,...props }
         </div>
     );
 };
-
-export {FormInput,FormCheckBox, FormRadioButton,FormSelect};
+const FormToggle = ({ id,label, value, className, style,checked, onClick,disabled, ...props }) => {
+    return (
+        <div className="form-check form-switch">
+            <Toggle
+                id={id}
+                label={label}
+                value={value}
+                labelClassName='form-check-label'
+                className={`form-check-input ${className}`} // Apply form-control class from Bootstrap
+                style={style}
+                checked={checked}
+                disabled={disabled}
+                onClick={onClick}
+                {...props} // Spread additional props to the Input component
+            />
+        </div>
+    );
+};
+export {FormInput,FormCheckBox, FormRadioButton,FormSelect, FormToggle};

@@ -2,7 +2,7 @@
   font-family: var(--font-family) !important;
   line-height: 1.5 !important;
   font-weight: 400 !important;
-
+  scroll-behavior: smooth;
   color-scheme: light dark !important;
   color: var(--text) !important;
   background-color: var(--background-color) !important;

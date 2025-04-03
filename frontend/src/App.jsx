@@ -18,9 +18,9 @@ function App({}) {
   const navlinks = [
       { name: 'Home', link:'/', icon:<Icon icon='mdi:home' width={24} height={24} />, active: true, onClick: () => alert('Home clicked')},
       { name: 'Places', link:'/places', icon:<Icon icon='mdi:map-marker-outline' width={24} height={24} />, active: false, onClick: () => alert('About clicked'),badgeContent: 'New'  },
-      { name: 'Faqs', link:'/faqs', icon:<Icon icon="mdi:frequently-asked-questions" width={24} height={24} />, active: false, onClick: () => alert('faqs clicked') },
-      { name: 'About', link:'/about', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
-      { name: 'Contact Us', link:'/contactus', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
+      { name: 'Faqs', link:'#faqs', icon:<Icon icon="mdi:frequently-asked-questions" width={24} height={24} />, active: false, onClick: () => alert('faqs clicked') },
+      { name: 'About', link:'#about', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
+      { name: 'Contact Us', link:'#contactus', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
     ];
   
   useEffect(() => {
@@ -32,11 +32,11 @@ function App({}) {
     if (pathname.includes('/places') || hash.includes('/places')) {
       setCurrentUrl('/places');
     } else if (pathname.includes('/faqs') || hash.includes('/faqs')) {
-      setCurrentUrl('/faqs');
+      setCurrentUrl('/');
     } else if (pathname.includes('/about') || hash.includes('/about')) {
-      setCurrentUrl('/about');
+      setCurrentUrl('/');
     } else if (pathname.includes('/contactus') || hash.includes('/contactus')) {
-      setCurrentUrl('/contactus');
+      setCurrentUrl('/');
     } else if (pathname.includes('/profile') || hash.includes('/profile')) {
       setCurrentUrl('/profile');
     }  else if (pathname.includes('/billing') || hash.includes('/billing')) {

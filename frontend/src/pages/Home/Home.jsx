@@ -429,7 +429,7 @@ function Home({header, footer, bottomheader}) {
                     <div className="row justify-content-xl-end">
                       <div className="col-12 col-xl-11">
                         <h2 className="mb-3">How can we help you?</h2>
-                        <p className="lead fs-4 text-secondary mb-5">We hope you have found an answer to your question. If you need any help, please search your query on our Support Center or contact us via email.</p>
+                        <p className="lead fs-4 text-secondary mb-5">We hope you have found an answer to your question. If you need any help, please contact us via email.</p>
                         <Accordion items={accordionItems} />
                       </div>
                     </div>

@@ -20,15 +20,15 @@ Here's how you can arrange the sections under **Home**, **Places**, **FAQs**, **
 
 ### **FAQs**
 - **Frequently Asked Questions**: Common questions about bookings, cancellations, payments, etc.
-- **Searchable FAQ Section**: Allow users to quickly find answers by searching or filtering through topics.
+# - **Searchable FAQ Section**: Allow users to quickly find answers by searching or filtering through topics.
   
 ---
 
 ### **About**
 - **Company Overview**: Brief description of the business, mission, and values.
-- **Team**: Information about the team or leadership behind the booking service.
-- **History**: A short section on the company’s background and milestones.
-- **Certifications or Partnerships**: If applicable, mention any certifications, awards, or partnerships.
+# - **Team**: Information about the team or leadership behind the booking service.
+# - **History**: A short section on the company’s background and milestones.
+# - **Certifications or Partnerships**: If applicable, mention any certifications, awards, or partnerships.
   
 ---
 

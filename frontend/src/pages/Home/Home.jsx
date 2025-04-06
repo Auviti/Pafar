@@ -53,7 +53,7 @@ function Home({header, footer, bottomheader}) {
   };
   
   
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(1);
     const [selectedItem, setSelectedItem] = useState(null);
 
     const handleIndexChange = (index) => {
@@ -66,9 +66,9 @@ function Home({header, footer, bottomheader}) {
         setSelectedItem(item);
     };
   const tabs = [
-      { title: "Rent a bus", content: <div>Content 1</div> },
-      { title: "Reserve a seat", content: <div>Content 3</div> },
-      { title: "Reservation status", content: <div>Content 4</div> },
+      { title: "Hire a bus", content: <div>Content 1</div> },
+      { title: "Book a seat", content: <div>Content 3</div> },
+      { title: "Booking status", content: <div>Content 4</div> },
       // { title: "Tab 3", content: <div>Content 5</div> },
   ];
   const destinations = [
@@ -160,26 +160,26 @@ function Home({header, footer, bottomheader}) {
         </div>
         <div className="container-fluid" style={{height:'20px'}}></div>
         <div className='p-2'>
-          <div className="container px-5 py-2" style={{backgroundColor: 'rgba(141, 140, 140, 0.5)', borderColor:'rgba(141, 140, 140)', borderRadius: '8px' }}>
+          <div className="container px-5 py-2 border shadow-lg"  style={{borderRadius: '8px' }}>
             <div className='row align-items-center my-2'>
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ borderRight: '1px solid #fff',...(!isDesktop && { borderBottom: '1px solid #fff' }) }}>
+              <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start border-end ${!isDesktop && 'border-bottom'} text-dark p-1`}>
                 <span className='d-flex justify-content-start align-items-center'>
                     <h3>1</h3> <span className='ms-2'>Trans Modes</span>
                 </span>
               </div>
 
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ ...(!isMobile && { borderRight: '1px solid #fff' }),...(!isDesktop && { borderBottom: '1px solid #fff' })  }}>
+              <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start  ${!isMobile && 'border-end'} ${!isDesktop && 'border-bottom'} text-dark p-1`} >
                 <span className='d-flex justify-content-start align-items-center'>
                     <h3>54k</h3> <span className='ms-2'>ADPs</span>
                 </span>
               </div>
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start text-dark p-1" style={{ ...(!isTablet && { borderRight: '1px solid #fff' }),...(isTablet && { borderBottom: '1px solid #fff' })  }}>
+              <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start  ${!isTablet && 'border-end'} ${isTablet && 'border-bottom'} text-dark p-1`} >
                 <span className='d-flex justify-content-start align-items-center'>
                   <h3 >54</h3> <span className='ms-2'>Branches</span>
                 </span>
               </div>
 
-              <div className="col-lg-3 col-md-4 col-6 text-center text-lg-start p-1" style={{ ...(isTablet && { borderRight: '1px solid #fff' }) }}>
+              <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start  ${isTablet && 'border-end'} text-dark p-1`} >
                 <Button className="w-100" size='lg' variant='primary' type="submit" >Sign up</Button>
               </div>
             </div>

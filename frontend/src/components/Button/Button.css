@@ -186,7 +186,6 @@
 .btn-outline-info:active,
 .btn-outline-info-active {
     background-color: var(--info) !important;
-    color: #fff !important;
     border-color: var(--info) !important;
 }
 

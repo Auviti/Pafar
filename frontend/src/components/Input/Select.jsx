@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import './Input.css';
-const Select = ({ id,label,items, currentIndex=0, onChange,className, ...props }) => {
+const Select = ({ id,label,items=[], currentIndex=0, onChange,className, ...props }) => {
     const [currentIndexState, setCurrentIndexState] = useState(currentIndex);
 
     
@@ -43,7 +43,8 @@ Select.propTypes = {
     onCurrentIndex: PropTypes.func,  // Optional callback function
 };
 
-Select.defaultProps = {
+Select.default = {
+    items:[],
     currentIndex: 0,  // Default to the first option if currentIndex is not provided
 };
 

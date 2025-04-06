@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo  } from 'react';
+import React, { useState, useEffect} from 'react';
 import Router from './routes/routes';  // Import the Router component that handles the app's routing
 
 import './App.css'
@@ -7,11 +7,10 @@ import useDeviceType from './hooks/useDeviceType';
 import Footer from './components/Footer/Footer';
 import Bottom from './components/NavBar/Bottom/Bottom';
 import { Icon } from '@iconify/react';
-import { useLocation } from 'react-router-dom';
 import NotFound from './pages/NotFound/NotFound';
 
-function App({}) {
-  const {isMobile, isTablet, isDesktop} = useDeviceType();
+function App() {
+  const {isMobile} = useDeviceType();
   const { isLoggedIn, user } = { isLoggedIn: true, user: {id:'1'} };
   const [currentUrl, setCurrentUrl] = useState('/');
   
@@ -29,8 +28,8 @@ function App({}) {
     const hash = window.location.hash;
   
     // Check the conditions based on pathname or hash and update the currentUrl
-    if (pathname.includes('/places') || hash.includes('/places')) {
-      setCurrentUrl('/places');
+    if (pathname.includes('/bookings') || hash.includes('/bookings')) {
+      setCurrentUrl('/bookings');
     } else if (pathname.includes('/faqs') || hash.includes('/faqs')) {
       setCurrentUrl('/');
     } else if (pathname.includes('/about') || hash.includes('/about')) {
@@ -48,10 +47,11 @@ function App({}) {
     } else {
       setCurrentUrl('/');  // Default case if no match
     }
-  }, [window.location.pathname, window.location.hash]);  // Run effect when pathname or hash changes
+  }, []);  // Run effect when pathname or hash changes
 
   const handleActiveLink=(value)=>{
-    // onActiveLink({'activeIndex':activeIndex,'link':link})
+    // // onActiveLink({'activeIndex':activeIndex,'link':link})
+    // console.log('==',value.link.link)
     setCurrentUrl(value.link.link)
   }
 

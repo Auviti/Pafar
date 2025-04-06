@@ -8,7 +8,7 @@ import useDeviceType from '../../hooks/useDeviceType';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
 const Bookings = ({ header, footer, bottomheader }) => {
-  const { isMobile, isTablet, isDesktop } = useDeviceType();
+  const { isMobile, isDesktop } = useDeviceType();
 
   // Array representing the card data with actual image URLs
   const cards = Array.from({ length: 35 }, (_, index) => ({
@@ -38,12 +38,12 @@ const Bookings = ({ header, footer, bottomheader }) => {
     <ThemeProvider>
       {header}
       <div className="container-fluid" style={{ height: '50px' }}></div>
-      <div className="p-4">
-        <div className="container-fluid p-3 px-5 border shadow-lg" style={{ borderRadius: '8px' }}>
+      <div className="p-2">
+        <div className="container-fluid mt-2 p-1 px-3 border shadow-lg" style={{ borderRadius: '8px' }}>
           <div className="row align-items-center my-2">
             <div
-              className={`d-flex justify-content-between align-items-center col-lg-4 col-md-12 col-12 text-center border-end ${
-                !isDesktop && 'border-bottom'
+              className={`d-flex justify-content-between align-items-center col-lg-4 col-md-12 col-12 text-center  ${
+                !isDesktop ? 'border-bottom' :'border-end'
               } text-dark p-1`}
             >
               <span className={'w-50'}>
@@ -54,7 +54,7 @@ const Bookings = ({ header, footer, bottomheader }) => {
                 icon="wi:direction-right"
                 width="30"
                 height="30"
-                className="text-light bg-dark mt-4 m-1"
+                className="text-light bg-primary mt-4 m-1"
                 style={{ borderRadius: '50%' }}
               />
               <span className={'w-50'}>
@@ -64,34 +64,30 @@ const Bookings = ({ header, footer, bottomheader }) => {
             </div>
 
             <div
-              className={`col-lg-4 col-md-6 col-12 text-center text-lg-start  ${
-                !isMobile && 'border-end'
-              } ${!isDesktop && 'border-bottom'} text-dark p-1`}
+              className={`col-lg-4 col-md-12 col-12 text-center text-lg-start ${!isDesktop ? 'border-bottom':'border-end'} text-dark p-1`}
             >
               <div className="d-flex justify-content-end align-items-end">
                 <span className="mx-1">return</span>
-                <FormCheckBox id="flexSwitchCheckChecked" checked />
+                <FormCheckBox id="flexSwitchCheckChecked" />
               </div>
               <FormInput label={'departure date'} />
             </div>
             <div
-              className={`d-flex justify-content-between align-items-center col-lg-4 col-md-12 col-12 text-center border-end ${
-                !isDesktop && 'border-bottom'
-              } text-dark p-1`}
+              className={`d-flex justify-content-between align-items-center col-lg-4 col-md-12 col-12 text-center text-dark p-1`}
             >
               <span className={'w-50'}>
-                <div className="d-flex justify-content-start align-items-start">Departure Time(from)</div>
+                <div className="d-flex justify-content-start align-items-start">Departure (from)</div>
                 <FormSelect disabled={true} />
               </span>
               <Icon
                 icon="wi:direction-right"
                 width="30"
                 height="30"
-                className="text-light bg-dark mt-4 m-1 "
+                className="text-light bg-primary mt-4 m-1 "
                 style={{ borderRadius: '50%' }}
               />
               <span className={'w-50'}>
-                <div className="d-flex justify-content-start align-items-start">to</div>
+                <div className="d-flex justify-content-start align-items-start">Arrival (to)</div>
                 <FormSelect disabled={true} />
               </span>
             </div>
@@ -101,16 +97,14 @@ const Bookings = ({ header, footer, bottomheader }) => {
           <h5 className="card-title">Trips:</h5>
 
           {currentCards.map((item, index) => (
-            <div key={index} className="card shadow-sm rounded-lg my-2">
+            <div key={index} className="card shadow-lg rounded-lg my-2">
               <div className="card-body text-body-secondary">
                 <div className={`d-flex justify-content-between align-items-center text-center text-dark p-1`}>
                   <span className={'w-50'}>
                     <div className="d-flex justify-content-start align-items-start">lagos bus station(from)</div>
                     <FormInput value={'10:00 AM'} disabled={true} style={{ fontWeight: 'bold' }} />
                   </span>
-                  <Button outline variant="light" className={' mt-4 m-1 mx-2'} style={{ fontWeight: 'bold' }}>
-                    4 hr 30 min
-                  </Button>
+                  <span className="badge badge-dark mt-4 text-center" style={{ fontWeight: 'bold', color:'black' }}>4hr.30mins</span>
                   <span className={'w-50'}>
                     <div className="d-flex justify-content-start align-items-start">abuja bus station(to)</div>
                     <FormInput value={'2:30 PM'} disabled={true} style={{ fontWeight: 'bold' }} />

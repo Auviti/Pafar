@@ -3,7 +3,7 @@ import { FormCheckBox, FormInput } from "../Form/FormInput";
 
 const SignUp = ({btnText = 'Sign Up'}) => {
     return (
-        <form className="p-3 p-md-4 bg-transparent">
+        <form className="p-3 p-md-4 bg-light m-5">
             {/* Name Input */}
             <FormInput type="text" label="Full Name" placeholder="John Doe" className="mb-3" />
             
@@ -26,8 +26,10 @@ const SignUp = ({btnText = 'Sign Up'}) => {
             <FormCheckBox value="agree-terms" label="I agree to the terms and conditions" className="mb-3" />
             
             {/* Submit Button */}
-            <Button type="submit" className="w-100">{btnText}</Button>
             
+            <div className="d-flex justify-content-center align-items-center">
+                <Button type="submit">{btnText}</Button>
+            </div>
             <hr className="my-4" />
             
             {/* Optional small text */}

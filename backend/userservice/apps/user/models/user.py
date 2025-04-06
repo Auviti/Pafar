@@ -57,14 +57,14 @@ class Address(Base):
 # Enum for user roles (make sure it's a valid Enum class)
 class UserRole(PyEnum):
     Guest = 'Guest'
-    Buyer = "Buyer"
-    Seller = "Seller"
+    Customer = "Customer"
+    Driver = "Driver"
     Admin = "Admin"
-    GodAdmin = "GodAdmin"
-    SuperAdmin = "SuperAdmin"
     Moderator = "Moderator"
     Support = "Support"
     Manager = "Manager"
+    SuperAdmin = "SuperAdmin"
+    GodAdmin = "GodAdmin"
 
 class UserGender(PyEnum):
     Male = 'Male'

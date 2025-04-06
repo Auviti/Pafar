@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Button from "../Button/Button";
 import { FormCheckBox, FormInput } from "../Form/FormInput";
 
@@ -10,9 +11,11 @@ const Login = ({btnText ='Sign In'})=>{
                 <label for="floatingPassword">Password</label>
             </div>
             <FormCheckBox value="remember-me" label={'Remember me'} className={' mb-3'}/>
-            <Button type="submit" className='w-100'>{btnText}</Button>
+            <div className="d-flex justify-content-center align-items-center">
+                <Button type="submit">{btnText}</Button>
+            </div>
             <hr className="my-4"/>
-            <small class="text-muted">forgetten password click. <a href="#">SignUp</a></small>
+            <small class="text-muted">forgetten password click. <Link to="/signup" className="text-info">SignUp</Link></small>
         </form>
     )
 }

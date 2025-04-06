@@ -15,21 +15,23 @@ const NavLink = ({ to, children, isMobile, className = '', active = false, onCli
         });
     };
 
-    const handleClick = () => {
+    const handleClick = (e) => {
         if (to.startsWith('#')) {
             const currentUrl = window.location.hash;
             // If current URL is not '/', navigate to '/' first
             if (currentUrl !== '#/') {
                 navigate('/'); // Navigate to the root URL
+                if (onClick) onClick(e);
                 // Wait for the navigation to complete before scrolling
                 setTimeout(() => scrollToSection(to.split('#')[1]), 100); // Scroll after a small delay
             } else {
                 // If we're already at '/', just scroll to the section
+                if (onClick) onClick(e);
                 scrollToSection(to.split('#')[1]);
             }
         } else {
             // If it's not an anchor link, simply call onClick (if provided)
-            if (onClick) onClick();
+            if (onClick) onClick(e);
         }
     };
 

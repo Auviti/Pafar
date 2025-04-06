@@ -28,7 +28,7 @@ const Select = ({ id,label,items=[], currentIndex=0, onChange,className, ...prop
                         value={index} 
                         // onClick={(e, index) => handleCurrentIndex(index)}
                     >
-                        {item}
+                        {item.label?item.label : item}
                     </option>
                 ))}
             </select>

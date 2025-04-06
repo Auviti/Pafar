@@ -1,21 +1,21 @@
 from pydantic import BaseModel
 from typing import Optional
 import uuid
+from .user import UserRole,UserBase,UserUpdate
 
 # Driver Pydantic Models
-class DriverCreate(BaseModel):
-    user_id: uuid.UUID  # Foreign key to User
+class DriverCreate(UserBase):
     rating: Optional[float] = 5.0  # Default to 5.0
+    role: UserRole.Driver  # Role of the user (Buyer, Seller, etc.)
+    password: str  # User's password for authentication
 
-    class Config:
-        from_attributes = True  
+    pass
 
+class DriverUpdate(UserUpdate):
+    pass
 
-class DriverRead(DriverCreate):
-    id: uuid.UUID
-    created_at: str  # DateTime as string for simplicity
-    updated_at: str  # DateTime as string for simplicity
-
+class DriverView(DriverCreate):
+    
     class Config:
         from_attributes = True  
 

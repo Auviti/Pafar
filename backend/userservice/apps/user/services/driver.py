@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.driver.models.driver import Driver, Vehicle
-from app.driver.schemas.driver import DriverCreate, VehicleCreate
+from app.user.models.driver import Driver, Vehicle
+from app.user.schemas.driver import DriverCreate, VehicleCreate
 from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException

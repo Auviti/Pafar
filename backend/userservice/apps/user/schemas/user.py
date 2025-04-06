@@ -4,7 +4,6 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import uuid4
-from apps.user.schemas.address import AddressView
 import sys
 
 # Database type detection
@@ -19,21 +18,58 @@ else:
     mappeditem = str
     default = lambda: str(uuid4())  # Use string representation for UUIDs in other databases
 
+
+
+# Enum for Address types: Billing or Shipping
+class AddressType(str, Enum):
+    Billing = "Billing"
+    Shipping = "Shipping"
+
+# Pydantic schema for Address base (used in create, update, and view)
+class AddressBase(BaseModel):
+    email_address: Optional[str] = None
+    street: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    post_code: Optional[str] = None
+    kind: AddressType  # Enum for AddressType (Billing or Shipping)
+
+    class Config:
+        from_attributes = True
+
+class AddressCreate(AddressBase):
+    """ Schema for creating a new address. """
+    pass
+
+class AddressUpdate(AddressBase):
+    """ Schema for updating an existing address. """
+    pass
+
+class AddressView(AddressBase):
+    id: UUIDType
+    created_at: str
+    updated_at: str
+
+
+
 # Enum for user roles (used in the schema)
 class UserRole(str, Enum):
     # Defining possible user roles as an Enum for better type safety and validation
     Guest = 'Guest'
-    Buyer = "Buyer"
-    Seller = "Seller"
+    Customer = "Customer"
+    Driver = "Driver"
     Admin = "Admin"
-    GodAdmin = "GodAdmin"
-    SuperAdmin = "SuperAdmin"
     Moderator = "Moderator"
     Support = "Support"
     Manager = "Manager"
+    SuperAdmin = "SuperAdmin"
+    GodAdmin = "GodAdmin"
+
 class UserGender(str, Enum):
     Male = 'Male'
     Female = "Female"
+    
 # Pydantic schema for User View (includes relationships and additional fields)
 class UserBase(BaseModel):
     # Base schema containing common fields for a User, used in both creation and updates

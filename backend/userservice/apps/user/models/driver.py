@@ -5,7 +5,7 @@ from sqlalchemy.orm import mapped_column
 from datetime import datetime
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-
+from .user import User
 import sys
 
 
@@ -20,18 +20,13 @@ else:
     UUIDType = String(36)
     mappeditem = str
     default = lambda: str(uuid4())
+    
 # Driver Model
-class Driver(Base):
+class Driver(User):
     __tablename__ = "driver"
 
-    # Driver ID (UUID as the primary key)
-    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)  # ForeignKey referencing user (UUID)
     rating: Mapped[Float] = mapped_column(Float, nullable=False, default=5.0)  # Rating between 1 and 5
-    # Optional timestamp for tracking address creation/updates
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Optional timestamp
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Auto update timestamp
-
+    
     # One-to-One relationship with Vehicle
     vehicle = relationship("Vehicle", back_populates="driver", uselist=False)
 

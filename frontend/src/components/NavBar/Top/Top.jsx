@@ -13,7 +13,6 @@ const Top = ({ isMobile, navlinks = [],isLoggedIn, user,currentUrl, onActiveLink
 
     // Step 2: Handle click to change active link
     const handleLinkClick = (index,link) => {
-        console.log(index,link)
         setActiveIndex(index); // Set the clicked link as active
         if (onActiveLink){
             onActiveLink({'activeIndex':activeIndex,'link':link})
@@ -60,7 +59,7 @@ const Top = ({ isMobile, navlinks = [],isLoggedIn, user,currentUrl, onActiveLink
                     <div className="d-flex justify-content-between gap-3">
                         {/* Render navlinks */}
                         <span className='d-flex align-items-center'>
-                            <Icon icon="mynaui:search" width="24" height="24" />
+                            <Icon icon="mynaui:search" width="24" height="24" onClick={()=>{}} />
                         </span>
                         {isLoggedIn?
                         <>

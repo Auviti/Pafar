@@ -25,13 +25,13 @@ import Pagination from '../../components/Pagination/Pagination';
 import Login from '../../components/Auth/Login';
 import Tabs from '../../components/Tabs/Tabs';
 import Accordion from '../../components/Accordion/Accordion';
+import Book from '../Bookings/Book';
+import BookingStatus from '../Bookings/BookingStatus';
 
-function Home({header, footer, bottomheader}) {
-  const [count, setCount] = useState(0)
+function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, user}) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const {isMobile, isTablet, isDesktop} = useDeviceType();
-  const { isLoggedIn, user } = { isLoggedIn: true, user: {} };
   
   // Memoize the socket object so it's only created once and doesn't change on every render
   const socket = useMemo(() => new WebSocketService("ws://localhost:8000"), []);
@@ -65,10 +65,11 @@ function Home({header, footer, bottomheader}) {
         console.log("Selected tab item:", item);
         setSelectedItem(item);
     };
+  
   const tabs = [
-      { title: "Hire a bus", content: <div>Content 1</div> },
-      { title: "Book a seat", content: <div>Content 3</div> },
-      { title: "Booking status", content: <div>Content 4</div> },
+      // { title: "Hire a bus", content: <BookingStatus /> },
+      { title: "Find Tickets", content: <Book /> },
+      { title: "Booking status", content: <BookingStatus />},
       // { title: "Tab 3", content: <div>Content 5</div> },
   ];
   const destinations = [

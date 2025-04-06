@@ -4,6 +4,7 @@ import Places from '../pages/Bookings/Bookings';
 import Profile from '../pages/Account/Profile';
 import Account from '../pages/Account/Account';
 import Bookings from '../pages/Bookings/Bookings';
+import SignUp from '../components/Auth/SignUp';
 // import About from '../pages/About';
 // import Signup from '../pages/Auth/SignUp';
 // import SignUpForSuppliers from '../pages/Auth/SignUpForSuppliers'
@@ -36,6 +37,11 @@ const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,user,header, footer, bot
     path: "/bookings",
     element: <Bookings API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
     title: "bookings"
+  },
+  {
+    path: "/signup",
+    element: <SignUp />,
+    title: "signup"
   },
   {
     path: "/accounts/:id/profile",

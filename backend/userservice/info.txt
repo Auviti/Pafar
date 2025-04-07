@@ -82,7 +82,7 @@ Backend (Server-Side):
     * /book_ride (POST): Allows users to book a ride.
     * /driver_assign (POST): Assigns a driver to the ride.
     * /ride_status (GET): Fetches current status of the ride.
-    * /track_location (GET): Provides real-time tracking of user and driver.
+    # * /track_location (GET): Provides real-time tracking of user and driver.
 Frontend (Client-Side):
 * User Interface:
     * A mobile or web application where users can log in, input destinations, book rides, and view the driver’s real-time location.

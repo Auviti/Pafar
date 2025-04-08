@@ -6,6 +6,7 @@ import Button from '../../Button/Button';
 
 // Helper function to get days of the month and the starting day
 const generateDays = (month, year) => {
+  
   const date = new Date(year, month, 0);
   const daysInMonth = date.getDate();
   const firstDay = new Date(year, month - 1, 1).getDay(); // Get the day of the week for the 1st of the month
@@ -24,8 +25,10 @@ const generateDays = (month, year) => {
   return days;
 };
 
-const DatePicker = () => {
+const DatePicker = ({showToday=false, format='DD/MM/YYYY', onChange}) => {
   // State variables
+  const today = new Date();
+  const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCalendarVisible, setCalendarVisible] = useState(false);
@@ -39,12 +42,18 @@ const DatePicker = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() + direction);
     setCurrentDate(newDate);
+    if(onChange){
+      onChange(`${newDate.toLocaleString('default', { day: '2-digit', month: 'long' })} ${newDate.getFullYear()}`)
+    }
   };
 
   const changeYear = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setFullYear(currentDate.getFullYear() + direction);
     setCurrentDate(newDate);
+    if(onChange){
+      onChange(`${newDate.toLocaleString('default', { day: '2-digit', month: 'long' })} ${newDate.getFullYear()}`)
+    }
   };
 
   // Generate the days for the current month
@@ -67,8 +76,7 @@ const DatePicker = () => {
           <div className="date-picker-calendar-header">
             <Icon icon="ooui:next-rtl" width="20" height="20" onClick={() => changeMonth(-1)} />
             <Icon icon="iconamoon:player-previous-thin" width="24" height="24" onClick={() => changeYear(-1)} />
-
-            <span>{currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}</span>
+            <span>{currentDate.toLocaleString('default', { day: '2-digit', month: 'long' })} {currentDate.getFullYear()}</span>
             <Icon icon="iconamoon:player-next-thin" width="24" height="24" onClick={() => changeYear(1)} />
             <Icon icon="ooui:next-ltr" width="20" height="20" onClick={() => changeMonth(1)} />
           </div>
@@ -91,9 +99,12 @@ const DatePicker = () => {
               </div>
             ))}
           </div>
-          <div className="date-picker-calendar-footer border-top">
-                
-          </div>
+          {showToday && 
+            <div className="date-picker-calendar-footer border-top">
+                  <span className='text-bold'>Today:</span><small>{formattedDate}</small>
+            </div>
+          }
+          
         </div>
       )}
     </div>

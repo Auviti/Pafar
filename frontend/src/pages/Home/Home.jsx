@@ -27,7 +27,7 @@ import Tabs from '../../components/Tabs/Tabs';
 import Accordion from '../../components/Accordion/Accordion';
 import Book from '../Bookings/Book';
 import BookingStatus from '../Bookings/BookingStatus';
-import DatePicker from '../../components/DatePicker/DatePicker';
+import DatePicker from '../../components/Input/DatePicker/DatePicker';
 
 function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, user}) {
   const [messages, setMessages] = useState([]);

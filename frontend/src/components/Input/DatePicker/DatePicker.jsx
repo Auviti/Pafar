@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import './DatePicker.css';
-import { FormInput } from '../Form/FormInput';
-import Button from '../Button/Button';
+import { FormInput } from '../../Form/FormInput';
+import Button from '../../Button/Button';
 
 // Helper function to get days of the month and the starting day
 const generateDays = (month, year) => {

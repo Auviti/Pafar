@@ -11,6 +11,7 @@
     font-size: smaller;
     
 }
+
 input:focus, .form-control:focus {
     padding-top: 18px !important;
     background-color: white !important;

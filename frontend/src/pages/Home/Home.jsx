@@ -27,6 +27,7 @@ import Tabs from '../../components/Tabs/Tabs';
 import Accordion from '../../components/Accordion/Accordion';
 import Book from '../Bookings/Book';
 import BookingStatus from '../Bookings/BookingStatus';
+import DatePicker from '../../components/DatePicker/DatePicker';
 
 function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, user}) {
   const [messages, setMessages] = useState([]);
@@ -182,6 +183,7 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
 
               <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start  ${isTablet && 'border-end'} text-dark p-1`} >
                 <Button className="w-100" size='lg' variant='primary' type="submit" >Sign up</Button>
+                {/* <DatePicker /> */}
               </div>
             </div>
           </div>

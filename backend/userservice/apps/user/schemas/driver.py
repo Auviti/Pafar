@@ -1,7 +1,21 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
-import uuid
+from uuid import UUID
 from .user import UserRole,UserBase,UserUpdate
+
+class VehicleTypeBase(BaseModel):
+    name: str = Field(..., max_length=50)
+    description: Optional[str] = Field(None, max_length=100)
+
+class VehicleTypeCreate(VehicleTypeBase):
+    pass  # You can add specific validations for creation here if needed.
+
+class VehicleTypeOut(VehicleTypeBase):
+    id: UUID
+
+    class Config:
+        from_attributes = True  
+
 
 # Driver Pydantic Models
 class DriverCreate(UserBase):
@@ -12,6 +26,7 @@ class DriverCreate(UserBase):
     pass
 
 class DriverUpdate(UserUpdate):
+    rating: Optional[float] = 5.0
     pass
 
 class DriverView(DriverCreate):
@@ -19,22 +34,28 @@ class DriverView(DriverCreate):
     class Config:
         from_attributes = True  
 
-
-# Vehicle Pydantic Models
-class VehicleCreate(BaseModel):
-    vehicle_type: str
-    license_number: str
-    model: Optional[str] = None
-    year: Optional[int] = None
-    color: Optional[str] = None
+class DriverOut(DriverBase):
+    id: UUID
+    vehicle_id: Optional[UUID]  # Optional, because the driver may not have a vehicle.
 
     class Config:
         from_attributes = True  
 
 
-class VehicleRead(VehicleCreate):
-    id: uuid.UUID
-    driver_id: uuid.UUID  # Link to the Driver
+class VehicleBase(BaseModel):
+    license_number: str = Field(..., max_length=50)
+    model: Optional[str] = Field(None, max_length=100)
+    year: Optional[int]
+    color: Optional[str] = Field(None, max_length=50)
+
+class VehicleCreate(VehicleBase):
+    vehicle_type_id: UUID  # This is required when creating a vehicle.
+    driver_id: UUID  # This is required when creating a vehicle.
+
+class VehicleOut(VehicleBase):
+    id: UUID
+    vehicle_type: str  # We can include the vehicle type name in the response
+    driver: Optional[DriverOut]  # To return the associated driver in the response.
 
     class Config:
         from_attributes = True  

@@ -67,7 +67,7 @@ async def create_user(db: AsyncSession, user: UserCreate):
     
     # Convert user to json (if needed for JWT generation)
     jsonuser = json.loads(user.json())
-    print('===\n',jsonuser,'\n===')
+    # print('===\n',jsonuser,'\n===')
     # Set role dynamically
     db_user = User(
         firstname=user.firstname,

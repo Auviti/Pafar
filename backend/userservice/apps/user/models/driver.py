@@ -1,13 +1,12 @@
-from sqlalchemy import Integer, String, Float, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from core.database import Base, CHAR_LENGTH
-from sqlalchemy.orm import mapped_column
 from datetime import datetime
 import uuid
+from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID
 from .user import User
 import sys
-
 
 # Database type detection
 if 'postgresql' in sys.argv:
@@ -23,15 +22,29 @@ else:
     
 # Driver Model
 class Driver(User):
-    __tablename__ = "driver"
+    __tablename__ = "drivers"
 
-    rating: Mapped[Float] = mapped_column(Float, nullable=False, default=5.0)  # Rating between 1 and 5
+    rating: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)  # Rating between 1 and 5
     
     # One-to-One relationship with Vehicle
     vehicle = relationship("Vehicle", back_populates="driver", uselist=False)
 
     def __repr__(self):
         return f"<Driver(id={self.id}, name={self.name}, phone_number={self.phone_number}, rating={self.rating})>"
+
+# VehicleType Model (This is the new class)
+class VehicleType(Base):
+    __tablename__ = "vehicle_types"
+
+    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)  # Type name, e.g., Car, Van, Truck
+    description: Mapped[str] = mapped_column(String(100), nullable=True)  # Optional description
+
+    # Relationship back to Vehicle
+    vehicles: Mapped[list["Vehicle"]] = relationship("Vehicle", back_populates="vehicle_type")
+
+    def __repr__(self):
+        return f"<VehicleType(id={self.id}, name={self.name}, description={self.description})>"
 
 # Vehicle Model
 class Vehicle(Base):
@@ -40,11 +53,11 @@ class Vehicle(Base):
     # Vehicle ID (UUID as the primary key)
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
     driver_id: Mapped[UUID] = mapped_column(ForeignKey("drivers.id"), nullable=False)
-    vehicle_type: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., Car, Van, Truck, etc.
-    license_number: Mapped[str] = mapped_column(String(50), nullable=False)
-    model: Mapped[str] = mapped_column(String(100), nullable=True)
+    vehicle_type_id: Mapped[UUID] = mapped_column(ForeignKey("vehicle_types.id"), nullable=False)  # Foreign key to VehicleType
+    license_number: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    model: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)
     year: Mapped[int] = mapped_column(Integer, nullable=True)
-    color: Mapped[str] = mapped_column(String(50), nullable=True)
+    color: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)
 
     # Back reference to Driver
     driver = relationship("Driver", back_populates="vehicle")

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 from apps.user.models.user import User, UUID
-from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword, SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword, DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
 from uuid import UUID
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from core.utils.auth.jwt_auth import JWTManager
@@ -92,13 +92,13 @@ async def create_user(db: AsyncSession, user: UserCreate):
     return db_user
 
 # Create a Seller
-async def create_seller(db: AsyncSession, user: SellerCreate):
-    user.role = UserRole.Seller  # Explicitly set role to Seller
+async def create_driver(db: AsyncSession, user: DriverCreate):
+    user.role = UserRole.Driver  # Explicitly set role to Seller
     return await create_user(db, user)  # Delegate to the general create_user function
 
 # Create a Buyer
-async def create_buyer(db: AsyncSession, user: BuyerCreate):
-    user.role = UserRole.Buyer  # Explicitly set role to Buyer
+async def create_customer(db: AsyncSession, user: CustomerCreate):
+    user.role = UserRole.Customer  # Explicitly set role to Buyer
     return await create_user(db, user)  # Delegate to the general create_user function
 
 # Create an Admin

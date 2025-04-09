@@ -183,7 +183,7 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
 
               <div className={`col-lg-3 col-md-4 col-6 text-center text-lg-start  ${isTablet && 'border-end'} text-dark p-1`} >
                 <Button className="w-100" size='lg' variant='primary' type="submit" >Sign up</Button>
-                <DatePicker />
+                
               </div>
             </div>
           </div>

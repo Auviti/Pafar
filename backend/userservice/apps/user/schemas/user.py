@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import uuid4
+from apps.user.models.user import UserRole
 import sys
 
 # Database type detection
@@ -131,15 +132,15 @@ class GuestCreate(UserBase):
     class Config:
         from_attributes = True
 
-class BuyerCreate(UserBase):
-    role: UserRole = UserRole.Buyer  # Default role is Buyer
+class CustomerCreate(UserBase):
+    role: UserRole = UserRole.Customer  # Default role is Buyer
     password: str  # Password for the buyer user
 
     class Config:
         from_attributes = True
 
-class SellerCreate(UserBase):
-    role: UserRole = UserRole.Seller  # Default role is Seller
+class DriverCreate(UserBase):
+    role: UserRole = UserRole.Driver  # Default role is Seller
     password: str  # Password for the seller user
 
     class Config:

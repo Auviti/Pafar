@@ -5,8 +5,8 @@ from typing import Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.utils.reponse import Response
 from core.database import get_db1
-from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
-from apps.user.services.user import get_users, create_user,create_seller,create_buyer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User, on_booking, on_payment, on_bus, on_ride
+from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from apps.user.services.user import get_users, create_user,create_driver,create_customer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User, on_booking, on_payment, on_bus, on_ride
 import json
 
 router = APIRouter()
@@ -46,31 +46,31 @@ async def create_new_user(user_create: UserCreate, db: AsyncSession = Depends(ge
         return Response(message=str(error), success=False,code=500)
 
 # Create a Seller user
-@router.post("/users/seller", response_model=UserCreate, status_code=201)
-async def create_seller_user(user_create: SellerCreate, db: AsyncSession = Depends(get_db1)):
+@router.post("/users/driver", response_model=UserCreate, status_code=201)
+async def create_driver_user(user_create: DriverCreate, db: AsyncSession = Depends(get_db1)):
     try:
         result = await db.execute(select(User).filter(User.email == user_create.email))
         if len(result.scalars().all()) > 0:
             return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
-        created_seller = await create_seller(db, user_create)  # Use the create_seller function for role-specific creation
-        if created_seller is None:
-            return Response(message="Seller user not created", success=False, code=404)
-        return Response(data=created_seller.to_dict(), code=201)
+        created_driver = await create_driver(db, user_create)  # Use the create_driver function for role-specific creation
+        if created_driver is None:
+            return Response(message="Driver user not created", success=False, code=404)
+        return Response(data=created_driver.to_dict(), code=201)
     except Exception as error:
         return Response(message=str(error), success=False, code=500)
 
 
 # Create a Buyer user
-@router.post("/users/buyer", response_model=UserCreate, status_code=201)
-async def create_buyer_user(user_create: BuyerCreate, db: AsyncSession = Depends(get_db1)):
+@router.post("/users/customer", response_model=UserCreate, status_code=201)
+async def create_customer_user(user_create: CustomerCreate, db: AsyncSession = Depends(get_db1)):
     try:
         result = await db.execute(select(User).filter(User.email == user_create.email))
         if len(result.scalars().all()) > 0:
             return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
-        created_buyer = await create_buyer(db, user_create)  # Use the create_buyer function for role-specific creation
-        if created_buyer is None:
-            return Response(message="Buyer user not created", success=False, code=404)
-        return Response(data=created_buyer.to_dict(), code=201)
+        created_customer = await create_customer(db, user_create)  # Use the create_customer function for role-specific creation
+        if created_customer is None:
+            return Response(message="Customer user not created", success=False, code=404)
+        return Response(data=created_customer.to_dict(), code=201)
     except Exception as error:
         return Response(message=str(error), success=False, code=500)
 

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db1
-from user.schemas.address import ApiKeyCreate, ApiKeyUpdate, ApiKeyView
-from user.services.address import get_apikeys, get_apikey, create_apikey, update_apikey, delete_apikey, filter_apikeys
+from schemas.address import ApiKeyCreate, ApiKeyUpdate, ApiKeyView
+from services.address import get_apikeys, get_apikey, create_apikey, update_apikey, delete_apikey, filter_apikeys
 
 router = APIRouter()
 

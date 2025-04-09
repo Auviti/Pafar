@@ -5,8 +5,8 @@ from typing import Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.utils.reponse import Response
 from core.database import get_db1
-from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
-from apps.user.services.user import get_users, create_user,create_driver,create_customer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User, on_booking, on_payment, on_bus, on_ride
+from schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from services.user import get_users, create_user,create_driver,create_customer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User, on_booking, on_payment, on_bus, on_ride
 import json
 
 router = APIRouter()

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
-from apps.user.models.user import User, UUID
-from apps.user.schemas.user import UserCreate, UserRole, UserUpdate, UserView, UserAuth,UserChangePassword, DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from models.user import User, UUID
+from schemas.user import UserCreate, UserRole, UserUpdate, UserView, UserAuth,UserChangePassword, DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
 from uuid import UUID
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from core.utils.auth.jwt_auth import JWTManager

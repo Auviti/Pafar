@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from uuid import UUID
-from apps.user.services.vehicle import VehicleTypeService, VehicleService  # Assuming these are your service layers
-from apps.user.schemas.vehicle import VehicleTypeCreate, VehicleCreate  # Your Pydantic models
+from services.vehicle import VehicleTypeService, VehicleService  # Assuming these are your service layers
+from schemas.vehicle import VehicleTypeCreate, VehicleCreate  # Your Pydantic models
 from core.database import get_db1
 from core.utils.reponse import Response
 

@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
 from fastapi import HTTPException
-from user.models.user import Address  # Assuming Address is already defined
-from user.schemas.user import AddressCreate, AddressUpdate
+from models.user import Address  # Assuming Address is already defined
+from schemas.user import AddressCreate, AddressUpdate
 
 
 # Get all addresses (asynchronous)

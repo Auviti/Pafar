@@ -10,9 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import Settings
 from core.database import get_db1
 from authlib.integrations.starlette_client import OAuth
-from apps.user.models.user import User, UUID
+from models.user import User, UUID
 from core.utils.reponse import Response
-from apps.user.services.oauth2 import create_user
+from services.oauth2 import create_user
 
 
 settings = Settings()

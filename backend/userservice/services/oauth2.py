@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from apps.user.models.user import User
+from models.user import User
 
 # Define a custom exception for user not found
 class UserNotFoundException(Exception):

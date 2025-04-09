@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db1
-from user.schemas.address import AddressCreate, AddressUpdate, AddressView
+from schemas.address import AddressCreate, AddressUpdate, AddressView
 
-from user.services.address import get_addresses, get_address, create_address, update_address, delete_address, filter_addresses
+from services.address import get_addresses, get_address, create_address, update_address, delete_address, filter_addresses
 
 router = APIRouter()
 

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 from apps.user.models.user import User, UUID
-from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword, DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from apps.user.schemas.user import UserCreate, UserRole, UserUpdate, UserView, UserAuth,UserChangePassword, DriverCreate, CustomerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
 from uuid import UUID
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from core.utils.auth.jwt_auth import JWTManager
@@ -149,7 +149,8 @@ async def update_user(db: AsyncSession, user_update: UserUpdate, user_id: UUID):
         db_user.firstname = user_update.firstname
     if user_update.lastname:
         db_user.lastname = user_update.lastname
-    
+    if user_update.picture:
+        db_user.picture = user_update.picture
     if user_update.email:
         db_user.email = user_update.email
     if user_update.role:

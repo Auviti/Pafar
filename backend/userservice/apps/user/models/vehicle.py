@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Float, ForeignKey
+from sqlalchemy import Integer, String, Float, ForeignKey, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from core.database import Base, CHAR_LENGTH
 from datetime import datetime
@@ -19,36 +19,25 @@ else:
     UUIDType = String(36)
     mappeditem = str
     default = lambda: str(uuid4())
-    
-# Driver Model
-class Driver(User):
-    __tablename__ = "drivers"
 
-    rating: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)  # Rating between 1 and 5
-    
-    # One-to-One relationship with Vehicle
-    vehicle = relationship("Vehicle", back_populates="driver", uselist=False)
-
-    def __repr__(self):
-        return f"<Driver(id={self.id}, name={self.name}, phone_number={self.phone_number}, rating={self.rating})>"
-
+# Driver Model (inherits from User)
 # VehicleType Model (This is the new class)
 class VehicleType(Base):
     __tablename__ = "vehicle_types"
 
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
-    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)  # Type name, e.g., Car, Van, Truck
-    description: Mapped[str] = mapped_column(String(100), nullable=True)  # Optional description
+    name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False, unique=True)  # Type name, e.g., Car, Van, Truck
+    description: Mapped[str] = mapped_column(Text, nullable=True)  # Optional description
 
     # Relationship back to Vehicle
-    vehicles: Mapped[list["Vehicle"]] = relationship("Vehicle", back_populates="vehicle_type")
+    vehicles: Mapped["Vehicle"] = relationship("Vehicle", back_populates="vehicle_type")
 
     def __repr__(self):
         return f"<VehicleType(id={self.id}, name={self.name}, description={self.description})>"
 
 # Vehicle Model
 class Vehicle(Base):
-    __tablename__ = "vehicle"
+    __tablename__ = "vehicles"  # Plural table name is typically preferred
 
     # Vehicle ID (UUID as the primary key)
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
@@ -59,8 +48,8 @@ class Vehicle(Base):
     year: Mapped[int] = mapped_column(Integer, nullable=True)
     color: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)
 
-    # Back reference to Driver
-    driver = relationship("Driver", back_populates="vehicle")
+    # Relationship to VehicleType
+    vehicle_type: Mapped["VehicleType"] = relationship("VehicleType", back_populates="vehicles")
 
     def __repr__(self):
         return f"<Vehicle(id={self.id}, license_number={self.license_number}, model={self.model})>"

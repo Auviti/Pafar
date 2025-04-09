@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import uuid4
-from apps.user.models.user import UserRole
+from apps.user.models.user import UserRole, User
 import sys
 
 # Database type detection

@@ -62,10 +62,10 @@ services:
     container_name: users-db
     restart: always
     environment:
-      POSTGRES_USER: your_username
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_DB: your_db
+      POSTGRES_DB: user_db
       # POSTGRES_HOST_AUTH_METHOD: trust to allow all connections without a password. This is *not* recommended.
     volumes:
       - users-db-data:/var/lib/postgresql/data

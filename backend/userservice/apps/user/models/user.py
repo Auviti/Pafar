@@ -1,5 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
-from sqlalchemy import Enum, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Enum, Integer, String, DateTime, ForeignKey, Boolean, Text
 from core.database import Base, CHAR_LENGTH
 from core.utils.encryption import PasswordManager
 from uuid import uuid4  # to generate unique UUIDs
@@ -36,7 +36,7 @@ class Address(Base):
     
     email_address: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Optional email field
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)  # ForeignKey referencing user (UUID)
-    user: Mapped["User"] = relationship("User", back_populates="addresses")  # Relationship with User model
+    user: Mapped["User"] = relationship("User", back_populates="addresses" , uselist=False)  # Relationship with User model
     
     street: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Optional street
     city: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Optional city
@@ -48,7 +48,7 @@ class Address(Base):
     # Optional timestamp for tracking address creation/updates
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Optional timestamp
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Auto update timestamp
-
+    
     
     def __repr__(self):
         return f"Address(id={self.id!r}, kind={self.kind!r}, email_address={self.email_address!r})"
@@ -79,9 +79,9 @@ class User(Base):
     # User details
     firstname: Mapped[str] = mapped_column(String(CHAR_LENGTH))  # First name as string
     lastname: Mapped[str] = mapped_column(String(CHAR_LENGTH))  # Last name as string
-    password: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Password as string
+    password: Mapped[str] = mapped_column(Text, nullable=True)  # Password as string
     email: Mapped[str] = mapped_column(String(CHAR_LENGTH), unique=True, index=True)  # Email as unique string
-    picture: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # picture as string 
+    picture: Mapped[str] = mapped_column(Text, nullable=True)  # picture as string 
     # Role as Enum with a non-nullable constraint
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)  # User role as Enum
     
@@ -97,10 +97,11 @@ class User(Base):
     gender: Mapped[str] = mapped_column(Enum(UserGender), nullable=False)  # Tags as string (nullable)
     
     # Relationship with Address model
-    addresses: Mapped[List["Address"]] = relationship("Address", back_populates="user", cascade="all, delete-orphan")
+    addresses: Mapped[List["Address"]] = relationship("Address", back_populates="user", cascade="all, delete-orphan", uselist=True, lazy="joined", passive_deletes=True)
 
-    access_token: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)
-    refresh_token: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)
+
+    access_token: Mapped[str] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[str] = mapped_column(Text, nullable=True)
 
     @property
     def full_name(self):

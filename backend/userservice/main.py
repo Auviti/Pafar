@@ -7,6 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from apps.user.routes.oauth2.google import router as google_router
 from apps.user.routes.user import router as user_router
+from apps.user.routes.vehicle import router as vehicle_router
 
 from core.utils.reponse import Response, RequestValidationError 
 import redis.asyncio as aioredis
@@ -32,6 +33,7 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
         
 # Include the routers
 app.include_router(user_router, prefix='/api/v1')
+app.include_router(vehicle_router, prefix='/api/v1')
 app.include_router(google_router, prefix='/api/v1')
 
 

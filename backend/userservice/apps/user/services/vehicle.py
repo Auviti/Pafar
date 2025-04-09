@@ -1,14 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.user.models.driver import Driver, Vehicle,VehicleType
-from app.user.schemas.driver import DriverCreate, VehicleCreate,VehicleTypeCreate
+from apps.user.models.vehicle import Vehicle,VehicleType
+from apps.user.schemas.vehicle import VehicleCreate,VehicleTypeCreate
 from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from core.utils.auth.jwt_auth import JWTManager
 from core.utils.reponse import Response
 from core.utils.encryption import PasswordManager
-
 
 class VehicleTypeService:
 
@@ -52,81 +51,6 @@ class VehicleTypeService:
             await db.delete(db_vehicle_type)
             await db.commit()
         return db_vehicle_type
-
-class DriverService:
-
-    @staticmethod
-    async def create_driver(db: AsyncSession, driver: DriverCreate):
-        
-
-        # Hash the password
-        hashed_password = password_manager.hash_password(driver.password)
-        
-        # Assuming JWTManager has a way to generate tokens
-        jwt_manager = JWTManager(secret_key=hashed_password)
-        
-        # Convert user to json (if needed for JWT generation)
-        jsondriver = json.loads(driver.json())
-        # print('===\n',jsondriver,'\n===')
-        # Set role dynamically
-        db_driver = Driver(
-            firstname=driver.firstname,
-            lastname=driver.lastname,
-            password=hashed_password,
-            picture=driver.picture,
-            email=driver.email,
-            role=driver.role,  # Set the role dynamically
-            phone_number=driver.phone_number,
-            phone_number_pre=driver.phone_number_pre,
-            active=False,
-            age=driver.age,
-            gender=driver.gender,
-            access_token=jwt_manager.create_access_token(jsondriver),
-            refresh_token=jwt_manager.create_refresh_token(jsondriver),
-            rating=driver.rating,
-            role=driver.role
-        )
-        
-        db.add(db_driver)
-        await db.commit()  # Commit the transaction asynchronously
-        await db.refresh(db_driver)  # Refresh to get updated info (e.g., ID after commit)
-        
-        return db_driver
-
-    @staticmethod
-    async def get_drivers(db: AsyncSession, skip: int = 0, limit: int = 100):
-        result = await db.execute(select(Driver).offset(skip).limit(limit))
-        return result.scalars().all()
-
-    @staticmethod
-    async def get_driver_by_id(db: AsyncSession, driver_id: UUID):
-        result = await db.execute(select(Driver).filter(Driver.id == driver_id))
-        return result.scalars().first()
-
-    @staticmethod
-    async def update_driver(db: AsyncSession, driver_id: UUID, driver: DriverUpdate):
-        result = await db.execute(select(Driver).filter(Driver.id == driver_id))
-        db_driver = result.scalars().first()
-        if db_driver:
-            if driver.name:
-                db_driver.name = driver.name
-            if driver.phone_number:
-                db_driver.phone_number = driver.phone_number
-            if driver.rating is not None:
-                db_driver.rating = driver.rating
-            await db.commit()
-            await db.refresh(db_driver)
-        return db_driver
-
-    @staticmethod
-    async def delete_driver(db: AsyncSession, driver_id: UUID):
-        result = await db.execute(select(Driver).filter(Driver.id == driver_id))
-        db_driver = result.scalars().first()
-        if db_driver:
-            await db.delete(db_driver)
-            await db.commit()
-        return db_driver
-
 
 class VehicleService:
 

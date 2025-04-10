@@ -1,9 +1,9 @@
-from app.rides.schemas.models import Ride, RideStatus, RideCreate, RideUpdate,Location
-# from app.rides.schemas.models import Bus  # Assuming Bus model exists
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
-from uuid import UUID
+from models.rides import Ride # Import the ORM model
+from schemas.rides import RideStatus, RideCreate, RideUpdate, Location, UUID
 from datetime import datetime
 import asyncio
 
@@ -16,8 +16,7 @@ class RideService:
             ride = Ride(
                 name = ride_data.name,
                 status=ride_data.status,
-                driver_id=ride_data.driver_id,
-                bus_id=ride_data.bus_id,
+                vehicle_id=ride_data.vehicle_id,
                 trip_fare=ride_data.trip_fare,
                 startlocation=ride_data.startlocation,
                 currentlocation=ride_data.currentlocation,
@@ -84,7 +83,7 @@ class RideService:
                 ride.status = ride_data.status
                 ride.updated_at = datetime.utcnow()
                 ride.status = ride_data.status
-                ride.bus_id = ride_data.bus_id
+                ride.vehicle_id = ride_data.vehicle_id
                 ride.trip_fare = ride_data.trip_fare
 
                 # Ensure the startlocation, currentlocation, and endlocation are valid Location instances
@@ -109,13 +108,13 @@ class RideService:
             raise Exception(f"Error updating ride status: {str(e)}")
     
     @staticmethod
-    async def update_ride_bus(db: AsyncSession, ride_id: UUID, bus_id: UUID):
+    async def update_ride_vehicle(db: AsyncSession, ride_id: UUID, vehicle_id: UUID):
         """Updates the bus of a ride (if applicable, such as for buses or vehicles)."""
         try:
             result = await db.execute(select(Ride).filter(Ride.id == ride_id))
             ride = result.scalars().first()
             if ride:
-                ride.bus_id = bus_id
+                ride.vehicle_id = vehicle_id
                 await db.commit()  # Async commit
                 await db.refresh(ride)  # Async refresh
                 return ride
@@ -184,20 +183,3 @@ class RideService:
         if ride.starts_at and ride.ends_at:
             return (ride.ends_at - ride.starts_at).total_seconds()
         return None
-
-    # @staticmethod
-    # def assign_bus_to_ride(db: AsyncSession, ride_id: UUID, bus_id: UUID):
-    #     """Assign a bus to a ride."""
-    #     try:
-    #         ride = db.query(Ride).filter(Ride.id == ride_id).first()
-    #         bus = db.query(Bus).filter(Bus.id == bus_id).first()
-    #         if ride and bus:
-    #             # Assuming a relationship between Ride and Bus exists, we can add the bus_id to ride
-    #             ride.bus_id = bus.id  # If ride model has bus_id column for relation
-    #             db.commit()
-    #             db.refresh(ride)
-    #             return ride
-    #         return None
-    #     except SQLAlchemyError as e:
-    #         db.rollback()
-    #         raise Exception(f"Error assigning bus to ride: {str(e)}")

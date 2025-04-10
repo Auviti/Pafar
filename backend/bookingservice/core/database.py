@@ -10,8 +10,8 @@ from core.config import settings
 Base = declarative_base()
 CHAR_LENGTH=255
 # First database engine
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///db1.db"  # For SQLite, update with the actual URI if necessary.
-engine_db1 = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI), echo=True)
+SQLALCHEMY_DATABASE_URL = str(settings.SQLALCHEMY_DATABASE_URI)
+engine_db1 = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
 # Second database engine
 engine_db2 = create_async_engine('sqlite+aiosqlite:///db2.db', echo=True)

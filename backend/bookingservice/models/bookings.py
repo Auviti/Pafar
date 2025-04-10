@@ -1,13 +1,14 @@
-from sqlalchemy import Integer, String, ForeignKey, DateTime, Enum, Float, Boolean, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, ForeignKey, DateTime, Enum, Float, Boolean, JSON, Text
+from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
 from core.database import Base, CHAR_LENGTH
 from sqlalchemy.orm import mapped_column
 from datetime import datetime
-import enum
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
-
+from enum import Enum as PyEnum
+from uuid import uuid4 
+from uuid import UUID
+from typing import List, Optional
 import sys
+
 
 
 # Database type detection
@@ -23,7 +24,7 @@ else:
     default = lambda: str(uuid4())
 
 # Enum for Booking Status
-class BookingStatus(enum.Enum):
+class BookingStatus(PyEnum):
     PENDING = "Pending"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
@@ -35,10 +36,10 @@ class Booking(Base):
 
     # Booking ID (UUID as the primary key)
     id: Mapped[UUID] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
-    ride_id: Mapped[UUID] = mapped_column(ForeignKey("ride.id"), nullable=False)  # Foreign key referencing User (UUID)
+    ride_id: Mapped[UUID] = mapped_column(ForeignKey("rides.id"), nullable=False)  # Foreign key referencing User (UUID)
     code: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     barcode: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)  # Foreign key referencing User (UUID)
+    user_id: Mapped[UUID] = mapped_column(Text, nullable=False)  # Foreign key referencing User (UUID)
     pick_up_location: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)  # Pick-up location
     drop_off_location: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)  # Drop-off location
     booking_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Date and time of the booking
@@ -48,9 +49,7 @@ class Booking(Base):
     seats: Mapped[List[dict]] = mapped_column(JSON, nullable=False)
 
     # Relationship to Payment (One Booking can have multiple payments)
-    payments: Mapped[List["Payment"]] = relationship('Payment', back_populates='bookings')
-    # Relationships
-    user = relationship("User", back_populates="bookings")  # Link to the user who created the booking
+    payments: Mapped[List[dict]] = mapped_column(JSON, nullable=True)
     
     def __repr__(self):
         return f"<Booking(id={self.id}, user_id={self.user_id}, ride_id={self.ride_id}, booking_status={self.booking_status}, booking_time={self.booking_time})>"

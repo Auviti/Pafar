@@ -20,7 +20,6 @@ else:
     mappeditem = str
     default = lambda: str(uuid4())
 
-# Driver Model (inherits from User)
 # VehicleType Model (This is the new class)
 class VehicleType(Base):
     __tablename__ = "vehicle_types"
@@ -41,7 +40,7 @@ class Vehicle(Base):
 
     # Vehicle ID (UUID as the primary key)
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
-    driver_id: Mapped[UUID] = mapped_column(ForeignKey("drivers.id"), nullable=False)
+    driver_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     vehicle_type_id: Mapped[UUID] = mapped_column(ForeignKey("vehicle_types.id"), nullable=False)  # Foreign key to VehicleType
     license_number: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     model: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)

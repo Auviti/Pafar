@@ -6,14 +6,13 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 # from apps.user.routes.oauth2.google import router as google_router
-from apps.user.routes.user import router as user_router
-from apps.user.routes.user import user_websocket_router
+from routes import booking_router
 # from apps.products.routes.product import router as product_router
 # from apps.products.routes.category import router as category_router
 # from apps.products.routes.market import router as market_router
 # from apps.payments.routes.payments import router as payments_router
 
-from core.utils.reponse import Response, RequestValidationError 
+from core.utils.response import Response, RequestValidationError 
 import redis.asyncio as aioredis
 app = FastAPI()
 settings = Settings()
@@ -36,16 +35,30 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
         
 # Include the routers
-app.include_router(user_router, prefix='/api/v1')
-app.include_router(user_websocket_router)
-# app.include_router(product_router, prefix='/api/v1')
-# app.include_router(category_router, prefix='/api/v1')
-# app.include_router(market_router, prefix='/api/v1')
-# app.include_router(google_router, prefix='/api/v1')
-# app.include_router(payments_router, prefix='/api/v1')
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+app.include_router(booking_router, prefix='/api/v1')
+
+
+@app.get("/", response_model=dict)
+def initialization_api():
+    return {
+        "message": "Welcome to the Booking Analytics API",
+        "version": "1.0.0",
+        "description": "This API allows you to manage bookings for different periods (daily, weekly, monthly, quarterly, yearly).",
+        "endpoints": {
+            "/daily": "Create or update daily bookings",
+            "/weekly": "Create or update weekly bookings",
+            "/monthly": "Create or update monthly bookings",
+            "/quarterly": "Create or update quarterly bookings",
+            "/yearly": "Create or update yearly bookings",
+            "/{booking_type}/{booking_id}": "Get a specific booking by ID",
+            "/{booking_type}/all": "Get all bookings of a specific type",
+        },
+        "contact": {
+            "email": "support@example.com",
+            "website": "https://www.example.com"
+        }
+    }
+
 
 
 # Handle validation errors globally
@@ -64,83 +77,3 @@ async def validation_exception_handler(request, exc: RequestValidationError):
     errors = errors[0] if len(errors) == 1 else errors
 
     return Response(message=errors, success=False, code=422)
-
-# Connect to Redis when FastAPI starts
-@app.on_event("startup")
-async def startup():
-    try:
-        app.state.redis = await aioredis.from_url(f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}", encoding="utf-8", decode_responses=True)
-        print("Connected to Redis successfully.")
-    except Exception as e:
-        print(f"Error connecting to Redis: {e}")
-        raise HTTPException(status_code=500, detail="Redis connection failed")
-
-# Close Redis connection when FastAPI shuts down
-@app.on_event("shutdown")
-async def shutdown():
-    if hasattr(app.state, "redis"):
-        await app.state.redis.close()
-        print("Redis connection closed successfully.")
-
-# Example endpoint to set a key-value pair in Redis
-@app.post("/set_key/")
-async def set_redis_key(key: str, value: str):
-    try:
-        await app.state.redis.set(key, value)
-        return Response(message="Key set successfully", data={"key": key, "value": value},code=200)
-    except aioredis.RedisError as e:
-        return Response(message=str(e), success=False, code=500)
-    
-# Example endpoint to get a value from Redis by key
-@app.get("/get_key/")
-async def get_redis_key(key: str):
-    try:
-        value = await app.state.redis.get(key, encoding="utf-8")
-        if value is None:
-            return Response(message="Key not found",success=False,code=404)
-        return Response(message="Key set successfully", data={"key": key, "value": value},code=201)
-    except aioredis.RedisError as e:
-        raise HTTPException(status_code=500, detail=f"Redis error: {str(e)}")
-    
-# user, rides,bus
-# # List of active connections (can be used for broadcasting messages)
-# active_connections: List[WebSocket] = []
-
-
-
-# @app.websocket("/wss")
-# async def websocket_endpoint(websocket: WebSocket):
-#     # Accept the WebSocket connection
-#     await websocket.accept()  # "on_open" - connection established
-#     print(f"Client connected--{websocket}")
-    
-#     # Add the new WebSocket connection to the list
-#     active_connections.append(websocket)
-    
-#     try:
-#         while True:
-#             # Receive a message from the client
-#             data = await websocket.receive_text() # Receive message
-#             print(f"Message sent: {data}")
-#             # You can implement your own logic to determine the event type.
-#             # For instance, check if the message is a command like "update" or "custom_event"
-#             if data == "update":
-#                 await on_update(websocket, data)
-#             elif data == "leave":
-#                 await on_leave(websocket)
-#                 break
-#             elif data.startswith("custom:"):
-#                 event = data.split(":", 1)[1]  # Get the custom event message
-#                 await on_custom_event(websocket, event)
-#             else:
-#                 await on_message(websocket, data)
-
-#             # Broadcast the message to all active connections
-#             for connection in active_connections:
-#                 if connection != websocket:
-#                     await connection.send_text(f"Broadcast message: {data}")
-    
-#     except WebSocketDisconnect:
-#         # Remove the connection when the client disconnects
-#         active_connections.remove(websocket)
-#         print("Client disconnected")

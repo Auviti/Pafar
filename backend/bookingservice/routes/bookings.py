@@ -1,43 +1,61 @@
 from fastapi import APIRouter, Depends
-from schemas.bookings import BookingCreate, BookingResponse
+from schemas.bookings import BookingCreate, BookingResponse, BookingUpdate
 from services.bookings import BookingService
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db1
 from core.utils.reponse import Response
 from uuid import UUID
+from models.bookings import BookingStatus  # assuming your status enum is here
 
 router = APIRouter()
 
-# Route to create a new booking
-@router.post("/bookings/", response_model=BookingResponse)
+
+@router.post("/bookings/")
 async def create_booking_route(booking: BookingCreate, db: AsyncSession = Depends(get_db1)):
-    response = await BookingService.create_booking(db=db, booking_data=booking)
-    return Response(success=True, data=response, message="Booking created successfully", code=201)
+    try:
+        result = await BookingService.create_booking(db=db, booking_data=booking)
+        return Response.success(data=result, message="Booking created successfully", code=201)
+    except Exception as e:
+        return Response.error(message="Failed to create booking", code=500)
 
-# Route to get all bookings
-@router.get("/bookings/", response_model=list[BookingResponse])
+
+@router.get("/bookings/")
 async def get_all_bookings_route(db: AsyncSession = Depends(get_db1)):
-    bookings = await BookingService.get_all_bookings(db)
-    return Response(success=True, data=bookings, message="Bookings fetched successfully", code=200)
+    try:
+        bookings = await BookingService.get_all_bookings(db)
+        return Response.success(data=bookings, message="Bookings fetched successfully")
+    except Exception as e:
+        return Response.error(message="Failed to fetch bookings", code=500)
 
-# Route to get a booking by ID
-@router.get("/bookings/{booking_id}", response_model=BookingResponse)
+
+@router.get("/bookings/{booking_id}")
 async def get_booking_by_id_route(booking_id: UUID, db: AsyncSession = Depends(get_db1)):
-    response = await BookingService.get_booking(db=db, booking_id=booking_id)
-    if not response.success:
-        return Response(success=False, message=response.message, code=404)
-    return Response(success=True, data=response, message="Booking fetched successfully", code=200)
+    try:
+        result = await BookingService.get_booking(db=db, booking_id=booking_id)
+        if not result:
+            return Response.error(message="Booking not found", code=404)
+        return Response.success(data=result, message="Booking fetched successfully")
+    except Exception as e:
+        return Response.error(message="Failed to fetch booking", code=500)
 
-# Route to update booking status
-@router.put("/bookings/{booking_id}/status", response_model=BookingResponse)
+
+@router.put("/bookings/{booking_id}/status")
 async def update_booking_status_route(booking_id: UUID, status: str, db: AsyncSession = Depends(get_db1)):
-    status_enum = BookingStatus(status)
-    response = await BookingService.update_booking_status(db=db, booking_id=booking_id, status=status_enum)
-    return Response(success=True, data=response, message="Booking status updated", code=200)
+    try:
+        status_enum = BookingStatus(status)
+        result = await BookingService.update_booking_status(db=db, booking_id=booking_id, status=status_enum)
+        return Response.success(data=result, message="Booking status updated")
+    except ValueError:
+        return Response.error(message="Invalid status value", code=400)
+    except Exception as e:
+        return Response.error(message="Failed to update status", code=500)
 
-# Route to protect a booking
-@router.put("/bookings/{booking_id}/protect", response_model=BookingResponse)
+
+@router.put("/bookings/{booking_id}/protect")
 async def protect_booking_route(booking_id: UUID, isprotected: bool, db: AsyncSession = Depends(get_db1)):
-    booking_data = BookingUpdate(isprotected=isprotected)
-    response = await BookingService.update_booking(db=db, booking_id=booking_id, booking_data=booking_data)
-    return Response(success=True, data=response, message="Booking protection status updated", code=200)
+    try:
+        booking_data = BookingUpdate(isprotected=isprotected)
+        result = await BookingService.update_booking(db=db, booking_id=booking_id, booking_data=booking_data)
+        return Response.success(data=result, message="Booking protection updated")
+    except Exception as e:
+        return Response.error(message="Failed to update protection", code=500)

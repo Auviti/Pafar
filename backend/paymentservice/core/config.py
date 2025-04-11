@@ -8,8 +8,8 @@ from pydantic import (
     Field  # Field validation tool in Pydantic
 )
 from pydantic_core import MultiHostUrl  # Import for handling multi-host URLs (not used in this example)
-
-
+import os
+from dotenv import load_dotenv
 # Function to parse CORS origins, handling both string and list types
 # This function will parse a comma-separated string into a list of strings
 def parse_cors(v: Any) -> list[list[str], str]:
@@ -18,47 +18,52 @@ def parse_cors(v: Any) -> list[list[str], str]:
     elif isinstance(v, (list, str)):  # If input is already a list or string
         return v  # Return as is
     raise ValueError(v)  # If the input is neither, raise a ValueError
+# Load the .env file from the parent directory
+# Get the parent directory of the current script's directory
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+env_file = os.path.join(parent_dir, '.env')
+print(f"Trying to load .env from: {env_file}")
+# Load the .env file
+result = load_dotenv(env_file, verbose=True)
+if not result:
+    print("Failed to load .env file.")
+else:
+    print("Successfully loaded .env file.")
 
-
-class Settings(BaseSettings):
+class Settings:
     """
     This class defines all the settings that are required for your application.
-    It uses Pydantic’s BaseSettings class to read from environment variables or .env file.
+    It uses environment variables loaded by `dotenv` from a .env file.
     """
     
-    # Configuration for the environment file.
-    # This tells Pydantic to read variables from a .env file and ignore empty ones.
-    model_config = SettingsConfigDict(env_file='.env', env_ignore_empty=True, extra="ignore")
-    
     # Basic settings like domain and environment.
-    DOMAIN: str = 'localhost'  # The domain or hostname (default: 'localhost')
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"  # Specifies which environment we're running (default: 'local')
+    DOMAIN: str = os.getenv('DOMAIN', 'localhost')  # Default to 'localhost' if not defined in .env
+    ENVIRONMENT: Literal["local", "staging", "production"] = os.getenv('ENVIRONMENT', 'local')  # Default to 'local' if not defined in .env
 
-    REDIS_HOST: str = 'localhost'
-    REDIS_PORT: str = '6379'
+    REDIS_HOST: str = os.getenv('REDIS_HOST', 'localhost')
+    REDIS_PORT: str = os.getenv('REDIS_PORT', '6379')
+    
     # PostgreSQL settings
-    POSTGRESQL_USER: str  # The username for PostgreSQL
-    POSTGRESQL_PASSWORD: str  # The password for PostgreSQL
-    POSTGRESQL_SERVER: str  # The server where PostgreSQL is hosted
-    POSTGRESQL_PORT: int  # The port PostgreSQL is using (default is usually 5432)
-    POSTGRESQL_DB: str  # The name of the PostgreSQL database
+    POSTGRES_USER: str = os.getenv('POSTGRES_USER')  # The username for PostgreSQL
+    POSTGRES_PASSWORD: str = os.getenv('POSTGRES_PASSWORD')  # The password for PostgreSQL
+    POSTGRES_SERVER: str = os.getenv('POSTGRES_SERVER')  # The server where PostgreSQL is hosted
+    POSTGRES_PORT: int = int(os.getenv('POSTGRES_PORT', 5432))  # Default to 5432 if not defined
+    POSTGRES_DB: str = os.getenv('POSTGRES_DB')  # The name of the PostgreSQL database
 
     # SQLite settings (fallback to SQLite for local development)
-    SQLITE_DB_PATH: str = 'db1.db'  # Default path for the SQLite database
+    SQLITE_DB_PATH: str = os.getenv('SQLITE_DB_PATH', 'db1.db')  # Default path for the SQLite database
 
     # CORS settings (for allowing specific origins to access the API)
-    BACKEND_CORS_ORIGINS: Annotated[
-        list[AnyUrl] | str, BeforeValidator(parse_cors)
-    ] = []  # Can be a list of URLs or a comma-separated string of allowed CORS origins
-    
+    BACKEND_CORS_ORIGINS: list[AnyUrl] = os.getenv('BACKEND_CORS_ORIGINS', '').split(',')  # Parsing CORS origins (comma-separated)
+
     # Google OAuth settings (client credentials for Google authentication)
-    GOOGLE_CLIENT_ID: str ='' # The Google OAuth client ID
-    GOOGLE_CLIENT_SECRET: str ='' # The Google OAuth client secret
-    GOOGLE_REDIRECT_URI: str = "http://127.0.0.1:8000/api/v1/users/login/google/callback"  # Default redirect URI (should be changed to frontend URL in production)
+    GOOGLE_CLIENT_ID: str = os.getenv('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET: str = os.getenv('GOOGLE_CLIENT_SECRET', '')
+    GOOGLE_REDIRECT_URI: str = os.getenv('GOOGLE_REDIRECT_URI', "http://127.0.0.1:8000/api/v1/users/login/google/callback")
 
     # Secret key for cryptography or JWT encoding/decoding
-    SECRET_KEY: str = 'django-insecure-i-i^&f9-=cdt+k478)**l!uy2olm)&24&_(-bqo&1+=oh5^5pu'
-    
+    SECRET_KEY: str = os.getenv('SECRET_KEY', 'django-insecure-i-i^&f9-=cdt+k478)**l!uy2olm)&24&_(-bqo&1+=oh5^5pu')
+
     @computed_field
     @property
     def server_host(self) -> str:
@@ -80,11 +85,16 @@ class Settings(BaseSettings):
         """
         if self.ENVIRONMENT == "local":
             # Use SQLite when in local environment
-            return f"sqlite+aiosqlite:///{self.SQLITE_DB_PATH}"  # SQLite URI
+            # return f"sqlite+aiosqlite:///{self.SQLITE_DB_PATH}"  # SQLite URI
+            # return f"postgresql+asyncpg://{self.POSTGRESQL_USER}:{self.POSTGRESQL_PASSWORD}" \
+            #        f"@{self.POSTGRESQL_SERVER}:{self.POSTGRESQL_PORT}/{self.POSTGRESQL_DB}"  # PostgreSQL URI
+            # # docker version
+            return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}" \
+                   f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"  # PostgreSQL URI
         elif self.ENVIRONMENT in ["staging", "production"]:
             # Use PostgreSQL in production or staging environments
-            return f"postgresql+asyncpg://{self.POSTGRESQL_USER}:{self.POSTGRESQL_PASSWORD}" \
-                   f"@{self.POSTGRESQL_SERVER}:{self.POSTGRESQL_PORT}/{self.POSTGRESQL_DB}"  # PostgreSQL URI
+            return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}" \
+                   f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"  # PostgreSQL URI
         else:
             raise ValueError("Unsupported environment for database connection")  # Raise an error for unsupported environments
     

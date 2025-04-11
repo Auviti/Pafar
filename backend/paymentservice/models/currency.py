@@ -21,7 +21,7 @@ else:
     default = lambda: str(uuid4())
 
 class Currency(Base):
-    __tablename__ = "currency"
+    __tablename__ = "currencies"
     
     # Unique identifier for each currency
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)
@@ -30,10 +30,10 @@ class Currency(Base):
     code: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False, unique=True)
     
     # Currency symbol (e.g., $, €, ¥)
-    symbol: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    symbol: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False, unique=True)
     
     # Name of the currency (e.g., US Dollar, Euro, British Pound)
-    name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False, unique=True)
 
     # Optional - Number of decimals the currency supports (e.g., 2 for USD, 0 for JPY)
     decimals: Mapped[int] = mapped_column(Integer, default=2)

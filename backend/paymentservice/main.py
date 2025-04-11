@@ -4,17 +4,12 @@ from typing import List
 from core.config import Settings
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
+from routes.currency import router as currency_router
+from routes.payments import router as payments_router
 
-# from apps.user.routes.oauth2.google import router as google_router
-from routes.user import router as user_router
-from routes.user import user_websocket_router
-# from apps.products.routes.product import router as product_router
-# from apps.products.routes.category import router as category_router
-# from apps.products.routes.market import router as market_router
-# from apps.payments.routes.payments import router as payments_router
-
-from core.utils.reponse import Response, RequestValidationError 
+from core.utils.response import Response, RequestValidationError 
 import redis.asyncio as aioredis
+
 app = FastAPI()
 settings = Settings()
 app = FastAPI()
@@ -36,13 +31,10 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
         
 # Include the routers
-app.include_router(user_router, prefix='/api/v1')
-app.include_router(user_websocket_router)
-# app.include_router(product_router, prefix='/api/v1')
-# app.include_router(category_router, prefix='/api/v1')
-# app.include_router(market_router, prefix='/api/v1')
-# app.include_router(google_router, prefix='/api/v1')
-# app.include_router(payments_router, prefix='/api/v1')
+app.include_router(currency_router, prefix='/api/v1')
+app.include_router(payments_router, prefix='/api/v1')
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

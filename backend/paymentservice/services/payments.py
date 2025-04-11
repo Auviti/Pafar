@@ -1,14 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from datetime import datetime
-from app.products.models.currency import Currency
+import json
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
-from app.payments.models.payments import PaymentMethod, Payment, PaymentStatus
-from app.payments.schemas.payments import PaymentMethodCreate, PaymentMethodOut, PaymentCreate, PaymentOut
 from fastapi import HTTPException
 from typing import List
+from models.currency import Currency
+from models.payments import PaymentMethod, Payment, PaymentStatus
+from schemas.payments import PaymentMethodCreate, PaymentMethodOut, PaymentCreate, PaymentOut
+
 
 # Service for PaymentMethod
 class PaymentMethodService:
@@ -56,9 +58,17 @@ class PaymentMethodService:
 class PaymentService:
     def __init__(self, db: AsyncSession):
         self.db = db
-
-    async def create_payment(self, payment: PaymentCreate) -> PaymentOut:
+    
+   
+    async def create_payment(self, payment: PaymentCreate, idempotency_key: str):
         """Create a new payment."""
+        # Check if the idempotency key already exists in the database
+        existing_key = await self.db.execute(select(IdempotencyKey).filter_by(id=idempotency_key))
+        existing_key = existing_key.scalar_one_or_none()
+
+        if existing_key:
+            # If the idempotency key exists, return the previously stored response
+            return json.loads(existing_key.response)
         try:
             db_payment = Payment(
                 booking_id=payment.booking_id,
@@ -78,6 +88,22 @@ class PaymentService:
             self.db.add(db_payment)
             await self.db.commit()
             await self.db.refresh(db_payment)
+            # Process the payment (simulated)
+            # For example, here you might call an external payment gateway to process the payment.
+            payment_status = PaymentStatus.COMPLETED  # Assume the payment was successful
+
+            # Update the payment status
+            db_payment.payment_status = payment_status
+            await self.db.commit()
+
+            # Store the idempotency key with the response
+            idempotency_record = IdempotencyKey(
+                id=idempotency_key,
+                response=json.dumps(PaymentMethodOut.from_orm(db_payment).dict())
+            )
+            self.db.add(idempotency_record)
+            await self.db.commit()
+
             return PaymentOut.from_orm(db_payment)
         except SQLAlchemyError as e:
             await self.db.rollback()

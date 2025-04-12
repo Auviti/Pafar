@@ -3,7 +3,7 @@ In a booking system, analytics can provide insights into user behavior, system p
 ### **1. Booking Analytics**
 - **Total Bookings**: The total number of bookings made over a specific period (daily, weekly, monthly, or yearly).
 reports eg for a grapgh
-- **Booking Trends**: Trends of bookings over time, helping identify peak periods, seasonal patterns, or declining trends.
+-- **Booking Trends**: Trends of bookings over time, helping identify peak periods, seasonal patterns, or declining trends.
 - **Booking Conversion Rate**: Percentage of users who visit the booking page and proceed to complete a booking (helps identify friction points).
 - **Booking Channel Performance**: The percentage of bookings made via different channels (website, mobile app, social media, etc.).
 - **Booking Source**: Data on where the bookings are coming from (referral sites, paid ads, organic search, etc.).
@@ -11,7 +11,7 @@ reports eg for a grapgh
 - **Booking Modifications**: Percentage of bookings that are modified after the initial booking, including changes in dates, preferences, or services.
 - **Booking Completion Time**: The average time it takes for a user to complete a booking, from initial visit to final confirmation.
 ### **10. Geographical Analytics**
-- **Bookings by Location**: The number of bookings by region, country, or city.
+-- **Bookings by Location**: The number of bookings by region, country, or city.
 - **Booking Trends by Location**: Understanding how different geographical areas are booking services at different times.
 - **Local Preferences**: Analytics showing which services are more popular in specific locations.
 

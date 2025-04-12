@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
-from models.bookings import DailyBookings, WeeklyBookings, MonthlyBookings, QuarterlyBookings, YearlyBookings
+from models.bookings import DailyBookings, WeeklyBookings, MonthlyBookings, QuarterlyBookings, YearlyBookings,Location, BookingsByLocation, BookingLocationType
 from uuid import uuid4
 from datetime import datetime
 
@@ -221,3 +221,94 @@ class BookingService:
             return True
         else:
             return False
+
+    async def create_location(self, name: str, location_type: BookingLocationType) -> Location:
+        try:
+            new_location = Location(
+                name=name,
+                type=location_type,
+            )
+            self.db.add(new_location)
+            await self.db.commit()
+            await self.db.refresh(new_location)
+            return new_location
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            raise e
+
+    async def get_location(self, location_id: str) -> Location:
+        async with self.db.begin():
+            result = await self.db.execute(select(Location).filter_by(id=location_id))
+            location = result.scalars().first()
+            return location
+
+    async def update_location(self, location_id: str, name: str, location_type: BookingLocationType) -> Location:
+        location = await self.get_location(location_id)
+        if location:
+            location.name = name
+            location.type = location_type
+            await self.db.commit()
+            await self.db.refresh(location)
+            return location
+        return None
+
+    async def delete_location(self, location_id: str) -> bool:
+        location = await self.get_location(location_id)
+        if location:
+            await self.db.delete(location)
+            await self.db.commit()
+            return True
+        return False
+
+    async def create_booking_by_location(
+        self, location_id: str, location_name: str, location_type: BookingLocationType, booking_count: int
+    ) -> BookingsByLocation:
+        try:
+            new_booking = BookingsByLocation(
+                location_id=location_id,
+                location_name=location_name,
+                location_type=location_type,
+                booking_count=booking_count,
+            )
+            self.db.add(new_booking)
+            await self.db.commit()
+            await self.db.refresh(new_booking)
+            return new_booking
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            raise e
+
+    async def get_booking_by_location(self, booking_id: str) -> BookingsByLocation:
+        async with self.db.begin():
+            result = await self.db.execute(select(BookingsByLocation).filter_by(id=booking_id))
+            booking = result.scalars().first()
+            return booking
+
+    async def update_booking_by_location(
+        self, booking_id: str, location_name: str, location_type: BookingLocationType, booking_count: int
+    ) -> BookingsByLocation:
+        booking = await self.get_booking_by_location(booking_id)
+        if booking:
+            booking.location_name = location_name
+            booking.location_type = location_type
+            booking.booking_count = booking_count
+            await self.db.commit()
+            await self.db.refresh(booking)
+            return booking
+        return None
+
+    async def delete_booking_by_location(self, booking_id: str) -> bool:
+        booking = await self.get_booking_by_location(booking_id)
+        if booking:
+            await self.db.delete(booking)
+            await self.db.commit()
+            return True
+        return False
+
+    async def get_all_bookings_by_location(self, location_id: str) -> list:
+        async with self.db.begin():
+            result = await self.db.execute(
+                select(BookingsByLocation).filter_by(location_id=location_id)
+            )
+            bookings = result.scalars().all()
+            return bookings

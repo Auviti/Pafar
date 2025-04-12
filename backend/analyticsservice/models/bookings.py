@@ -149,3 +149,58 @@ class YearlyBookings(Base):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
+
+
+
+
+class BookingLocationType(enum.Enum):
+    CITY = "city"
+    COUNTRY = "country"
+    REGION = "region"
+
+class BookingsByLocation(Base):
+    __tablename__ = 'bookings_by_location'
+    
+    # Defining columns using the imported types
+    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)
+    # Foreign key for Location
+    location_id: Mapped[UUID] = mapped_column(ForeignKey('locations.id'), nullable=False)
+    location_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    
+    # Enum for the location type
+    location_type: Mapped[BookingLocationType] = mapped_column(Enum(BookingLocationType), nullable=False)
+    
+    # Booking count for this location
+    booking_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    
+    # Timestamps for creation and updates
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Optional relationship to Location model
+    location = relationship('Location', back_populates='bookings')
+
+    def __repr__(self):
+        return f"<BookingsByLocation(location_name={self.location_name}, booking_count={self.booking_count})>"
+
+# Sample of other models
+
+class Location(Base):
+    __tablename__ = 'locations'
+
+    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)
+    # Name of the location (City, Region, or Country)
+    name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    
+    # Type of the location (City, Region, or Country)
+    type: Mapped[BookingLocationType] = mapped_column(Enum(BookingLocationType), nullable=False)
+    
+    # Timestamps for creation and updates
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship to bookings
+    bookings = relationship('BookingsByLocation', back_populates='location')
+
+    def __repr__(self):
+        return f"<Location(name={self.name}, type={self.type})>"

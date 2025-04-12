@@ -114,3 +114,46 @@ class YearlyBookingCreateUpdate(YearlyBookingsBase):
 
 class YearlyBookings(YearlyBookingsBase):
     id: UUID
+
+class BookingLocationTypeEnum(str, Enum):
+    CITY = "city"
+    COUNTRY = "country"
+    REGION = "region"
+
+class LocationBase(BaseModel):
+    name: str
+    type: BookingLocationTypeEnum
+
+class LocationCreate(LocationBase):
+    pass
+
+class LocationUpdate(LocationBase):
+    name: Optional[str] = None
+    type: Optional[BookingLocationTypeEnum] = None
+
+class Location(LocationBase):
+    id: UUID
+
+    class Config:
+        from_attributes = True
+
+
+class BookingsByLocationBase(BaseModel):
+    location_name: str
+    location_type: BookingLocationTypeEnum
+    booking_count: int
+
+class BookingsByLocationCreate(BookingsByLocationBase):
+    location_id: UUID
+
+class BookingsByLocationUpdate(BookingsByLocationBase):
+    location_name: Optional[str] = None
+    location_type: Optional[BookingLocationTypeEnum] = None
+    booking_count: Optional[int] = None
+
+class BookingsByLocation(BookingsByLocationBase):
+    id: UUID
+    location_id: UUID
+
+    class Config:
+        from_attributes = True

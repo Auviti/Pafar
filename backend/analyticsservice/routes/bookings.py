@@ -12,7 +12,8 @@ from schemas.bookings import (
     WeeklyBookingCreateUpdate,
     MonthlyBookingCreateUpdate,
     QuarterlyBookingCreateUpdate,
-    YearlyBookingCreateUpdate
+    YearlyBookingCreateUpdate,
+    Location, BookingsByLocation,BookingLocationTypeEnum
 )
 
 from pydantic import BaseModel
@@ -123,3 +124,142 @@ async def delete_booking(
     if not is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
     return Response(data=None, success=True, message=f"{booking_type.capitalize()} booking deleted successfully.", code=200)
+
+# Create Location
+@router.post("/locations/", response_model=Response)
+async def create_location(name: str, location_type: BookingLocationTypeEnum, db: AsyncSession = Depends(get_db1)):
+    service = BookingService(db)
+    location = await service.create_location(name, location_type)
+    return Response(
+        success=True,
+        message="Location created successfully.",
+        code=200,
+        data=location
+    )
+
+# Get Location by ID
+@router.get("/locations/{location_id}", response_model=Response)
+async def get_location(location_id: str, db: AsyncSession = Depends(get_db1)):
+    service = BookingService(db)
+    location = await service.get_location(location_id)
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return Response(
+        success=True,
+        message="Location found.",
+        code=200,
+        data=location
+    )
+
+# Update Location by ID
+@router.put("/locations/{location_id}", response_model=Response)
+async def update_location(location_id: str, name: str, location_type: BookingLocationTypeEnum, db: AsyncSession = Depends(get_db1)):
+    service = BookingService(db)
+    location = await service.update_location(location_id, name, location_type)
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return Response(
+        success=True,
+        message="Location updated successfully.",
+        code=200,
+        data=location
+    )
+
+# Delete Location by ID
+@router.delete("/locations/{location_id}", response_model=Response)
+async def delete_location(location_id: str, db: AsyncSession = Depends(get_db1)):
+    service = BookingService(db)
+    success = await service.delete_location(location_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return Response(
+        success=True,
+        message="Location deleted successfully.",
+        code=200,
+        data=None  # No data returned on delete
+    )
+
+# Create Booking by Location
+@router.post("/bookings/", response_model=Response)
+async def create_booking_by_location(
+    location_id: str, location_name: str, location_type: BookingLocationTypeEnum, booking_count: int, db: AsyncSession = Depends(get_db1)
+):
+    service = BookingsByLocationService(db)
+    try:
+        booking = await service.create_booking_by_location(location_id, location_name, location_type, booking_count)
+        return Response(
+            success=True,
+            message="Booking created successfully.",
+            code=200,
+            data=booking.to_dict()  # Assuming `to_dict()` method is available in the model
+        )
+    except Exception as e:
+        return Response(
+            success=False,
+            message=f"Error creating booking: {str(e)}",
+            code=500,
+            data=None
+        )
+
+# Get Booking by Location ID
+@router.get("/bookings/{booking_id}", response_model=Response)
+async def get_booking_by_location(booking_id: str, db: AsyncSession = Depends(get_db1)):
+    service = BookingsByLocationService(db)
+    booking = await service.get_booking_by_location(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return Response(
+        success=True,
+        message="Booking found.",
+        code=200,
+        data=booking.to_dict()  # Assuming `to_dict()` method is available in the model
+    )
+
+# Update Booking by Location
+@router.put("/bookings/{booking_id}", response_model=Response)
+async def update_booking_by_location(
+    booking_id: str, location_name: str, location_type: BookingLocationTypeEnum, booking_count: int, db: AsyncSession = Depends(get_db1)
+):
+    service = BookingsByLocationService(db)
+    booking = await service.update_booking_by_location(booking_id, location_name, location_type, booking_count)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return Response(
+        success=True,
+        message="Booking updated successfully.",
+        code=200,
+        data=booking.to_dict()  # Assuming `to_dict()` method is available in the model
+    )
+
+# Delete Booking by Location
+@router.delete("/bookings/{booking_id}", response_model=Response)
+async def delete_booking_by_location(booking_id: str, db: AsyncSession = Depends(get_db1)):
+    service = BookingsByLocationService(db)
+    success = await service.delete_booking_by_location(booking_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return Response(
+        success=True,
+        message="Booking deleted successfully.",
+        code=200,
+        data=None  # No data returned on delete
+    )
+
+# Get All Bookings by Location ID
+@router.get("/bookings/location/{location_id}", response_model=Response)
+async def get_all_bookings_by_location(location_id: str, db: AsyncSession = Depends(get_db1)):
+    service = BookingsByLocationService(db)
+    bookings = await service.get_all_bookings_by_location(location_id)
+    if not bookings:
+        return Response(
+            success=False,
+            message="No bookings found for this location.",
+            code=404,
+            data=[]
+        )
+    return Response(
+        success=True,
+        message="Bookings retrieved successfully.",
+        code=200,
+        data=[booking.to_dict() for booking in bookings]  # Assuming `to_dict()` method is available in the model
+    )

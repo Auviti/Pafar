@@ -111,7 +111,7 @@ class BookingService:
             return BookingResponse.from_orm(booking)
 
     @staticmethod
-    async def delete_booking(db: AsyncSession, booking_id: UUID) -> str:
+    async def delete_booking(db: AsyncSession, booking_id: UUID) -> bool:
         """
         Delete a booking by its ID.
         :param db: Database session
@@ -127,7 +127,7 @@ class BookingService:
             
             await db.delete(booking)
             await db.commit()
-            return f"Booking {booking_id} deleted successfully"
+            return True
 
     @staticmethod
     async def calculate_fare(db: AsyncSession, booking_id: UUID) -> float:

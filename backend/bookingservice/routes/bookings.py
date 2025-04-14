@@ -59,3 +59,13 @@ async def protect_booking_route(booking_id: UUID, isprotected: bool, db: AsyncSe
         return Response.success(data=result, message="Booking protection updated")
     except Exception as e:
         return Response.error(message="Failed to update protection", code=500)
+
+@router.delete("/bookings/{booking_id}")
+async def delete_booking_by_id(booking_id: UUID, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await BookingService.delete_booking(db=db, booking_id=booking_id)
+        if not result:
+            return Response.error(message="Booking not found", code=404)
+        return Response.success(data=result, message="Booking deleted successfully")
+    except Exception as e:
+        return Response.error(message="Failed to delete booking", code=500)

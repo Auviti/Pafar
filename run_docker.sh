@@ -56,6 +56,7 @@ stop_containers() {
     docker-compose down
 }
 
+
 # Function to stop and remove containers, images, volumes, and orphan containers
 stop_and_remove_containers() {
     docker-compose down --rmi all --volumes --remove-orphans

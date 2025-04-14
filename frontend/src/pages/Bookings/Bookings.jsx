@@ -6,9 +6,11 @@ import Button from '../../components/Button/Button';
 import Pagination from '../../components/Pagination/Pagination';
 import useDeviceType from '../../hooks/useDeviceType';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { fetchBookings } from '../../services/api/booking';
 
 const Bookings = ({ header, footer, bottomheader }) => {
   const { isMobile, isDesktop } = useDeviceType();
+  // const { loading, data: bookings, error } = await fetchBookings({ baseurl: 'http://localhost:5000' });
 
   // Array representing the card data with actual image URLs
   const cards = Array.from({ length: 35 }, (_, index) => ({

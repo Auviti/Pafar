@@ -7,7 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 from routes import ride_router, booking_router
 
 from core.utils.reponse import Response, RequestValidationError 
-import redis.asyncio as aioredis
+from models import engine_db1 ,Base,create_tables
 
 app = FastAPI()
 settings = Settings()
@@ -54,7 +54,9 @@ async def validation_exception_handler(request, exc: RequestValidationError):
     errors = errors[0] if len(errors) == 1 else errors
 
     return Response(message=errors, success=False, code=422)
-
+@app.on_event("startup")
+async def startup():
+    await create_tables()    
 # user, rides,bus
 # # List of active connections (can be used for broadcasting messages)
 # active_connections: List[WebSocket] = []

@@ -8,7 +8,7 @@ from core.config import settings
 Base = declarative_base()
 CHAR_LENGTH=255
 # First database engine
-SQLALCHEMY_DATABASE_URL = 'postgresql+asyncpg://postgres:postgres@users-db:5432/users_db' #str(settings.SQLALCHEMY_DATABASE_URI) 
+SQLALCHEMY_DATABASE_URL = str(settings.SQLALCHEMY_DATABASE_URI) 
 # print('=====++++',SQLALCHEMY_DATABASE_URL,'===')
 engine_db1 = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 

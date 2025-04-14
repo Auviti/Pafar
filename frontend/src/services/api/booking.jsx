@@ -14,10 +14,16 @@ const fetchData = async (method, url, data = null) => {
             url,
             data
         });
-        result.data = response.data;
+        if (response.success === true){
+            result.data = response.data.data;
+            result.error = response.data.message
+        }else{
+            result.data = response.data.data;
+        }
         result.loading = false;
+        
     } catch (error) {
-        result.error = 'Failed to load data.';
+        result.error = error.message;
         result.loading = false;
     }
 

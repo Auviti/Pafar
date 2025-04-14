@@ -21,7 +21,6 @@ services:
       retries: 5
       timeout: 10s
       start_period: 30s
-  
   users-db:
     image: postgres:16-alpine
     container_name: users-db
@@ -41,7 +40,6 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
-
   userservice:
     build:
       context: ./backend/userservice
@@ -60,47 +58,47 @@ services:
       - ./backend/userservice:/usr/src/app
     env_file:
       - ./backend/userservice/.env
-
-  # # Booking Service
-  # bookingservice:
-  #   build:
-  #     context: ./backend/bookingservice
-  #     dockerfile: Dockerfile.dev
-  #   container_name: bookingservice
-  #   ports:
-  #     - "8001:8001"
-  #   restart: always
-  #   env_file:
-  #     - ./backend/bookingservice/.env
-  #   volumes:
-  #     - ./backend/bookingservice:/usr/src/app
-  #     - /usr/src/app/venv
-  #   networks:
-  #     - webnet
-  #   depends_on:
-  #     - kafka
-
-  # # Bookings Database (PostgreSQL)
-  # bookings-db:
-  #   image: postgres:16-alpine3.20
-  #   container_name: bookings-db
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: bookings_db
-  #   volumes:
-  #     - bookings-db-data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5433:5432"
-  #   networks:
-  #     - webnet
-  #   healthcheck:
-  #     test: ["CMD", "pg_isready", "-U", "postgres", "-d", "bookings_db"]
-  #     interval: 10s
-  #     retries: 5
-  #     start_period: 30s
-  #     timeout: 10s
+  # Booking Service
+  bookingservice:
+    build:
+      context: ./backend/bookingservice
+      dockerfile: Dockerfile.dev
+    container_name: bookingservice
+    ports:
+      - "8001:8001"
+    restart: always
+    env_file:
+      - ./backend/bookingservice/.env
+    volumes:
+      - ./backend/bookingservice:/usr/src/app
+      - /usr/src/app/venv
+    networks:
+      - webnet
+    depends_on:
+      kafka:
+        condition: service_healthy
+      bookings-db:
+        condition: service_healthy
+  # Bookings Database (PostgreSQL)
+  bookings-db:
+    image: postgres:16-alpine3.20
+    container_name: bookings-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bookings_db
+    volumes:
+      - bookings-db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - webnet
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "bookings_db"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
   
   
   # Frontend Service
@@ -127,5 +125,4 @@ volumes:
     
   analytics-db-data:
 
-  pgadmin_data:
-    
+  payment-db-data:

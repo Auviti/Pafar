@@ -25,6 +25,8 @@ if [ "$(uname)" == "Linux" ]; then
     # Step 1: Copy the environment file
     echo "Step 1: Copying the environment file..."
     cp ./backend/userservice/.env.local ./backend/userservice/.env
+    cp ./backend/bookingservice/.env.local ./backend/bookingservice/.env
+    cp ./backend/analyticsservice/.env.local ./backend/analytics/.env
 fi
 
 # Function to create the network and volume
@@ -33,7 +35,10 @@ create_network_and_volume() {
     docker network create webnet || echo "Network 'webnet' already exists or failed to create"
 
     # Create the Docker volume if it doesn't exist
-    docker volume create --name users-db-data || echo "Volume 'users-db-data' already exists or failed to create"
+    # docker volume create --name users-db-data || echo "Volume 'users-db-data' already exists or failed to create"
+    # docker volume create --name bookings-db-data || echo "Volume 'bookings-db-data' already exists or failed to create"
+    # docker volume create --name analytics-db-data || echo "Volume 'analytics-db-data' already exists or failed to create"
+
 }
 
 # Function to start containers
@@ -41,6 +46,7 @@ start_containers() {
     create_network_and_volume
     # Build docker-compose for development
     docker-compose -f docker-compose.dev.yml build
+    
     # Run docker-compose for the specified environment
     docker-compose -f docker-compose.dev.yml up -d
 }

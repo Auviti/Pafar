@@ -1,27 +1,7 @@
 
 services:
-  # zookeeper:
-  #   image: 'confluentinc/cp-zookeeper'
-  #   container_name: zookeeper
-  #   ports:
-  #     - '2181:2181'
-  #   restart: always
-  #   environment:   
-  #     - ZOOKEEPER_CLIENT_PORT=2181  # Add the required environment variable for Zookeeper client port
-  #     - ZOOKEEPER_TICK_TIME=2000
-  #     - ZOOKEEPER_INIT_LIMIT=5
-  #     - ZOOKEEPER_SYNC_LIMIT=2
-  #   healthcheck:
-  #     test: ["CMD", "nc", "-z", "localhost", "2181"]  # Health check for Zookeeper client port
-  #     interval: 30s
-  #     retries: 3
-  #     start_period: 10s
-  #     timeout: 5s
-  #   networks:
-  #     - webnet
-  
   kafka:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.8.0
     container_name: kafka
     environment:
       - KAFKA_CFG_NODE_ID=0
@@ -34,149 +14,96 @@ services:
    
     networks:
       - webnet
-
-
-  userservice:
-    image: userservice:latest
-    container_name: userservice
-    build:
-      context: ./backend/userservice
-      dockerfile: Dockerfile.dev
-    ports:
-      - "8000:8000"
-    restart: always
-    
-    env_file:
-      - ./backend/userservice/.env  # This loads the variables from your .env file
-    volumes:
-      - ./backend/userservice:/usr/src/app
-      - /usr/src/app/venv
-    networks:
-      - webnet
-    depends_on:
-      - kafka
-      - users-db
+    # optional healthcheck to confirm it's alive
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      retries: 5
+      timeout: 10s
+      start_period: 30s
   
   users-db:
-    image: postgres:16-alpine3.20
+    image: postgres:16-alpine
     container_name: users-db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: user_db
-      # POSTGRES_HOST_AUTH_METHOD: trust to allow all connections without a password. This is *not* recommended.
+      POSTGRES_DB: users_db
     volumes:
       - users-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     networks:
       - webnet
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "your_username", "-d", "your_db"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "users_db"]
       interval: 10s
       retries: 5
       start_period: 30s
       timeout: 10s
 
+  userservice:
+    build:
+      context: ./backend/userservice
+      dockerfile: Dockerfile.dev
+    container_name: userservice
+    depends_on:
+      kafka:
+        condition: service_healthy
+      users-db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - webnet
+    volumes:
+      - ./backend/userservice:/usr/src/app
+    env_file:
+      - ./backend/userservice/.env
+
+  # # Booking Service
   # bookingservice:
-  #   image: bookingservice:latest
-  #   container_name: bookingservice
   #   build:
-  #     context: ./backend/bookingservice  # Update with the correct path to your Booking Service's source code
+  #     context: ./backend/bookingservice
+  #     dockerfile: Dockerfile.dev
+  #   container_name: bookingservice
   #   ports:
-  #     - "${BOOKINGPORT}:${BOOKINGPORT}"
+  #     - "8001:8001"
   #   restart: always
-  #   environment:
-  #     - KAFKA_HOST=${KAFKA_HOST}
-  #     - BOOKINGPORT=${BOOKINGPORT}
-  #     - BOOKINGIP=${BOOKINGIP}
-  #     - BOOKING_CREATED_TOPIC=${BOOKING_CREATED_TOPIC}
-  #     - BOOKING_UPDATED_TOPIC=${BOOKING_UPDATED_TOPIC}
-  #     - BOOKING_CANCELLED_TOPIC=${BOOKING_CANCELLED_TOPIC}
-  #     - BOOKING_COMPLETED_TOPIC=${BOOKING_COMPLETED_TOPIC}
-  #     - BOOKING_PAYMENT_RECEIVED_TOPIC=${BOOKING_PAYMENT_RECEIVED_TOPIC}
-  #     - BOOKING_NOTIFICATION_TOPIC=${BOOKING_NOTIFICATION_TOPIC}
   #   env_file:
-  #     - ./backend/bookingservice/.env  # This loads environment variables from the .env file for the Booking Service
+  #     - ./backend/bookingservice/.env
   #   volumes:
   #     - ./backend/bookingservice:/usr/src/app
-  #     - /usr/src/app/venv  # Virtual environment (optional, based on your setup)
+  #     - /usr/src/app/venv
   #   networks:
   #     - webnet
   #   depends_on:
   #     - kafka
 
+  # # Bookings Database (PostgreSQL)
   # bookings-db:
   #   image: postgres:16-alpine3.20
   #   container_name: bookings-db
   #   restart: always
   #   environment:
-  #     POSTGRES_USER: "${POSTGRESQL_USER}"
-  #     POSTGRES_PASSWORD: "${POSTGRESQL_PASSWORD}"
-  #     POSTGRESQL_SERVER: "${POSTGRESQL_SERVER}"
-  #     POSTGRESQL_PORT: "${POSTGRESQL_PORT}"
-  #     POSTGRESQL_DB: "${POSTGRESQL_DB}"
-  #     DOMAIN: "${DOMAIN}"
-  #     ENVIRONMENT: "${ENVIRONMENT}"
-  #     BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS}"
-  #     SQLITE_DB_PATH: "${SQLITE_DB_PATH}"
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: bookings_db
   #   volumes:
   #     - bookings-db-data:/var/lib/postgresql/data
-  #   networks:
-  #     - webnet
-      
-  # analyticsservice:
-  #   image: analyticsservice:latest
-  #   container_name: analyticsservice
-  #   build:
-  #     context: ./backend/analyticsservice  # Update with the correct path to your Analytics Service's source code
   #   ports:
-  #     - "${ANALYTICS_PORT}:${ANALYTICS_PORT}"
-  #   restart: always
-  #   environment:
-  #     - KAFKA_HOST=${KAFKA_HOST}
-  #     - ANALYTICS_PORT=${ANALYTICS_PORT}
-  #     - ANALYTICS_IP=${ANALYTICS_IP}
-  #     - ANALYTICS_REPORT_GENERATED_TOPIC=${ANALYTICS_REPORT_GENERATED_TOPIC}
-  #     - ANALYTICS_DATA_PROCESSED_TOPIC=${ANALYTICS_DATA_PROCESSED_TOPIC}
-  #     - ANALYTICS_USER_ACTIVITY_TOPIC=${ANALYTICS_USER_ACTIVITY_TOPIC}
-  #     - ANALYTICS_BOOKING_STATS_TOPIC=${ANALYTICS_BOOKING_STATS_TOPIC}
-  #     - ANALYTICS_PAYMENT_STATS_TOPIC=${ANALYTICS_PAYMENT_STATS_TOPIC}
-  #     - REPORTS_TOPIC=${REPORTS_TOPIC}
-  #   env_file:
-  #     - ./backend/analyticsservice/.env  # This loads environment variables from the .env file for the Analytics Service
-  #   volumes:
-  #     - ./backend/analyticsservice:/usr/src/app
-  #     - /usr/src/app/venv  # Virtual environment (optional, based on your setup)
+  #     - "5433:5432"
   #   networks:
   #     - webnet
-  #   depends_on:
-  #     - kafka
-  #     - bookings-db  # Assuming the Analytics Service interacts with the Bookings DB
-  #     - payments-db  # Assuming the Analytics Service needs Payment Data
-  #     - users-db  # Assuming the Analytics Service needs User Data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "postgres", "-d", "bookings_db"]
+  #     interval: 10s
+  #     retries: 5
+  #     start_period: 30s
+  #     timeout: 10s
   
-  # analytics-db:
-  #   image: postgres:16-alpine3.20
-  #   container_name: analytics-db
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: "${POSTGRESQL_USER}"
-  #     POSTGRES_PASSWORD: "${POSTGRESQL_PASSWORD}"
-  #     POSTGRESQL_SERVER: "${POSTGRESQL_SERVER}"
-  #     POSTGRESQL_PORT: "${POSTGRESQL_PORT}"
-  #     POSTGRESQL_DB: "${POSTGRESQL_DB}"
-  #     DOMAIN: "${DOMAIN}"
-  #     ENVIRONMENT: "${ENVIRONMENT}"
-  #     BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS}"
-  #     SQLITE_DB_PATH: "${SQLITE_DB_PATH}"
-      
-  #   volumes:
-  #     - analytics-db-data:/var/lib/postgresql/data
-  #   networks:
-  #     - webnet
   
-  # Frontend service configuration serving static files
+  # Frontend Service
   frontend:
     build:
       context: ./frontend
@@ -185,19 +112,20 @@ services:
     ports:
       - "5173:5173"
     restart: always
-    # env_file:
-    #   - ./frontend/env
     networks:
       - webnet
+    
 
 networks:
   webnet:
-    external: true
+    driver: bridge
 
 volumes:
   users-db-data:
-    external: true
+    
   bookings-db-data:
-    external: true
+    
   analytics-db-data:
-    external: true
+
+  pgadmin_data:
+    

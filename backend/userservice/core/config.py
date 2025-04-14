@@ -46,9 +46,9 @@ class Settings:
     # PostgreSQL settings
     POSTGRES_USER: str = os.getenv('POSTGRES_USER')  # The username for PostgreSQL
     POSTGRES_PASSWORD: str = os.getenv('POSTGRES_PASSWORD')  # The password for PostgreSQL
-    POSTGRES_SERVER: str = os.getenv('POSTGRES_SERVER')  # The server where PostgreSQL is hosted
+    POSTGRES_SERVER: str = os.getenv('POSTGRES_SERVER','users-db')  # The server where PostgreSQL is hosted
     POSTGRES_PORT: int = int(os.getenv('POSTGRES_PORT', 5432))  # Default to 5432 if not defined
-    POSTGRES_DB: str = os.getenv('POSTGRES_DB')  # The name of the PostgreSQL database
+    POSTGRES_DB: str = os.getenv('POSTGRES_DB','users_db')  # The name of the PostgreSQL database
 
     # SQLite settings (fallback to SQLite for local development)
     SQLITE_DB_PATH: str = os.getenv('SQLITE_DB_PATH', 'db1.db')  # Default path for the SQLite database

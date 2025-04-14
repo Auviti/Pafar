@@ -3,18 +3,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
-from fastapi import Depends
 from core.config import settings
 
 Base = declarative_base()
 CHAR_LENGTH=255
 # First database engine
-SQLALCHEMY_DATABASE_URL = str(settings.SQLALCHEMY_DATABASE_URI) # For SQLite, update with the actual URI if necessary.
+SQLALCHEMY_DATABASE_URL = 'postgresql+asyncpg://postgres:postgres@users-db:5432/users_db' #str(settings.SQLALCHEMY_DATABASE_URI) 
 # print('=====++++',SQLALCHEMY_DATABASE_URL,'===')
 engine_db1 = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
-
-# Second database engine
-engine_db2 = create_async_engine('sqlite+aiosqlite:///db2.db', echo=True)
 
 # Session factory for the first database (Async)
 AsyncSessionDB1 = sessionmaker(
@@ -23,12 +19,6 @@ AsyncSessionDB1 = sessionmaker(
     expire_on_commit=False, 
 )
 
-# Session factory for the second database (Async)
-AsyncSessionDB2 = sessionmaker(
-    bind=engine_db2, 
-    class_=AsyncSession, 
-    expire_on_commit=False, 
-)
 
 # Dependency to get the async session for the first database
 async def get_db1():
@@ -39,9 +29,3 @@ async def get_db1():
         # Log the error or handle it accordingly
         print(f"Database connection failed: {e}")
         raise
-
-
-# Dependency to get the async session for the second database
-async def get_db2():
-    async with AsyncSessionDB2() as session:
-        yield session  # Session will automatically close at the end of the async with block

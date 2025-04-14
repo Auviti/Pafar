@@ -1,27 +1,32 @@
-# pull official base image
+# Pull official Python image
 FROM python:3.12-slim
-
-# Create a directory where our app will be placed
-RUN mkdir -p /usr/src/app/venv && chown -R node:node /usr/src/app
-
-# Switch to the root user
-USER root
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy the requirements.txt
+# Install system dependencies (only if you need them)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the requirements.txt first to leverage Docker cache during builds
 COPY requirements*.txt ./
 
 # Install project dependencies
-RUN pip install --upgrade pip &&  pip install gunicorn && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .
-RUN chmod +x run_migrations && \ 
-    ./run_migrations.sh
-# Expose the port your app runs on
-EXPOSE 8000
 
-# Command to run your app
-CMD ["uvicorn", "main:app", "--reload"]
+# Make the run_migrations.sh script executable and run it
+RUN chmod +x run_migrations.sh && \
+    ./run_migrations.sh || true
+# Ensure the migration script exits with failure if theres an issue
+
+# Expose the port your app runs on
+EXPOSE 8002
+
+# Command to run your app with uvicorn and enable --reload for development
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]

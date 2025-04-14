@@ -8,12 +8,10 @@ from starlette.middleware.cors import CORSMiddleware
 from routes.oauth2.google import router as google_router
 from routes.user import router as user_router
 from routes.vehicle import router as vehicle_router
-
 from core.utils.reponse import Response, RequestValidationError 
-import redis.asyncio as aioredis
+from models import engine_db1 ,Base,create_tables
 app = FastAPI()
 settings = Settings()
-app = FastAPI()
 
 # Add CORS middleware if configured
 if settings.BACKEND_CORS_ORIGINS:
@@ -59,7 +57,9 @@ async def validation_exception_handler(request, exc: RequestValidationError):
 
     return Response(message=errors, success=False, code=422)
 
-    
+@app.on_event("startup")
+async def startup():
+    await create_tables()    
 # user, rides,bus
 # # List of active connections (can be used for broadcasting messages)
 # active_connections: List[WebSocket] = []

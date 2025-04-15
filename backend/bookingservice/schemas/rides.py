@@ -13,6 +13,16 @@ class RideStatus(str, Enum):
     COMPLETED = "Completed"
     CANCELED = "Canceled"
 
+class RideClass(str, Enum):
+    ECONOMY = "economy"
+    BUSINESS = "business"
+    FIRST_CLASS = "first_class"
+    PREMIUM_ECONOMY = "premium_economy"
+class RideType(str, Enum):
+    ROUND = "Round"
+    ONE_WAY = "One_way"
+    MULTICITY = "Multi_City"
+
 class Location(BaseModel):
     latitude: Union[float, int]
     longitude: Union[float, int]
@@ -35,6 +45,8 @@ class Location(BaseModel):
 class Ride(BaseModel):
     name: Optional[str] = None
     status: RideStatus
+    ride_class: RideClass
+    ride_type: RideType
     vehicle_id: str
     trip_fare: float
     startlocation: dict

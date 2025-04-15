@@ -33,19 +33,23 @@ class RideClass(PyEnum):
     BUSINESS = "business"
     FIRST_CLASS = "first_class"
     PREMIUM_ECONOMY = "premium_economy"
+class RideType(PyEnum):
+    ROUND = "Round"
+    ONE_WAY = "One_way"
+    MULTICITY = "Multi_City"
 
 # Ride Model
 class Ride(Base):
     __tablename__ = "rides"
 
     # Ride ID (UUID as the primary key)
-    # Use UUID type with default to auto-generate UUID
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
     
     name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     # Ride Status (Assigned, Ongoing, Completed, Canceled)
     status: Mapped[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)
     ride_class: Mapped[RideClass] = mapped_column(Enum(RideClass), default=RideClass.ECONOMY)  # Class of the trip (Economy, Business, etc.)
+    ride_type: Mapped[RideClass] = mapped_column(Enum(RideType), default=RideType.ONE_WAY)
     
     # Foreign key referencing the Vehicle table (UUID)
     vehicle_id: Mapped[UUID] = mapped_column(Text, nullable=False) 
@@ -58,7 +62,7 @@ class Ride(Base):
     endlocation: Mapped[dict] = mapped_column(JSON, nullable=True)  # End location
 
     # Timestamps
-    starts_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # Start time of the ride
+    starts_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)  # Start time of the ride
     ends_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)  # End time of the ride
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Created timestamp (UTC)
@@ -98,6 +102,7 @@ class Ride(Base):
             "name": self.name,
             "status": self.status.value,
             "ride_class": self.ride_class.value,
+            "ride_type":self.ride_type.value,
             "vehicle_id": str(self.vehicle_id),
             "trip_fare": self.trip_fare,
             "startlocation": self.startlocation,

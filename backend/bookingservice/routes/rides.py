@@ -86,3 +86,13 @@ async def get_ride_duration(ride_id: UUID, db: AsyncSession = Depends(get_db1)):
     if ride is None:
         return Response(success=False, message="Ride not found", code=404)
     return Response(data=await RideService.get_ride_duration(ride), message="Ride duration fetched successfully", code=200)
+
+# Filter users by dynamic criteria
+@router.post("/rides/filter")
+async def filter_rides_by_criteria(filters: dict,  db: AsyncSession = Depends(get_db1)):
+    try:
+        rides = await RideService.filter_rides(db, filters)
+        
+        return Response(data=rides,code=200)
+    except Exception as error:
+        return Response(message=str(error),success=False,code=500)

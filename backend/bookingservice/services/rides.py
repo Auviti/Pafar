@@ -16,6 +16,8 @@ class RideService:
             ride = Ride(
                 name = ride_data.name,
                 status=ride_data.status,
+                ride_class = ride_data.ride_class,
+                ride_type=ride_data.ride_type,
                 vehicle_id=ride_data.vehicle_id,
                 trip_fare=ride_data.trip_fare,
                 startlocation=ride_data.startlocation,
@@ -54,7 +56,29 @@ class RideService:
             return result.scalars().all()
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching rides: {str(e)}")
+    # Filter rides dynamically (asynchronous)
+    @staticmethod
+    async def filter_rides(db: AsyncSession, filters: dict, skip: int = 0, limit: int = 100):
+        # Start with the base query
+        query = select(Ride)
+        
+        # Apply filters dynamically
+        for field, value in filters.items():
+            if hasattr(Ride, field):  # Check if ride model has the attribute (field)
+                query = query.filter(getattr(Ride, field) == value).offset(skip).limit(limit)
 
+        # Execute the query after all filters are applied
+        result = await db.execute(query)
+        
+        # Get all rides as a list of dictionaries
+        res=result.scalars().all()
+        rides = []
+        # Remove sensitive keys from each ride's dictionary
+        for ride in res:
+            ride_dict = ride.to_dict()  # Assuming you have a method to convert to dict
+            
+            rides.append(ride_dict)
+        return rides
     @staticmethod
     async def update_ride_status(db: AsyncSession, ride_id: UUID, status: RideStatus):
         """Updates the status of a ride."""
@@ -81,6 +105,8 @@ class RideService:
             if ride:
                 ride.name = ride_data.name
                 ride.status = ride_data.status
+                ride.ride_class = ride_data.ride_class
+                ride.ride_type = ride_data.ride_type
                 ride.updated_at = datetime.utcnow()
                 ride.status = ride_data.status
                 ride.vehicle_id = ride_data.vehicle_id

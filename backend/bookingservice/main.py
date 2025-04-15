@@ -48,7 +48,11 @@ async def validation_exception_handler(request, exc: RequestValidationError):
         e['loc'] = error['loc']
         e['msg'] = error['msg']
         if 'ctx' in error.keys():
-            e['ctx'] = error['ctx']['error']
+            err = error['ctx']
+            if 'error' in err.keys():
+                e['ctx'] = err['error']
+            else:
+                e['ctx'] = err
 
         errors.append(e)
     errors = errors[0] if len(errors) == 1 else errors

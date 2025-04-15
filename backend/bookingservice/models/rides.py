@@ -1,50 +1,51 @@
 from sqlalchemy import Integer, String, ForeignKey, Enum, DateTime, JSON, Float, CheckConstraint, Boolean, Text
 from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
+from sqlalchemy.dialects.postgresql import TIMESTAMP
+
 from core.database import Base, CHAR_LENGTH
 from datetime import datetime
 from enum import Enum as PyEnum
-from uuid import uuid4 
-from uuid import UUID
+from uuid import UUID,uuid4
 from typing import List, Optional
 import sys
+
+
 
 # Database type detection
 if 'postgresql' in sys.argv:
     # Use native UUID for PostgreSQL
     UUIDType = UUID(as_uuid=True)
     mappeditem = UUID
-    default = uuid.uuid4  # Changed from uuid4 to uuid.uuid4 (correct)
+    default = uuid4
 else:
     # Use string representation for other databases
     UUIDType = String(36)
     mappeditem = str
     default = lambda: str(uuid4())
-
 # Enum for Ride Status
 class RideStatus(PyEnum):
-    UPCOMING = "UpComing"
-    ASSIGNED = "Assigned"
-    ONGOING = "Ongoing"
-    COMPLETED = "Completed"
-    CANCELED = "Canceled"
-
+    UPCOMING = "UPCOMING"
+    ASSIGNED = "ASSIGNED"
+    ONGOING = "ONGOING"
+    COMPLETED = "COMPLETED"
+    CANCELED = "CANCELED"
 class RideClass(PyEnum):
-    ECONOMY = "economy"
-    BUSINESS = "business"
-    FIRST_CLASS = "first_class"
-    PREMIUM_ECONOMY = "premium_economy"
+    ECONOMY = "ECONOMY"
+    BUSINESS = "BUSINESS"
+    FIRST_CLASS = "FIRST_CLASS"
+    PREMIUM_ECONOMY = "PREMIUM_ECONOMY"
+
 class RideType(PyEnum):
-    ROUND = "Round"
-    ONE_WAY = "One_way"
-    MULTICITY = "Multi_City"
+    ROUND = "ROUND"
+    ONE_WAY = "ONE_WAY"
+    MULTICITY = "MULTICITY"
 
 # Ride Model
 class Ride(Base):
     __tablename__ = "rides"
 
     # Ride ID (UUID as the primary key)
-    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
-    
+    id: Mapped[UUID] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
     name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     # Ride Status (Assigned, Ongoing, Completed, Canceled)
     status: Mapped[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)
@@ -52,21 +53,22 @@ class Ride(Base):
     ride_type: Mapped[RideClass] = mapped_column(Enum(RideType), default=RideType.ONE_WAY)
     
     # Foreign key referencing the Vehicle table (UUID)
-    vehicle_id: Mapped[UUID] = mapped_column(Text, nullable=False) 
+    vehicle_id: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False) 
+
     # Fare amount for the trip
     trip_fare: Mapped[Float] = mapped_column(Float, nullable=False)
 
     # Locations stored as JSON objects (latitude, longitude, and address)
-    startlocation: Mapped[dict] = mapped_column(JSON, nullable=True)  # Start location
-    currentlocation: Mapped[dict] = mapped_column(JSON, nullable=True)  # Current location during the ride
-    endlocation: Mapped[dict] = mapped_column(JSON, nullable=True)  # End location
+    startlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    currentlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    endlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
 
     # Timestamps
-    starts_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)  # Start time of the ride
-    ends_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)  # End time of the ride
+    starts_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)  # Start time of the ride
+    ends_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)  # End time of the ride
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Created timestamp (UTC)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Updated timestamp (auto updates)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.utcnow)  # Created timestamp (UTC)
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)  # Updated timestamp (auto updates)
 
     # Luggage weights
     suitcase: Mapped[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for suitcase weight')

@@ -8,38 +8,22 @@ from typing import Union
 
 # Enum for Ride Status
 class RideStatus(str, Enum):
-    ASSIGNED = "Assigned"
-    ONGOING = "Ongoing"
-    COMPLETED = "Completed"
-    CANCELED = "Canceled"
+    UPCOMING = "UPCOMING"
+    ASSIGNED = "ASSIGNED"
+    ONGOING = "ONGOING"
+    COMPLETED = "COMPLETED"
+    CANCELED = "CANCELED"
 
 class RideClass(str, Enum):
-    ECONOMY = "economy"
-    BUSINESS = "business"
-    FIRST_CLASS = "first_class"
-    PREMIUM_ECONOMY = "premium_economy"
+    ECONOMY = "ECONOMY"
+    BUSINESS = "BUSINESS"
+    FIRST_CLASS = "FIRST_CLASS"
+    PREMIUM_ECONOMY = "PREMIUM_ECONOMY"
+
 class RideType(str, Enum):
-    ROUND = "Round"
-    ONE_WAY = "One_way"
-    MULTICITY = "Multi_City"
-
-class Location(BaseModel):
-    latitude: Union[float, int]
-    longitude: Union[float, int]
-    address: str
-
-    # Custom validator for location fields to ensure data integrity
-    @validator('latitude', 'longitude')
-    def check_coordinates(cls, v):
-        if not isinstance(v, (int, float)):
-            raise ValueError(f"{v} must be a number.")
-        return v
-
-    @validator('address')
-    def check_address(cls, v):
-        if not isinstance(v, str):
-            raise ValueError(f"Address must be a string.")
-        return v
+    ROUND = "ROUND"
+    ONE_WAY = "ONE_WAY"
+    MULTICITY = "MULTICITY"
 
 # Pydantic Schema for Ride
 class Ride(BaseModel):
@@ -49,11 +33,11 @@ class Ride(BaseModel):
     ride_type: RideType
     vehicle_id: str
     trip_fare: float
-    startlocation: dict
-    currentlocation: dict
-    endlocation: dict
-    starts_at: datetime
-    ends_at: datetime
+    startlocation: str
+    currentlocation:str
+    endlocation: str
+    starts_at: str
+    ends_at: str
     suitcase: float = 0.0
     handluggage: float = 0.0
     otherluggage: float = 0.0
@@ -61,48 +45,34 @@ class Ride(BaseModel):
     class Config:
         from_attributes = True  # Enable ORM mapping for SQLAlchemy models
 
-    # Validator to ensure that location contains latitude, longitude, and address
-    # Root validator to validate multiple fields at once
-    @root_validator(pre=True)
-    def check_location_fields(cls, values):
-        startlocation = values.get('startlocation')
-        endlocation = values.get('endlocation')
-
-        # Ensure both startlocation and endlocation are provided
-        if startlocation:
-            # Ensure the location contains latitude, longitude, and address for startlocation
-            required_fields = ['latitude', 'longitude', 'address']
-            for field_name in required_fields:
-                if field_name not in startlocation:
-                    raise ValueError(f"Startlocation must include {', '.join(required_fields)}.")
-                if not isinstance(startlocation['latitude'], (int, float)):
-                    raise ValueError("Latitude must be a number.")
-                if not isinstance(startlocation['longitude'], (int, float)):
-                    raise ValueError("Longitude must be a number.")
-                if not isinstance(startlocation['address'], str):
-                    raise ValueError("Address must be a string.")
-        
-        if endlocation:
-            # Ensure the location contains latitude, longitude, and address for endlocation
-            required_fields = ['latitude', 'longitude', 'address']
-            for field_name in required_fields:
-                if field_name not in endlocation:
-                    raise ValueError(f"Endlocation must include {', '.join(required_fields)}.")
-                if not isinstance(endlocation['latitude'], (int, float)):
-                    raise ValueError("Latitude must be a number.")
-                if not isinstance(endlocation['longitude'], (int, float)):
-                    raise ValueError("Longitude must be a number.")
-                if not isinstance(endlocation['address'], str):
-                    raise ValueError("Address must be a string.")
-        
-        return values
-
+   
 class RideCreate(Ride):
     pass  # Used when creating a new ride (no ride id)
 
 class RideUpdate(Ride):
     
     pass
+class RideFilter(BaseModel):
+    id: Optional[UUID] = None
+    name: Optional[str] = None
+    status: Optional[RideStatus] = None
+    ride_class: Optional[RideClass] = None
+    ride_type: Optional[RideType] = None
+    vehicle_id: Optional[str] = None
+    trip_fare: Optional[float] = None
+    startlocation: Optional[str] = None
+    currentlocation:Optional[str] = None
+    endlocation: Optional[str] = None
+    starts_at: Optional[str] = None
+    ends_at: Optional[str] = None
+    suitcase: Optional[float] = 0.0
+    handluggage: Optional[float] = 0.0
+    otherluggage: Optional[float] = 0.0
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True  # Enable ORM mapping for SQLAlchemy models
 
 class RideResponse(Ride):
     id: UUID  # This will be returned when fetching the ride from the database

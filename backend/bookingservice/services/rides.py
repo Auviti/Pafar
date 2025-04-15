@@ -2,16 +2,22 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
-from models.rides import Ride # Import the ORM model
-from schemas.rides import RideStatus, RideCreate, RideUpdate, Location, UUID
+from fastapi import FastAPI, HTTPException, Depends, Query
+import asyncpg
+from sqlalchemy import cast
+from models.rides import Ride,mappeditem # Import the ORM model
+from schemas.rides import RideStatus, RideCreate, RideUpdate, UUID,RideFilter
 from datetime import datetime
 import asyncio
+from datetime import datetime, timezone, timedelta
+from typing import Optional, List, Dict
 
 class RideService:
 
     @staticmethod
     async def create_ride(db: AsyncSession, ride_data: RideCreate):
         """Creates a new ride in the database."""
+        
         try:
             ride = Ride(
                 name = ride_data.name,
@@ -23,28 +29,30 @@ class RideService:
                 startlocation=ride_data.startlocation,
                 currentlocation=ride_data.currentlocation,
                 endlocation=ride_data.endlocation,
-                starts_at=ride_data.starts_at,
-                ends_at=ride_data.ends_at,
+                starts_at = datetime.fromisoformat(ride_data.starts_at.replace("Z", "+00:00")),
+                ends_at = datetime.fromisoformat(ride_data.ends_at.replace("Z", "+00:00")),
                 suitcase=ride_data.suitcase,
                 handluggage=ride_data.handluggage,
                 otherluggage=ride_data.otherluggage,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
             )
             db.add(ride)
             await db.commit()  # Async commit
             await db.refresh(ride)  # Async refresh
-            return ride
-        except SQLAlchemyError as e:
+            return ride.to_dict()
+        except Exception as e:
             await db.rollback()  # Async rollback
             raise Exception(f"Error creating ride: {str(e)}")
 
     @staticmethod
     async def get_ride(db: AsyncSession, ride_id: UUID):
         """Fetches a ride by its ID."""
+        rideid = str(ride_id) if mappeditem is str else ride_id
         try:
-            result = await db.execute(select(Ride).filter(Ride.id == ride_id))
-            return result.scalars().first()
+            result = await db.execute(select(Ride).filter(Ride.id == rideid))
+            res = result.scalars().first()
+            if res:
+                return res.to_dict()
+            return res
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching ride: {str(e)}")
 
@@ -53,32 +61,78 @@ class RideService:
         """Fetches all rides, paginated by skip and limit."""
         try:
             result = await db.execute(select(Ride).offset(skip).limit(limit))
-            return result.scalars().all()
+            rides=[]
+            # Remove sensitive keys from each ride's dictionary
+            for ride in result.scalars().all():
+                ride_ = ride.to_dict()
+                rides.append(ride_)
+            return rides
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching rides: {str(e)}")
+        
     # Filter rides dynamically (asynchronous)
     @staticmethod
-    async def filter_rides(db: AsyncSession, filters: dict, skip: int = 0, limit: int = 100):
-        # Start with the base query
-        query = select(Ride)
-        
-        # Apply filters dynamically
-        for field, value in filters.items():
-            if hasattr(Ride, field):  # Check if ride model has the attribute (field)
-                query = query.filter(getattr(Ride, field) == value).offset(skip).limit(limit)
+    async def filter_rides(db: AsyncSession, filter: Optional[RideFilter], skip: int = 0, limit: int = 10):
+        try:
+            # Start building the query
+            query = select(Ride)
 
-        # Execute the query after all filters are applied
-        result = await db.execute(query)
-        
-        # Get all rides as a list of dictionaries
-        res=result.scalars().all()
-        rides = []
-        # Remove sensitive keys from each ride's dictionary
-        for ride in res:
-            ride_dict = ride.to_dict()  # Assuming you have a method to convert to dict
-            
-            rides.append(ride_dict)
-        return rides
+            # Check if filter is provided
+            if filter:
+                # Filtering based on the fields available in the filter object
+                if filter.name:
+                    query = query.filter(Ride.name.ilike(f"%{filter.name}%"))
+                if filter.status:
+                    query = query.filter(Ride.status == filter.status)
+                if filter.ride_class:
+                    query = query.filter(Ride.ride_class == filter.ride_class)
+                if filter.ride_type:
+                    query = query.filter(Ride.ride_type == filter.ride_type)
+                if filter.vehicle_id:
+                    query = query.filter(Ride.vehicle_id == filter.vehicle_id)
+
+                if filter.startlocation:
+                    query = query.filter(Ride.startlocation.ilike(f"%{filter.startlocation}%"))
+                if filter.currentlocation:
+                    query = query.filter(Ride.currentlocation.ilike(f"%{filter.currentlocation}%"))
+                if filter.endlocation:
+                    query = query.filter(Ride.endlocation.ilike(f"%{filter.endlocation}%"))
+                if filter.starts_at:
+                    query = query.filter(Ride.starts_at >= datetime.fromisoformat(filter.starts_at))  # Assume ISO format
+                if filter.ends_at:
+                    query = query.filter(Ride.ends_at <= datetime.fromisoformat(filter.ends_at))  # Assume ISO format
+                if filter.suitcase is not None:
+                    query = query.filter(Ride.suitcase == filter.suitcase)
+                if filter.handluggage is not None:
+                    query = query.filter(Ride.handluggage == filter.handluggage)
+                if filter.otherluggage is not None:
+                    query = query.filter(Ride.otherluggage == filter.otherluggage)
+
+            # Apply pagination
+            query = query.offset(skip).limit(limit)
+
+            # Execute the query
+            result = await db.execute(query)
+            rides = result.scalars().all()
+
+            # Return the rides as dictionaries (assuming Ride model has a to_dict method)
+            return [ride.to_dict() for ride in rides]
+        except SQLAlchemyError as e:
+            raise HTTPException(status_code=400, detail=f"{str(e)}")
+
+        except asyncpg.exceptions.UniqueViolationError as e:
+            raise HTTPException(status_code=400, detail=f"{str(e)}")
+
+        except asyncpg.exceptions.DataError as e:
+            raise HTTPException(status_code=400, detail=f"{str(e)}")
+
+        except asyncpg.exceptions.InvalidTextRepresentationError as e:
+            raise HTTPException(status_code=400, detail=f"{str(e)}")
+
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{str(e)}")
+
+    
     @staticmethod
     async def update_ride_status(db: AsyncSession, ride_id: UUID, status: RideStatus):
         """Updates the status of a ride."""
@@ -107,7 +161,6 @@ class RideService:
                 ride.status = ride_data.status
                 ride.ride_class = ride_data.ride_class
                 ride.ride_type = ride_data.ride_type
-                ride.updated_at = datetime.utcnow()
                 ride.status = ride_data.status
                 ride.vehicle_id = ride_data.vehicle_id
                 ride.trip_fare = ride_data.trip_fare

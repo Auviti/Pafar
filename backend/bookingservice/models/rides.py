@@ -57,7 +57,7 @@ class Ride(Base):
 
     # Fare amount for the trip
     trip_fare: Mapped[Float] = mapped_column(Float, nullable=False)
-
+    passengers: Mapped[int] = mapped_column(Integer, nullable=False)
     # Locations stored as JSON objects (latitude, longitude, and address)
     startlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     currentlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
@@ -105,6 +105,7 @@ class Ride(Base):
             "status": self.status.value,
             "ride_class": self.ride_class.value,
             "ride_type":self.ride_type.value,
+            'passengers':self.passengers,
             "vehicle_id": str(self.vehicle_id),
             "trip_fare": self.trip_fare,
             "startlocation": self.startlocation,

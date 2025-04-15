@@ -63,7 +63,7 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
     };
 
     const handleItemChange = (item) => {
-        console.log("Selected tab item:", item);
+        // console.log("Selected tab item:", item);
         setSelectedItem(item);
     };
   

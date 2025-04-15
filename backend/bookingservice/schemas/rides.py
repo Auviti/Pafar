@@ -38,6 +38,7 @@ class Ride(BaseModel):
     endlocation: str
     starts_at: str
     ends_at: str
+    passengers:int
     suitcase: float = 0.0
     handluggage: float = 0.0
     otherluggage: float = 0.0
@@ -65,9 +66,10 @@ class RideFilter(BaseModel):
     endlocation: Optional[str] = None
     starts_at: Optional[str] = None
     ends_at: Optional[str] = None
-    suitcase: Optional[float] = 0.0
-    handluggage: Optional[float] = 0.0
-    otherluggage: Optional[float] = 0.0
+    suitcase: Optional[float] = None
+    handluggage: Optional[float] = None
+    otherluggage: Optional[float] = None
+    passengers:Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

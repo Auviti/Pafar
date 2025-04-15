@@ -26,6 +26,7 @@ class RideService:
                 ride_type=ride_data.ride_type,
                 vehicle_id=ride_data.vehicle_id,
                 trip_fare=ride_data.trip_fare,
+                passengers=ride_data.passengers,
                 startlocation=ride_data.startlocation,
                 currentlocation=ride_data.currentlocation,
                 endlocation=ride_data.endlocation,
@@ -107,7 +108,9 @@ class RideService:
                     query = query.filter(Ride.handluggage == filter.handluggage)
                 if filter.otherluggage is not None:
                     query = query.filter(Ride.otherluggage == filter.otherluggage)
-
+                
+                if filter.passengers is not None:
+                    query = query.filter(Ride.passengers == filter.passengers)
             # Apply pagination
             query = query.offset(skip).limit(limit)
 
@@ -164,7 +167,7 @@ class RideService:
                 ride.status = ride_data.status
                 ride.vehicle_id = ride_data.vehicle_id
                 ride.trip_fare = ride_data.trip_fare
-
+                ride.passengers=ride_data.passengers,
                 # Ensure the startlocation, currentlocation, and endlocation are valid Location instances
                 ride.startlocation = Location(**ride_data.startlocation)
                 ride.currentlocation = Location(**ride_data.currentlocation)

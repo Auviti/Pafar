@@ -92,7 +92,55 @@ async def get_ride_duration(ride_id: UUID, db: AsyncSession = Depends(get_db1)):
 async def filter_rides_by_criteria(filters: dict,  db: AsyncSession = Depends(get_db1)):
     try:
         rides = await RideService.filter_rides(db, filters)
-        
+#         ride_example_schema = {
+#     "id": "UUID",  # e.g. "a1b2c3d4-e5f6-7890-1234-56789abcdef0"
+#     "name": "string",  # e.g. "John's Ride"
+    
+#     # Enum: One of these strings
+#     "status": ["ASSIGNED", "ONGOING", "COMPLETED", "CANCELED"],
+
+#     # Enum: Ride class options
+#     "ride_class": ["ECONOMY", "BUSINESS", "LUXURY"],
+
+#     # Enum: Type of ride
+#     "ride_type": ["ONE_WAY", "ROUND_TRIP"],
+
+#     "vehicle_id": "UUID",  # e.g. "4d2a8f3d-1ab2-4c9d-a45b-001a1b2c3d4e"
+#     "trip_fare": 25.00,  # base fare in float
+
+#     # JSON object: location with coordinates + address
+#     "startlocation": {
+#         "latitude": 41.8781,
+#         "longitude": -87.6298,
+#         "address": "233 S Wacker Dr, Chicago, IL"
+#     },
+#     "currentlocation": {
+#         "latitude": 41.9000,
+#         "longitude": -87.6500,
+#         "address": "123 N Clark St, Chicago, IL"
+#     },
+#     "endlocation": {
+#         "latitude": 41.881832,
+#         "longitude": -87.623177,
+#         "address": "Millennium Park, Chicago"
+#     },
+
+#     "starts_at": "2025-04-14T10:30:00Z",  # ISO 8601 timestamp
+#     "ends_at": "2025-04-14T11:00:00Z",    # ISO 8601 timestamp
+
+#     "created_at": "2025-04-14T10:00:00Z",  # Automatically generated
+#     "updated_at": "2025-04-14T10:15:00Z",  # Auto-updated on changes
+
+#     # Luggage weights in kg (or units)
+#     "suitcase": 5.0,
+#     "handluggage": 2.0,
+#     "otherluggage": 1.5,
+
+#     # Calculated fields
+#     "duration": 1800,  # in seconds (30 mins)
+#     "total_fare": 25.18  # base fare + luggage cost (0.02 * total luggage weight)
+# }
+
         return Response(data=rides,code=200)
     except Exception as error:
         return Response(message=str(error),success=False,code=500)

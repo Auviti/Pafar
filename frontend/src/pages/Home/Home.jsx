@@ -25,36 +25,36 @@ import Pagination from '../../components/Pagination/Pagination';
 import Login from '../../components/Auth/Login';
 import Tabs from '../../components/Tabs/Tabs';
 import Accordion from '../../components/Accordion/Accordion';
-import Book from '../Bookings/Book';
+import FilterTicket from '../Bookings/FilterTicket';
 import BookingStatus from '../Bookings/BookingStatus';
 import DatePicker from '../../components/Input/DatePicker/DatePicker';
 
 function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, user}) {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const {isMobile, isTablet, isDesktop} = useDeviceType();
-  
-  // Memoize the socket object so it's only created once and doesn't change on every render
-  const socket = useMemo(() => new WebSocketService("ws://localhost:8000"), []);
-
-  useEffect(() => {
-    socket.connect((message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const {isMobile, isTablet, isDesktop} = useDeviceType();
     
-    // Cleanup when the component unmounts (important to avoid memory leaks)
-    return () => {
-      socket.socket.close();
-    };
-  }, [socket]); // Dependency array with 'socket'
+    // Memoize the socket object so it's only created once and doesn't change on every render
+    const socket = useMemo(() => new WebSocketService("ws://localhost:8000"), []);
 
-  const handleSendMessage = () => {
-    socket.sendMessage(newMessage);
-    setNewMessage('');
-  };
-  
-  
-  const [selectedIndex, setSelectedIndex] = useState(1);
+    useEffect(() => {
+      socket.connect((message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+      
+      // Cleanup when the component unmounts (important to avoid memory leaks)
+      return () => {
+        socket.socket.close();
+      };
+    }, [socket]); // Dependency array with 'socket'
+
+    const handleSendMessage = () => {
+      socket.sendMessage(newMessage);
+      setNewMessage('');
+    };
+    
+    
+    const [selectedIndex, setSelectedIndex] = useState(1);
     const [selectedItem, setSelectedItem] = useState(null);
 
     const handleIndexChange = (index) => {
@@ -69,7 +69,7 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
   
   const tabs = [
       // { title: "Hire a bus", content: <BookingStatus /> },
-      { title: "Find Tickets", content: <Book /> },
+      { title: "Find Rides", content: <FilterTicket /> },
       { title: "Booking status", content: <BookingStatus />},
       // { title: "Tab 3", content: <div>Content 5</div> },
   ];

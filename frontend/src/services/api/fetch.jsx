@@ -7,9 +7,10 @@ const fetchData = async (method, url, data = null) => {
         const response = await axios({ method, url, data });
         if (response.data.success === true) {
             result.data = response.data.data;
-            result.error = response.data.message;
+            result.message = response.data.message;
         } else {
             result.data = response.data.data;
+            result.error = response.data.message;
         }
         result.loading = false;
     } catch (error) {

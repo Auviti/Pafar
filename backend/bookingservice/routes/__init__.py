@@ -1,2 +1,2 @@
-from .rides import router as ride_router
+from .tickets import router as ticket_router
 from .bookings import router as booking_router

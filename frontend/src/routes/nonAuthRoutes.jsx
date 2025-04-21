@@ -1,30 +1,8 @@
 import React from 'react';
 import Home from '../pages/Home/Home';
-import Places from '../pages/Bookings/Bookings';
-import Profile from '../pages/Account/Profile';
 import Account from '../pages/Account/Account';
-import Bookings from '../pages/Bookings/Bookings';
+import Tickets from '../pages/Bookings/Tickets';
 import SignUp from '../components/Auth/SignUp';
-// import About from '../pages/About';
-// import Signup from '../pages/Auth/SignUp';
-// import SignUpForSuppliers from '../pages/Auth/SignUpForSuppliers'
-// import Login from '../pages/Auth/Login';
-// import Loginfingerprint from '../pages/Auth/Login-fingerprint';
-// import ForgotPassword from '../pages/Auth/ForgotPassword';
-// import Marketplace from '../pages/MarketPlace'; // Import your Marketplace component
-// import Map from '../pages/Map'; // Import your Map component
-// import Cart from '../pages/Cart'; // Import your Cart component
-// import User from '../pages/User'; // Import your User component
-// import Categories from '../pages/Categories';
-// import PaymentConfirmation from '../pages/PaymentConfirmation';
-// import OrderResult from '../pages/OrderResultPage';
-// import TrackingOrder from '../pages/OrderTracking';
-// import VerifyMail from '../pages/VerifyMail';
-// import VerifyMailConfirmation from '../pages/VerifyMailConfirmation';
-// import PasswordReset from '../pages/PasswordReset';
-// import ProductPage from '../pages/ProductItem';
-// import LogoutPage from '../pages/Auth/Logout';
-// import Test from '../pages/TestingPage';
 
 
 const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,user,header, footer, bottomheader,currentUrl }) => [
@@ -34,9 +12,9 @@ const NonAuthRoutes = ({ API_URL,Companyname,isLoggedIn,user,header, footer, bot
     title: "home"
   },
   {
-    path: "/bookings",
-    element: <Bookings API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
-    title: "bookings"
+    path: "/tickets",
+    element: <Tickets API_URL={API_URL} Companyname={Companyname} isLoggedIn={isLoggedIn} user={user} header={header} footer={footer} bottomheader={bottomheader} />,
+    title: "tickets"
   },
   {
     path: "/signup",

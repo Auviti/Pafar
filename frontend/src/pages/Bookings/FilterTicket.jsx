@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { FormInput, FormRadioButton, FormSelect } from "../../components/Form/FormInput";
 import Button from "../../components/Button/Button";
-import { filterRides } from "../../services/api/rides"; // your filter API function
+import { filterTickets } from "../../services/api/tickets"; // renamed API function
+import { useNavigate } from 'react-router-dom';
 
-const Book = () => {
-  const [bookingType, setBookingType] = useState(1); // 0: Round Trip, 1: One Way, 2: Multi City
+const Ticket = () => {
+  const navigate = useNavigate();
+  const [ticketType, setTicketType] = useState(1); // 0: Round Trip, 1: One Way, 2: Multi City
   const [fromLocation, setFromLocation] = useState('233 S Wacker Dr, Chicago, IL');
   const [toLocation, setToLocation] = useState('Millennium Park, Chicago');
   const [departDate, setDepartDate] = useState('2025-04-14T10:30:00Z');
   const [returnDate, setReturnDate] = useState('2025-04-14T11:00:00Z');
   const [passengers, setPassengers] = useState("1");
-  const [travelClass, setTravelClass] = useState('economy');
-  const [error, setError] = useState('');
+  const [travelClass, setTravelClass] = useState('ECONOMY');
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [rides, setRides] = useState([]); // store API results
+  const [tickets, setTickets] = useState([]); // renamed from rides
 
-  const handleBookingType = (index) => setBookingType(index);
+  const handleTicketType = (index) => setTicketType(index);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!fromLocation || !toLocation || !departDate || (bookingType !== 1 && !returnDate) || !passengers || !travelClass) {
+    if (!fromLocation || !toLocation || !departDate || (ticketType !== 1 && !returnDate) || !passengers || !travelClass) {
       setError("Please fill out all required fields.");
       return;
     }
@@ -29,23 +31,29 @@ const Book = () => {
     setLoading(true);
 
     const filterData = {
-      ride_class: travelClass.toUpperCase(),
-      ride_type: bookingType === 0 ? "ROUND" : bookingType === 1 ? "ONE_WAY" : "MULTICITY",
+      ticket_class: travelClass.toUpperCase(),
+      ticket_type: ticketType === 0 ? "ROUND" : ticketType === 1 ? "ONE_WAY" : "MULTICITY",
       startlocation: fromLocation,
       endlocation: toLocation,
-      starts_at:departDate,
-      ends_at:returnDate,
+      starts_at: departDate,
+      ends_at: returnDate,
       passengers: Number(passengers),
     };
 
     try {
-      const response = await filterRides({
+      const response = await filterTickets({
         baseurl: 'https://literate-cod-9vwgg7xj5qg297w5-8001.app.github.dev',
         filterData
       });
-      
-      setRides(response.data || []);
+
+      setTickets(response.data || []);
       setError(response.error || '');
+      navigate('/tickets', {
+        state: {
+          tickets: response.data,
+          filter: filterData
+        }
+      });
     } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -58,27 +66,27 @@ const Book = () => {
       <div className='d-flex justify-content-between align-items-center'>
         <FormRadioButton
           label="Round Trip"
-          id="bookingType0"
-          name="bookingType"
+          id="ticketType0"
+          name="ticketType"
           value="ROUND"
-          checked={bookingType === 0}
-          onChange={() => handleBookingType(0)}
+          checked={ticketType === 0}
+          onChange={() => handleTicketType(0)}
         />
         <FormRadioButton
           label="One Way"
-          id="bookingType1"
-          name="bookingType"
+          id="ticketType1"
+          name="ticketType"
           value="ONE_WAY"
-          checked={bookingType === 1}
-          onChange={() => handleBookingType(1)}
+          checked={ticketType === 1}
+          onChange={() => handleTicketType(1)}
         />
         <FormRadioButton
           label="Multi City"
-          id="bookingType2"
-          name="bookingType"
+          id="ticketType2"
+          name="ticketType"
           value="MULTICITY"
-          checked={bookingType === 2}
-          onChange={() => handleBookingType(2)}
+          checked={ticketType === 2}
+          onChange={() => handleTicketType(2)}
         />
       </div>
 
@@ -111,7 +119,7 @@ const Book = () => {
           />
         </div>
 
-        {bookingType !== 1 && (
+        {ticketType !== 1 && (
           <div className="col-6 p-1">
             <FormInput
               id="returnDate"
@@ -126,8 +134,7 @@ const Book = () => {
         <div className="col-6 p-1">
           <FormSelect
             label="Passengers"
-            value={passengers}
-            onChange={(e) => setPassengers(e.target.value)}
+            onChange={(index) => setPassengers(index)}
             items={[
               { label: '1', value: '1' },
               { label: '2', value: '2' },
@@ -141,12 +148,11 @@ const Book = () => {
         <div className="col-6 p-1">
           <FormSelect
             label="Class"
-            value={travelClass}
-            onChange={(e) => setTravelClass(e.target.value)}
+            onChange={(index) => setTravelClass(index)}
             items={[
-              { label: 'Economy', value: 'economy' },
-              { label: 'Business', value: 'business' },
-              { label: 'First Class', value: 'firstClass' },
+              { label: 'Economy', value: 'ECONOMY' },
+              { label: 'Business', value: 'BUSINESS' },
+              { label: 'First Class', value: 'FIRST_CLASS' }
             ]}
           />
         </div>
@@ -155,22 +161,8 @@ const Book = () => {
           <Button type="submit">Search</Button>
         </div>
       </div>
-
-      {error && <div className="alert alert-danger mt-2">{error}</div>}
-      {loading && <div className="alert alert-info mt-2">Loading...</div>}
-
-      {rides.length > 0 && (
-        <div className="mt-4">
-          <h4>Available Rides:</h4>
-          <ul>
-            {rides.map((ride, idx) => (
-              <li key={idx}>{ride.name} - {ride.status}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </form>
   );
 };
 
-export default Book;
+export default Ticket;

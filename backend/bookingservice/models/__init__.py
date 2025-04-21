@@ -1,5 +1,5 @@
 # models/__init__.py
-from .rides import Ride
+from .tickets import Ticket
 from .bookings import Booking
 # import other models too...
 

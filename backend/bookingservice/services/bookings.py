@@ -1,12 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
-from uuid import UUID
-from models.bookings import Booking,BookingStatus  # Import the ORM model
-from schemas.bookings import BookingCreate, BookingUpdate, BookingResponse
 from sqlalchemy.exc import SQLAlchemyError
-from core.utils.reponse import Response  # Custom response handler for uniform responses
-from typing import List, Optional
+from uuid import UUID
+import json
+from models.bookings import Booking, List,Optional,datetime, timezone
+from schemas.bookings import BookingCreate, BookingUpdate, BookingResponse
+from core.utils.scanner.qrcode import QRCode
 
 class BookingService:
 
@@ -18,16 +17,33 @@ class BookingService:
         :param booking_data: BookingCreate Pydantic model
         :return: The created BookingResponse
         """
+        
         try:
+            # Convert booking_data to dict for mutation
+            print(booking_data,'-------+')
+            data = booking_data.dict()
+            data['ticket_id']=str(booking_data.ticket_id)
+            data['user_id']=str(booking_data.user_id)
+            data['created_at']=datetime.now(timezone.utc)
+            data['updated_at']=datetime.now(timezone.utc)
+            # Convert the booking_data to a JSON-formatted string
+            stringified_data = json.dumps(data, default=str)  # default=str handles datetime & UUID
+
+            qrcode = QRCode()
+            qrcoderesult = qrcode.generate_qrcode(
+                data=stringified_data,
+                save_as_png=False
+            )
+            # data['barcode']=qrcoderesult
+            # print(data,'======')
+        
             booking = Booking(
-                ride_id=booking_data.ride_id,
+                ticket_id=booking_data.ticket_id,
                 code=booking_data.code,
-                barcode=booking_data.barcode,
+                barcode=qrcoderesult,
                 user_id=booking_data.user_id,
                 pick_up_location=booking_data.pick_up_location,
                 drop_off_location=booking_data.drop_off_location,
-                booking_time=booking_data.booking_time or datetime.utcnow(),
-                booking_status=booking_data.booking_status,
                 fare_amount=booking_data.fare_amount,
                 isprotected=booking_data.isprotected,
                 seats=booking_data.seats
@@ -35,11 +51,15 @@ class BookingService:
             db.add(booking)
             await db.commit()
             await db.refresh(booking)
-            return BookingResponse.from_orm(booking)  # Converts to Pydantic model
+            return booking.to_dict()  # Converts to Pydantic model
 
         except SQLAlchemyError as e:
             await db.rollback()
-            raise Exception(f"Error creating booking: {str(e)}")
+            error_message = str(e)
+            result = error_message[error_message.index('<class')+6:error_message.index('[SQL')]
+            raise Exception(str(e))
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while creating booking: {str(e)}")
 
     @staticmethod
     async def get_booking(db: AsyncSession, booking_id: UUID) -> BookingResponse:
@@ -49,13 +69,21 @@ class BookingService:
         :param booking_id: UUID of the booking to fetch
         :return: BookingResponse
         """
-        async with db.begin():
-            stmt = select(Booking).filter(Booking.id == booking_id)
-            result = await db.execute(stmt)
-            booking = result.scalar_one_or_none()
-            if not booking:
-                raise Exception("Booking not found")
-            return BookingResponse.from_orm(booking)
+        try:
+            async with db.begin():
+                stmt = select(Booking).filter(Booking.id == booking_id)
+                result = await db.execute(stmt)
+                booking = result.scalar_one_or_none()
+                if not booking:
+                    raise Exception("Booking not found")
+                return booking.to_dict()
+
+        except SQLAlchemyError as e:
+            error_message = str(e)
+            result = error_message[error_message.index('<class')+6:error_message.index('[SQL')]
+            raise Exception(result)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while fetching booking: {str(e)}")
 
     @staticmethod
     async def get_all_bookings(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[BookingResponse]:
@@ -66,11 +94,19 @@ class BookingService:
         :param limit: Number of records to fetch
         :return: List of BookingResponse
         """
-        async with db.begin():
-            stmt = select(Booking).offset(skip).limit(limit)
-            result = await db.execute(stmt)
-            bookings = result.scalars().all()
-            return [BookingResponse.from_orm(booking) for booking in bookings]
+        try:
+            async with db.begin():
+                stmt = select(Booking).offset(skip).limit(limit)
+                result = await db.execute(stmt)
+                bookings = result.scalars().all()
+                return [booking.to_dict() for booking in bookings]
+
+        except SQLAlchemyError as e:
+            error_message = str(e)
+            result = error_message[error_message.index('<class')+6:error_message.index('[SQL')]
+            raise Exception(result)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while fetching all bookings: {str(e)}")
 
     @staticmethod
     async def update_booking(db: AsyncSession, booking_id: UUID, booking_data: BookingUpdate) -> BookingResponse:
@@ -81,34 +117,54 @@ class BookingService:
         :param booking_data: BookingUpdate Pydantic model
         :return: The updated BookingResponse
         """
-        async with db.begin():
-            stmt = select(Booking).filter(Booking.id == booking_id)
-            result = await db.execute(stmt)
-            booking = result.scalar_one_or_none()
-            if not booking:
-                raise Exception("Booking not found")
+        try:
+            
+        
+            async with db.begin():
+                stmt = select(Booking).filter(Booking.id == booking_id)
+                result = await db.execute(stmt)
+                booking = result.scalar_one_or_none()
+                if not booking:
+                    raise Exception("Booking not found")
+                # Convert booking_data to dict for mutation
+                data = booking_data.dict()
+                data['created_at']=booking.created_at
+                data['updated_at']=datetime.now(timezone.utc)
+                barcode = Barcode()
+                barcoderes = barcode.generate_barcode(
+                    data=data,
+                    filename='barcode.png',
+                    save_as_png=False
+                )
+            
+                # Update the fields that are provided in the request body
+                if booking_data.code:
+                    booking.code = booking_data.code
+                if barcoderes:
+                    booking.barcode = booking_data.barcoderes
+                if booking_data.pick_up_location:
+                    booking.pick_up_location = booking_data.pick_up_location
+                if booking_data.drop_off_location:
+                    booking.drop_off_location = booking_data.drop_off_location
+                
+                if booking_data.fare_amount:
+                    booking.fare_amount = booking_data.fare_amount
+                if booking_data.isprotected is not None:
+                    booking.isprotected = booking_data.isprotected
+                if booking_data.seats:
+                    booking.seats = booking_data.seats
 
-            # Update the fields that are provided in the request body
-            if booking_data.code:
-                booking.code = booking_data.code
-            if booking_data.barcode:
-                booking.barcode = booking_data.barcode
-            if booking_data.pick_up_location:
-                booking.pick_up_location = booking_data.pick_up_location
-            if booking_data.drop_off_location:
-                booking.drop_off_location = booking_data.drop_off_location
-            if booking_data.booking_status:
-                booking.booking_status = booking_data.booking_status
-            if booking_data.fare_amount:
-                booking.fare_amount = booking_data.fare_amount
-            if booking_data.isprotected is not None:
-                booking.isprotected = booking_data.isprotected
-            if booking_data.seats:
-                booking.seats = booking_data.seats
+                await db.commit()
+                await db.refresh(booking)
+                return booking.to_dict()
 
-            await db.commit()
-            await db.refresh(booking)
-            return BookingResponse.from_orm(booking)
+        except SQLAlchemyError as e:
+            await db.rollback()
+            error_message = str(e)
+            result = error_message[error_message.index('<class')+6:error_message.index('[SQL')]
+            raise Exception(result)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while updating booking: {str(e)}")
 
     @staticmethod
     async def delete_booking(db: AsyncSession, booking_id: UUID) -> bool:
@@ -118,16 +174,25 @@ class BookingService:
         :param booking_id: UUID of the booking to delete
         :return: Confirmation message
         """
-        async with db.begin():
-            stmt = select(Booking).filter(Booking.id == booking_id)
-            result = await db.execute(stmt)
-            booking = result.scalar_one_or_none()
-            if not booking:
-                raise Exception("Booking not found")
-            
-            await db.delete(booking)
-            await db.commit()
-            return True
+        try:
+            async with db.begin():
+                stmt = select(Booking).filter(Booking.id == booking_id)
+                result = await db.execute(stmt)
+                booking = result.scalar_one_or_none()
+                if not booking:
+                    raise Exception("Booking not found")
+                
+                await db.delete(booking)
+                await db.commit()
+                return True
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            error_message = str(e)
+            result = error_message[error_message.index('<class')+6:error_message.index('[SQL')]
+            raise Exception(result)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while deleting booking: {str(e)}")
 
     @staticmethod
     async def calculate_fare(db: AsyncSession, booking_id: UUID) -> float:
@@ -137,19 +202,12 @@ class BookingService:
         :param booking_id: UUID of the booking
         :return: Calculated fare amount (float)
         """
-        booking = await BookingService.get_booking(db, booking_id)
-        # Here you could add some business logic to calculate the fare
-        # For simplicity, let's return the stored fare amount
-        return booking.fare_amount
+        try:
+            booking = await BookingService.get_booking(db, booking_id)
+            # Here you could add some business logic to calculate the fare
+            # For simplicity, let's return the stored fare amount
+            return booking.fare_amount
 
-    @staticmethod
-    async def update_booking_status(db: AsyncSession, booking_id: UUID, status: BookingStatus) -> BookingResponse:
-        """
-        Update the status of a booking.
-        :param db: Database session
-        :param booking_id: UUID of the booking to update
-        :param status: New status to set
-        :return: Updated BookingResponse
-        """
-        booking_data = BookingUpdate(booking_status=status)
-        return await BookingService.update_booking(db, booking_id, booking_data)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred while calculating fare: {str(e)}")
+

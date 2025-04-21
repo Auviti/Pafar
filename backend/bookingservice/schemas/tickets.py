@@ -1,94 +1,91 @@
-from pydantic import BaseModel, root_validator, ValidationError,validator
+from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from enum import Enum
-from typing import Union
 
 
-# Enum for Ride Status
-class RideStatus(str, Enum):
+# Enum for Ticket Status
+class TicketStatus(str, Enum):
     UPCOMING = "UPCOMING"
     ASSIGNED = "ASSIGNED"
     ONGOING = "ONGOING"
     COMPLETED = "COMPLETED"
     CANCELED = "CANCELED"
 
-class RideClass(str, Enum):
+class TicketClass(str, Enum):
     ECONOMY = "ECONOMY"
     BUSINESS = "BUSINESS"
     FIRST_CLASS = "FIRST_CLASS"
-    PREMIUM_ECONOMY = "PREMIUM_ECONOMY"
 
-class RideType(str, Enum):
+class TicketType(str, Enum):
     ROUND = "ROUND"
     ONE_WAY = "ONE_WAY"
     MULTICITY = "MULTICITY"
 
-# Pydantic Schema for Ride
-class Ride(BaseModel):
+# Pydantic Schema for Ticket
+class Ticket(BaseModel):
     name: Optional[str] = None
-    status: RideStatus
-    ride_class: RideClass
-    ride_type: RideType
+    status: TicketStatus
+    ticket_class: TicketClass
+    ticket_type: TicketType
     vehicle_id: str
     trip_fare: float
     startlocation: str
-    currentlocation:str
+    currentlocation: str
     endlocation: str
     starts_at: str
     ends_at: str
-    passengers:int
+    passengers: int
     suitcase: float = 0.0
     handluggage: float = 0.0
     otherluggage: float = 0.0
 
     class Config:
-        from_attributes = True  # Enable ORM mapping for SQLAlchemy models
+        from_attributes = True
 
-   
-class RideCreate(Ride):
-    pass  # Used when creating a new ride (no ride id)
-
-class RideUpdate(Ride):
-    
+class TicketCreate(Ticket):
     pass
-class RideFilter(BaseModel):
+
+class TicketUpdate(Ticket):
+    pass
+
+class TicketFilter(BaseModel):
     id: Optional[UUID] = None
     name: Optional[str] = None
-    status: Optional[RideStatus] = None
-    ride_class: Optional[RideClass] = None
-    ride_type: Optional[RideType] = None
+    status: Optional[TicketStatus] = None
+    ticket_class: Optional[TicketClass] = None
+    ticket_type: Optional[TicketType] = None
     vehicle_id: Optional[str] = None
     trip_fare: Optional[float] = None
     startlocation: Optional[str] = None
-    currentlocation:Optional[str] = None
+    currentlocation: Optional[str] = None
     endlocation: Optional[str] = None
     starts_at: Optional[str] = None
     ends_at: Optional[str] = None
     suitcase: Optional[float] = None
     handluggage: Optional[float] = None
     otherluggage: Optional[float] = None
-    passengers:Optional[int] = None
+    passengers: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # Enable ORM mapping for SQLAlchemy models
+        from_attributes = True
 
-class RideResponse(Ride):
-    id: UUID  # This will be returned when fetching the ride from the database
+class TicketResponse(Ticket):
+    id: UUID
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        from_attributes = True  # Enable ORM mapping for SQLAlchemy models
+        from_attributes = True
 
     @property
     def duration(self):
-        """Calculate duration of the ride (end - start)"""
+        """Calculate duration of the ticket (end - start)"""
         if self.starts_at and self.ends_at:
-            return (self.ends_at - self.starts_at).total_seconds()  # Duration in seconds
+            return (self.ends_at - self.starts_at).total_seconds()
         return None
 
     @property

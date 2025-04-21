@@ -3,74 +3,66 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from core.database import Base, CHAR_LENGTH
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from uuid import UUID,uuid4
+from uuid import UUID, uuid4
 from typing import List, Optional
 import sys
 
-
-
 # Database type detection
 if 'postgresql' in sys.argv:
-    # Use native UUID for PostgreSQL
     UUIDType = UUID(as_uuid=True)
     mappeditem = UUID
     default = uuid4
 else:
-    # Use string representation for other databases
-    UUIDType = String(36)
+    UUIDType = String(CHAR_LENGTH)
     mappeditem = str
     default = lambda: str(uuid4())
-# Enum for Ride Status
-class RideStatus(PyEnum):
+
+# Enum for Ticket Status
+class TicketStatus(PyEnum):
     UPCOMING = "UPCOMING"
     ASSIGNED = "ASSIGNED"
     ONGOING = "ONGOING"
     COMPLETED = "COMPLETED"
     CANCELED = "CANCELED"
-class RideClass(PyEnum):
+
+class TicketClass(PyEnum):
     ECONOMY = "ECONOMY"
     BUSINESS = "BUSINESS"
     FIRST_CLASS = "FIRST_CLASS"
-    PREMIUM_ECONOMY = "PREMIUM_ECONOMY"
 
-class RideType(PyEnum):
+class TicketType(PyEnum):
     ROUND = "ROUND"
     ONE_WAY = "ONE_WAY"
     MULTICITY = "MULTICITY"
 
-# Ride Model
-class Ride(Base):
-    __tablename__ = "rides"
+# Ticket Model
+class Ticket(Base):
+    __tablename__ = "tickets"
 
-    # Ride ID (UUID as the primary key)
-    id: Mapped[UUID] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
+    id: Mapped[UUID] = mapped_column(UUIDType, primary_key=True, default=default)
     name: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
-    # Ride Status (Assigned, Ongoing, Completed, Canceled)
-    status: Mapped[RideStatus] = mapped_column(Enum(RideStatus), nullable=False)
-    ride_class: Mapped[RideClass] = mapped_column(Enum(RideClass), default=RideClass.ECONOMY)  # Class of the trip (Economy, Business, etc.)
-    ride_type: Mapped[RideClass] = mapped_column(Enum(RideType), default=RideType.ONE_WAY)
-    
-    # Foreign key referencing the Vehicle table (UUID)
-    vehicle_id: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False) 
 
-    # Fare amount for the trip
+    status: Mapped[TicketStatus] = mapped_column(Enum(TicketStatus), nullable=False)
+    ticket_class: Mapped[TicketClass] = mapped_column(Enum(TicketClass), default=TicketClass.ECONOMY)
+    ticket_type: Mapped[TicketType] = mapped_column(Enum(TicketType), default=TicketType.ONE_WAY)
+
+    vehicle_id: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+
     trip_fare: Mapped[Float] = mapped_column(Float, nullable=False)
     passengers: Mapped[int] = mapped_column(Integer, nullable=False)
-    # Locations stored as JSON objects (latitude, longitude, and address)
+
     startlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     currentlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
     endlocation: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
 
-    # Timestamps
-    starts_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)  # Start time of the ride
-    ends_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)  # End time of the ride
+    starts_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    ends_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.utcnow)  # Created timestamp (UTC)
-    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)  # Updated timestamp (auto updates)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
-    # Luggage weights
     suitcase: Mapped[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for suitcase weight')
     handluggage: Mapped[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for hand luggage weight')
     otherluggage: Mapped[Float] = mapped_column(Float, default=0.0, nullable=False, comment='0.02 per unit price for other luggage weight')
@@ -83,9 +75,9 @@ class Ride(Base):
 
     @property
     def duration(self):
-        """Calculate duration of the ride (end - start)"""
+        """Calculate duration of the ticket (end - start)"""
         if self.starts_at and self.ends_at:
-            return (self.ends_at - self.starts_at).total_seconds()  # Duration in seconds
+            return (self.ends_at - self.starts_at).total_seconds()
         return None
 
     @property
@@ -95,17 +87,16 @@ class Ride(Base):
         return self.trip_fare + luggage_fare
 
     def __repr__(self):
-        return f"<Ride(id={self.id}, startlocation={self.startlocation}, endlocation={self.endlocation}, duration={self.duration}, status={self.status}, fare_amount={self.total_fare})>"
+        return f"<Ticket(id={self.id}, startlocation={self.startlocation}, endlocation={self.endlocation}, duration={self.duration}, status={self.status}, fare_amount={self.total_fare})>"
 
     def to_dict(self):
-        """Convert the Ride object to a dictionary"""
         return {
-            "id": str(self.id),  # Convert UUID to string
+            "id": str(self.id),
             "name": self.name,
             "status": self.status.value,
-            "ride_class": self.ride_class.value,
-            "ride_type":self.ride_type.value,
-            'passengers':self.passengers,
+            "ticket_class": self.ticket_class.value,
+            "ticket_type": self.ticket_type.value,
+            "passengers": self.passengers,
             "vehicle_id": str(self.vehicle_id),
             "trip_fare": self.trip_fare,
             "startlocation": self.startlocation,
@@ -121,4 +112,3 @@ class Ride(Base):
             "duration": self.duration,
             "total_fare": self.total_fare
         }
-    

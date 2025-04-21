@@ -89,7 +89,7 @@ def get_message_from_code(code: int) -> str:
     # Default to the status code if not found in the dictionary
     return message_dict.get(code, f"Unknown status code {code}")
 
-def Response(data=None, success=True, message=None, code=200):
+def Response(data=None, success=True, message=None, error=None, code=200):
     """
     A generic response handler for JSON responses with status, message, and data.
 
@@ -103,13 +103,18 @@ def Response(data=None, success=True, message=None, code=200):
     - JSONResponse: A JSON response with the provided data, status, message, and status code.
     """
     # Use provided message or default to the one based on the code
-    r_message = message if message else get_message_from_code(code)
     
+    content = {
+            
+            "message": message if message else get_message_from_code(code),
+            "success": False if error else success
+        }
+    if error :
+        content['error']=error
+    else:
+        content['data']=data
     return JSONResponse(
-        content={
-            "data": data,
-            "message": r_message,
-            "success": success
-        },
+        content=content,
+        
         status_code=code
     )

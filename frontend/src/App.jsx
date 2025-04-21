@@ -16,7 +16,7 @@ function App() {
   
   const navlinks = [
       { name: 'Home', link:'/', icon:<Icon icon='mdi:home' width={24} height={24} />, active: true, onClick: () => alert('Home clicked')},
-      { name: 'Bookings', link:'/bookings', icon:<Icon icon='mdi:map-marker-outline' width={24} height={24} />, active: false, onClick: () => alert('About clicked'),badgeContent: 'New'  },
+      { name: 'Tickets', link:'/tickets', icon:<Icon icon='mdi:map-marker-outline' width={24} height={24} />, active: false, onClick: () => alert('Tickets'),badgeContent: 'New'  },
       { name: 'Faqs', link:'#faqs', icon:<Icon icon="mdi:frequently-asked-questions" width={24} height={24} />, active: false, onClick: () => alert('faqs clicked') },
       { name: 'About', link:'#about', icon:<Icon icon='mdi:information' width={24} height={24} />, active: false, onClick: () => alert('About clicked') },
       { name: 'Contact Us', link:'#contactus', icon:<Icon icon='mdi:phone' width={24} height={24} />, active: false, onClick: () => alert('Contact clicked') },
@@ -28,8 +28,8 @@ function App() {
     const hash = window.location.hash;
   
     // Check the conditions based on pathname or hash and update the currentUrl
-    if (pathname.includes('/bookings') || hash.includes('/bookings')) {
-      setCurrentUrl('/bookings');
+    if (pathname.includes('/tickets') || hash.includes('/tickets')) {
+      setCurrentUrl('/tickets');
     } else if (pathname.includes('/faqs') || hash.includes('/faqs')) {
       setCurrentUrl('/');
     } else if (pathname.includes('/about') || hash.includes('/about')) {

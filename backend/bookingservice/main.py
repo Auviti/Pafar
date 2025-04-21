@@ -4,9 +4,9 @@ from typing import List
 from core.config import Settings
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
-from routes import ride_router, booking_router
+from routes import ticket_router, booking_router
 
-from core.utils.reponse import Response, RequestValidationError 
+from core.utils.response import Response, RequestValidationError 
 from models import engine_db1 ,Base,create_tables
 
 app = FastAPI()
@@ -30,7 +30,7 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
         
 # Include the routers
-app.include_router(ride_router, prefix='/api/v1')
+app.include_router(ticket_router, prefix='/api/v1')
 app.include_router(booking_router, prefix='/api/v1')
 
 @app.get("/")
@@ -58,6 +58,7 @@ async def validation_exception_handler(request, exc: RequestValidationError):
     errors = errors[0] if len(errors) == 1 else errors
 
     return Response(message=errors, success=False, code=422)
+
 @app.on_event("startup")
 async def startup():
     await create_tables()    

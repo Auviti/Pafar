@@ -191,41 +191,41 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
         <div id='about' className="container mx-auto py-2" style={{borderRadius: '8px' }}>
           <section className="py-3 py-md-5">
             <div className="container">
-              <div class="row gy-3 gy-md-4 gy-lg-0 align-items-lg-center">
-                <div class="col-12 col-lg-6 col-xl-5">
-                  <img class="img-fluid rounded" loading="lazy" src={WhoWeAre} alt="About 1" />
+              <div className="row gy-3 gy-md-4 gy-lg-0 align-items-lg-center">
+                <div className="col-12 col-lg-6 col-xl-5">
+                  <img className="img-fluid rounded" loading="lazy" src={WhoWeAre} alt="About 1" />
                 </div>
-                <div class="col-12 col-lg-6 col-xl-7">
-                  <div class="row justify-content-xl-center">
-                    <div class="col-12 col-xl-11">
-                      <h2 class="mb-3">Who Are We?</h2>
-                      <p class="lead fs-4 text-secondary mb-3">We specialize in safe, efficient, and reliable transport services. Our goal is to provide timely deliveries while prioritizing the safety of both goods and people.</p>
-                      <p class="mb-5">As a growing company in the transport industry, we remain committed to our core values of safety, reliability, and customer satisfaction. We continuously innovate to optimize our services and make transportation smarter.</p>
-                      <div class="row gy-4 gy-md-0 gx-xxl-5X">
-                        <div class="col-12 col-md-6">
-                          <div class="d-flex">
-                            <div class="me-4 text-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-gear-fill" viewBox="0 0 16 16">
+                <div className="col-12 col-lg-6 col-xl-7">
+                  <div className="row justify-content-xl-center">
+                    <div className="col-12 col-xl-11">
+                      <h2 className="mb-3">Who Are We?</h2>
+                      <p className="lead fs-4 text-secondary mb-3">We specialize in safe, efficient, and reliable transport services. Our goal is to provide timely deliveries while prioritizing the safety of both goods and people.</p>
+                      <p className="mb-5">As a growing company in the transport industry, we remain committed to our core values of safety, reliability, and customer satisfaction. We continuously innovate to optimize our services and make transportation smarter.</p>
+                      <div className="row gy-4 gy-md-0 gx-xxl-5X">
+                        <div className="col-12 col-md-6">
+                          <div className="d-flex">
+                            <div className="me-4 text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="bi bi-gear-fill" viewBox="0 0 16 16">
                               <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
                             </svg>
                             </div>
                             <div>
-                              <h2 class="h4 mb-3">Reliable Transport</h2>
-                              <p class="text-secondary mb-0">We provide fast and reliable transport services tailored to your needs. Whether it's freight or passenger transport, we’ve got you covered.</p>
+                              <h2 className="h4 mb-3">Reliable Transport</h2>
+                              <p className="text-secondary mb-0">We provide fast and reliable transport services tailored to your needs. Whether it's freight or passenger transport, we’ve got you covered.</p>
                             </div>
                           </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                          <div class="d-flex">
-                            <div class="me-4 text-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-fire" viewBox="0 0 16 16">
+                        <div className="col-12 col-md-6">
+                          <div className="d-flex">
+                            <div className="me-4 text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="bi bi-fire" viewBox="0 0 16 16">
                               <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16Zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15Z" />
                             </svg>
 
                             </div>
                             <div>
-                              <h2 class="h4 mb-3">Safety First</h2>
-                              <p class="text-secondary mb-0">Our transport solutions prioritize safety at every step, ensuring the safe and secure delivery of goods and passengers alike.</p>
+                              <h2 className="h4 mb-3">Safety First</h2>
+                              <p className="text-secondary mb-0">Our transport solutions prioritize safety at every step, ensuring the safe and secure delivery of goods and passengers alike.</p>
                             </div>
                           </div>
                         </div>
@@ -358,20 +358,20 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
             itemsPerPage={itemsPerPage}/>
           </div>
           <div className="container px-4 py-5" id='features'>
-            <h2 class="pb-2 border-bottom">Make a Booking</h2>
+            <h2 className="pb-2 border-bottom">Make a Booking</h2>
 
-            <div class="row row-cols-1 row-cols-md-2 align-items-md-center g-5 py-5">
-              <div class="col d-flex flex-column align-items-start gap-2">
-                <h2 class="fw-bold text-body-emphasis">Explore Our Premium Booking Features</h2>
-                <p class="text-body-secondary">Discover the ease of booking your next trip with us. Whether you're looking for luxury, comfort, or convenience, we have something tailored to your needs. Our seamless process ensures you'll have a stress-free booking experience from start to finish.</p>
-                {/* <!-- <a href="#" class="btn btn-primary btn-lg">Primary button</a> --> */}
+            <div className="row row-cols-1 row-cols-md-2 align-items-md-center g-5 py-5">
+              <div className="col d-flex flex-column align-items-start gap-2">
+                <h2 className="fw-bold text-body-emphasis">Explore Our Premium Booking Features</h2>
+                <p className="text-body-secondary">Discover the ease of booking your next trip with us. Whether you're looking for luxury, comfort, or convenience, we have something tailored to your needs. Our seamless process ensures you'll have a stress-free booking experience from start to finish.</p>
+                {/* <!-- <a href="#" className="btn btn-primary btn-lg">Primary button</a> --> */}
                 <Button>Start Your Booking</Button>
               </div>
 
-              <div class="col">
-                <div class="row row-cols-1 row-cols-sm-2 g-4">
-                  <div class="col d-flex flex-column gap-2 cursor-pointer">
-                    <div class="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
+              <div className="col">
+                <div className="row row-cols-1 row-cols-sm-2 g-4">
+                  <div className="col d-flex flex-column gap-2 cursor-pointer">
+                    <div className="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
                         <svg xmlns="http://www.w3.org/2000/svg" width={34} height={34} viewBox="0 0 24 24">
                           <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} color="currentColor">
                             <path d="M14.5 9a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0"></path>
@@ -381,39 +381,39 @@ function Home({API_URL, Companyname,header, footer, bottomheader,isLoggedIn, use
                           </g>
                         </svg>
                     </div>
-                    <h4 class="fw-semibold mb-0 text-body-emphasis">Wide Selection of Destinations</h4>
-                    <p class="text-body-secondary">Choose from a diverse range of destinations around the world, from beach resorts to mountain escapes.</p>
+                    <h4 className="fw-semibold mb-0 text-body-emphasis">Wide Selection of Destinations</h4>
+                    <p className="text-body-secondary">Choose from a diverse range of destinations around the world, from beach resorts to mountain escapes.</p>
                   </div>
 
-                  <div class="col d-flex flex-column gap-2 cursor-pointer">
-                    <div class="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
+                  <div className="col d-flex flex-column gap-2 cursor-pointer">
+                    <div className="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
                       <svg xmlns="http://www.w3.org/2000/svg" width={34} height={34} viewBox="0 0 14 14">
                       <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.5}>
                         <path d="M6.35.5h6.302c.469 0 .849.38.849.849v6.778c0 .47-.38.85-.849.85H7.5M3.149 4.001a1.75 1.75 0 1 0 0-3.501a1.75 1.75 0 0 0 0 3.501"></path><path d="M9 5.527C9 4.96 8.54 4.5 7.973 4.5H3.149v0A2.65 2.65 0 0 0 .5 7.149V9.5h1.135l.379 4h2.27l.872-6.945h2.817C8.54 6.555 9 6.095 9 5.527">
                         </path></g></svg>
                       </div>
-                    <h4 class="fw-semibold mb-0 text-body-emphasis">Choose Your Travel Class</h4>
-                    <p class="text-body-secondary">Select the travel class that fits your preferences – from economy to VIP and business options.</p>
+                    <h4 className="fw-semibold mb-0 text-body-emphasis">Choose Your Travel Class</h4>
+                    <p className="text-body-secondary">Select the travel class that fits your preferences – from economy to VIP and business options.</p>
                   </div>
 
-                  <div class="col d-flex flex-column gap-2 cursor-pointer">
-                    <div class="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
+                  <div className="col d-flex flex-column gap-2 cursor-pointer">
+                    <div className="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
                     <svg xmlns="http://www.w3.org/2000/svg" width={34} height={34} viewBox="0 0 20 20">
                     <path fill="currentColor" d="M9 4a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm-1 9a1 1 0 1 1-2 0a1 1 0 0 1 2 0m5 1a1 1 0 1 0 0-2a1 1 0 0 0 0 2M3 5.5A3.5 3.5 0 0 1 6.5 2h7A3.5 3.5 0 0 1 17 5.5V8h1a.5.5 0 0 1 0 1h-1v7.5a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5V16H7v.5A1.5 1.5 0 0 1 5.5 18h-1A1.5 1.5 0 0 1 3 16.5V9H2a.5.5 0 0 1 0-1h1zm13 0A2.5 2.5 0 0 0 13.5 3h-7A2.5 2.5 0 0 0 4 5.5V10h12zM14 16v.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5V16zM4 16v.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5V16zm0-1h12v-4H4z">
                       </path></svg>
                     </div>
-                    <h4 class="fw-semibold mb-0 text-body-emphasis">Select Your Vehicle</h4>
-                    <p class="text-body-secondary">Choose from a range of vehicles for your journey – whether it's a sedan, SUV, or luxury car.</p>
+                    <h4 className="fw-semibold mb-0 text-body-emphasis">Select Your Vehicle</h4>
+                    <p className="text-body-secondary">Choose from a range of vehicles for your journey – whether it's a sedan, SUV, or luxury car.</p>
                   </div>
 
-                  <div class="col d-flex flex-column gap-2 cursor-pointer">
-                    <div class="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
+                  <div className="col d-flex flex-column gap-2 cursor-pointer">
+                    <div className="feature-icon-small d-inline-flex align-items-center justify-content-center bg-primary bg-gradient fs-4 rounded-3 p-2" style={{width:'64px'}}>
                     <svg xmlns="http://www.w3.org/2000/svg" width={34} height={34} viewBox="0 0 1024 1024">
                     <path fill="currentColor" d="m960 95.888l-256.224.001V32.113c0-17.68-14.32-32-32-32s-32 14.32-32 32v63.76h-256v-63.76c0-17.68-14.32-32-32-32s-32 14.32-32 32v63.76H64c-35.344 0-64 28.656-64 64v800c0 35.343 28.656 64 64 64h896c35.344 0 64-28.657 64-64v-800c0-35.329-28.656-63.985-64-63.985m0 863.985H64v-800h255.776v32.24c0 17.679 14.32 32 32 32s32-14.321 32-32v-32.224h256v32.24c0 17.68 14.32 32 32 32s32-14.32 32-32v-32.24H960zM736 511.888h64c17.664 0 32-14.336 32-32v-64c0-17.664-14.336-32-32-32h-64c-17.664 0-32 14.336-32 32v64c0 17.664 14.336 32 32 32m0 255.984h64c17.664 0 32-14.32 32-32v-64c0-17.664-14.336-32-32-32h-64c-17.664 0-32 14.336-32 32v64c0 17.696 14.336 32 32 32m-192-128h-64c-17.664 0-32 14.336-32 32v64c0 17.68 14.336 32 32 32h64c17.664 0 32-14.32 32-32v-64c0-17.648-14.336-32-32-32m0-255.984h-64c-17.664 0-32 14.336-32 32v64c0 17.664 14.336 32 32 32h64c17.664 0 32-14.336 32-32v-64c0-17.68-14.336-32-32-32m-256 0h-64c-17.664 0-32 14.336-32 32v64c0 17.664 14.336 32 32 32h64c17.664 0 32-14.336 32-32v-64c0-17.68-14.336-32-32-32m0 255.984h-64c-17.664 0-32 14.336-32 32v64c0 17.68 14.336 32 32 32h64c17.664 0 32-14.32 32-32v-64c0-17.648-14.336-32-32-32" strokeWidth={0.1} stroke="currentColor">
                       </path></svg>
                     </div>
-                    <h4 class="fw-semibold mb-0 text-body-emphasis">Pick a Date That Works for You</h4>
-                    <p class="text-body-secondary">Select the date that fits your schedule – we offer flexibility for all types of trips.</p>
+                    <h4 className="fw-semibold mb-0 text-body-emphasis">Pick a Date That Works for You</h4>
+                    <p className="text-body-secondary">Select the date that fits your schedule – we offer flexibility for all types of trips.</p>
                   </div>
                 </div>
               </div>

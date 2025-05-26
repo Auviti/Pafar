@@ -6,7 +6,7 @@ const Login = ({btnText ='Sign In'})=>{
     return(
         <form className="p-3 p-md-4 bg-transparent">
             <FormInput type="email" label="Email address" placeholder="name@example.com" className={' mb-3'}/>
-            <div class="form-floating mb-3">
+            <div className="form-floating mb-3">
                 <input type="password" className="form-control" id="floatingPassword" placeholder="Password" />
                 <label for="floatingPassword">Password</label>
             </div>
@@ -15,7 +15,7 @@ const Login = ({btnText ='Sign In'})=>{
                 <Button type="submit">{btnText}</Button>
             </div>
             <hr className="my-4"/>
-            <small class="text-muted">forgetten password click. <Link to="/signup" className="text-info">SignUp</Link></small>
+            <small className="text-muted">forgetten password click. <Link to="/signup" className="text-info">SignUp</Link></small>
         </form>
     )
 }

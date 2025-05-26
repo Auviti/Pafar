@@ -1,0 +1,72 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on pushes to the main branch
+  pull_request:
+    branches:
+      - main  # Also trigger on PRs to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 2: Set up Node.js (adjust to your project's version)
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.19.2'  # Set your Node.js version here
+    
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm install
+
+    # Step 4: Build the React app with Vite
+    - name: Build the app
+      run: |
+        cd frontend
+        npm run build
+
+    # Step 5: Copy the build to EC2 server using SCP
+    # - name: Copy build to EC2 server
+    #   env:
+    #       EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+    #       EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+    #   run: |
+    #       # Setup SSH
+    #       mkdir -p ~/.ssh
+    #       echo "$EC2_PRIVATE_KEY" > ~/.ssh/id_rsa
+          
+    #       # Set the correct file permissions (chmod 400)
+    #       chmod 400 ~/.ssh/id_rsa
+
+    #       # Use SCP to copy the build from the 'frontend/dist' folder to the EC2 server
+    #       scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r frontend/dist/* ubuntu@ec2-${{ secrets.EC2_PUBLIC_IP }}.compute-1.amazonaws.com:/home/ubuntu/bivis-dist/
+
+    # # Step 6: SSH into EC2 and restart Nginx
+    # - name: Restart Nginx on EC2
+    #   run: |
+    #     ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@ec2-${{ secrets.EC2_PUBLIC_IP }}.compute-1.amazonaws.com << 'EOF'
+    #       # Remove old files from the web root
+    #       sudo rm -rf /var/www/html/*
+
+    #       # Copy new files from the build folder to the web root
+    #       sudo cp -r /home/ubuntu/bivis-dist/* /var/www/html/
+
+    #       # Restart Nginx to apply changes
+    #       sudo systemctl restart nginx
+    #     EOF
+    #   env:
+    #     EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+    #     EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+
+    # Optional Step 7: Notify deployment success (example using Slack or email)
+    # Add a Slack/Email notification step if needed.

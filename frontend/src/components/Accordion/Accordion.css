@@ -1,7 +1,0 @@
-
-.accordion-button:not(.collapsed) {
-    background-color: var(--primary-light) !important;
-    color: var(--text-dark) !important;
-    box-shadow: none !important;
-    outline: none !important;
-}

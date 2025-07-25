@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from .core.config import settings
 from .core.database import init_db, close_db
+from .api.auth import router as auth_router
 
 # Configure logging
 logging.basicConfig(
@@ -71,6 +72,9 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "environment": settings.environment}
 
+
+# Include routers
+app.include_router(auth_router)
 
 # Global exception handler
 @app.exception_handler(Exception)

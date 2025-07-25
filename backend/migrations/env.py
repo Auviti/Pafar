@@ -1,17 +1,21 @@
 """
-Alembic environment configuration for database migrations.
+Alembic migration environment configuration.
 """
-import asyncio
 import os
 from logging.config import fileConfig
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
+from dotenv import load_dotenv
 
-# Import your models here to ensure they are registered with SQLAlchemy
+# Load environment variables
+load_dotenv()
+
+# Import your models here
 from app.core.database import Base
-from app.core.config import settings
+from app.models.user import User
+from app.models.ride import Ride, Location, DriverLocation
+from app.models.payment import Payment
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -32,11 +36,6 @@ target_metadata = Base.metadata
 # ... etc.
 
 
-def get_url():
-    """Get database URL from environment or config."""
-    return os.getenv("DATABASE_URL", settings.database_url)
-
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -49,7 +48,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = get_url()
+    url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url") or "sqlite:///./pafar.db"
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -62,35 +61,38 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    """Run migrations with database connection."""
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-async def run_async_migrations() -> None:
-    """Run migrations in async mode."""
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url().replace(
-        "postgresql://", "postgresql+asyncpg://"
-    )
-
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
-
-
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    asyncio.run(run_async_migrations())
+    # Override database URL from environment if available
+    configuration = config.get_section(config.config_ini_section, {})
+    database_url = os.getenv("DATABASE_URL") or "sqlite:///./pafar.db"
+    
+    # Ensure we use the correct database URL
+    configuration["sqlalchemy.url"] = database_url
+    
+    # For SQLite, we don't need special pool configuration
+    if database_url.startswith("sqlite"):
+        connectable = engine_from_config(
+            configuration,
+            prefix="sqlalchemy.",
+            poolclass=pool.StaticPool,
+            connect_args={"check_same_thread": False},
+        )
+    else:
+        connectable = engine_from_config(
+            configuration,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+
+    with connectable.connect() as connection:
+        do_run_migrations(connection)
 
 
 if context.is_offline_mode():

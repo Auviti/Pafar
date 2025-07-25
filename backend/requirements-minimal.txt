@@ -1,0 +1,8 @@
+# Minimal requirements for basic functionality
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.36
+alembic==1.14.0
+python-dotenv==1.0.0
+pydantic==2.8.0
+pydantic-settings==2.4.0

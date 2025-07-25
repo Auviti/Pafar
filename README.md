@@ -1,108 +1,271 @@
-# Pafar - Full Stack & Mobile Development Plan
-A transportation system with booking, ride management, and location tracking integrates user/driver management, real-time updates, payment processing, and route optimization. It uses GPS and mapping APIs, ensuring efficiency and reliability, while handling scalability, security, and route planning challenges.
-Got it! You want to **clone the LuxRide site** ([https://creativelayers.net/themes/luxride-html/](https://creativelayers.net/themes/luxride-html/)) for a transportation and 
+# Pafar Ride Booking System
 
-Got it! Here’s the **updated detailed plan** for your full stack **Pafar project** including the **mobile app with Flutter** and responsive website — all aligned with the LuxRide design and your feature set:
+A comprehensive ride booking platform built with FastAPI, React, and Flutter.
 
----
+## 🏗️ Architecture
 
-## 1. Frontend Web (React + Vite)
+- **Backend**: FastAPI with kafka, PostgreSQL and Redis
+- **Frontend**: React with Vite and TypeScript
+- **Mobile**: Flutter for iOS and Android
+- **Infrastructure**: Docker, kafka and Docker Compose
 
-* Clone and convert the LuxRide HTML theme into a **React + Vite** SPA.
-* Responsive design matching original theme for desktop and mobile browsers.
-* Components: Header, Footer, BookingForm, RideStatus, DriverProfile, Payment UI, User Auth, etc.
-* React Router for page navigation.
-* Integrate Google Maps / Mapbox for location display.
-* Real-time updates via WebSocket or polling.
+## 📁 Project Structure
 
----
+```
+pafar/
+├── backend/                 # FastAPI backend application
+│   ├── app/
+│   │   ├── api/            # API endpoints
+│   │   ├── core/           # Core configuration and database
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── services/       # Business logic services
+│   │   └── utils/          # Utility functions
+│   ├── migrations/         # Alembic database migrations
+│   ├── scripts/           # Database and utility scripts
+│   └── tests/             # Backend tests
+├── frontend/               # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable React components
+│   │   ├── contexts/      # React contexts
+│   │   ├── pages/         # Page components
+│   │   └── test/          # Frontend tests
+│   └── public/            # Static assets
+├── mobile/                 # Flutter mobile application
+│   ├── lib/
+│   │   ├── app/           # App configuration
+│   │   ├── core/          # Core utilities and DI
+│   │   └── features/      # Feature modules
+│   └── test/              # Mobile tests
+└── .kiro/                 # Kiro specifications and tasks
+    └── specs/
+        └── ride-booking-system/
+```
 
-## 2. Backend API (FastAPI)
+## 🚀 Quick Start
 
-* RESTful API backend with **FastAPI**.
-* Database: SQLite for prototyping, PostgreSQL for production.
-* Models:
+### Prerequisites
 
-  * Users (drivers/customers)
-  * Rides (status, timestamps, geo-coordinates)
-  * Payments (transactions)
-* JWT-based authentication and authorization.
-* WebSocket endpoints for live ride tracking.
-* Payment integration via Stripe or PayPal or another alterntive .
-* Route optimization logic using Google Maps API or open-source algorithms.
+- Python 3.11 or higher
+- Node.js 18 or higher
+- Flutter 3.10 or higher (for mobile development)
+- PostgreSQL 14 or higher
+- Redis 7 or higher
+- Docker and Docker Compose (optional)
 
----
+### Setup
 
-## 3. Mobile App (Flutter)
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd pafar
+   ```
 
-* Build cross-platform iOS & Android app using **Flutter**.
-* Mirror website design and UI/UX exactly for consistent branding.
-* Responsive layouts that adapt to various device screen sizes.
-* Same core features: booking, ride management, location tracking, user profiles, payments.
-* Connect to the same backend APIs and WebSocket endpoints.
-* Use Google Maps Flutter plugin for map and tracking.
-* Implement push notifications for real-time ride updates.
+2. **Run the setup script**
+   ```bash
+   ./setup.sh
+   ```
 
----
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-## 4. Real-Time Location & Ride Tracking
+### Development
 
-* WebSocket support on backend and frontend/mobile.
-* Live GPS location updates of driver and ride progress.
-* Interactive maps with routes and markers.
-* Efficient synchronization between web and mobile clients.
+#### Using Docker (Recommended)
 
----
+```bash
+# Start all services
+docker-compose up -d
 
-## 5. Payment Processing
+# View logs
+docker-compose logs -f
 
-* Secure payment integration with Stripe or PayPal.
-* Tokenized payment methods, PCI compliance.
-* Payment flows on web and mobile apps.
-* Backend handles payment intents, confirmation, refunds.
+# Stop services
+docker-compose down
+```
 
----
+#### Manual Setup
 
-## 6. Security & Scalability
+1. **Start Backend**
+   ```bash
+   cd backend
+   source ../.venv/bin/activate
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-* HTTPS everywhere, JWT for secure API access.
-* Input validation and rate limiting.
-* Stateless API design to support horizontal scaling.
-* Database optimizations and caching for performance.
+2. **Start Frontend**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
 
----
+3. **Start Mobile App**
+   ```bash
+   cd mobile
+   flutter run
+   ```
 
-## 7. Deployment & CI/CD
+## 🗄️ Database
 
-* Docker containers for backend and frontend.
-* Host web frontend on Vercel/Netlify.
-* Backend on AWS/GCP/DigitalOcean/Heroku.
-* Mobile apps published to Apple App Store and Google Play Store.
-* Automated CI/CD pipelines for testing and deployment.
+### Migrations
 
----
+```bash
+cd backend
+source ../.venv/bin/activate
 
-## 8. Optional Advanced Features
+# Create a new migration
+alembic revision --autogenerate -m "Description"
 
-* Driver and rider rating & feedback.
-* Admin dashboard for management.
-* Multi-language support.
-* Push notifications (Firebase Cloud Messaging).
-* Analytics dashboard.
+# Apply migrations
+alembic upgrade head
 
----
+# Rollback migration
+alembic downgrade -1
+```
 
-# Summary Workflow if ai cant get any
+### Database Management
 
-| Step | Task Description                                  | Output                                   |
-| ---- | ------------------------------------------------- | ---------------------------------------- |
-| 1    | Clone LuxRide HTML to React + Vite responsive SPA | Fully functional web frontend            |
-| 2    | Build FastAPI backend with REST & WebSocket APIs  | Backend with ride, user, payment APIs    |
-| 3    | Develop Flutter mobile app with identical UX/UI   | Cross-platform iOS & Android apps        |
-| 4    | Integrate real-time location & ride tracking      | Live updates on web & mobile             |
-| 5    | Integrate payment gateways (Stripe/PayPal)        | Secure payment flows on all clients      |
-| 6    | Implement security: JWT, HTTPS, validation        | Secure and scalable system               |
-| 7    | Dockerize and deploy all components               | Production-ready infrastructure          |
-| 8    | Add optional features & enhancements              | Ratings, admin, notifications, analytics |
+```bash
+cd backend
+source ../.venv/bin/activate
 
+# Check database connection
+python scripts/manage_db.py check
 
+# Initialize database
+python scripts/manage_db.py init
+
+# Reset database (WARNING: Deletes all data)
+python scripts/manage_db.py reset
+
+# Seed database with initial data
+python scripts/manage_db.py seed
+```
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+source ../.venv/bin/activate
+pytest
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+### Mobile Tests
+```bash
+cd mobile
+flutter test
+```
+
+## 📦 Deployment
+
+### Production Build
+
+```bash
+# Build all services for production
+docker-compose -f docker-compose.prod.yml build
+
+# Deploy to production
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Environment Configuration
+
+Create production environment files:
+- `.env.production` - Production environment variables
+- Update `docker-compose.prod.yml` with production settings
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://pafar_user:pafar_password@localhost:5432/pafar_db` |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
+| `SECRET_KEY` | Application secret key | Required |
+| `JWT_SECRET_KEY` | JWT signing key | Required |
+| `STRIPE_SECRET_KEY` | Stripe payment processing key | Optional |
+| `GOOGLE_MAPS_API_KEY` | Google Maps API key | Optional |
+
+### API Documentation
+
+Once the backend is running, visit:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## 🏃‍♂️ Development Workflow
+
+### Task Management
+
+This project uses Kiro specs for feature development:
+
+1. **View Tasks**: Open `.kiro/specs/ride-booking-system/tasks.md`
+2. **Execute Tasks**: Use Kiro to execute individual tasks
+3. **Track Progress**: Tasks are marked as completed when finished
+
+### Code Style
+
+- **Backend**: Black, isort, flake8
+- **Frontend**: ESLint, Prettier
+- **Mobile**: Dart formatter
+
+### Git Workflow
+
+1. Create feature branch from `main`
+2. Implement changes following the task specifications
+3. Run tests and ensure they pass
+4. Submit pull request for review
+
+## 📚 API Reference
+
+### Authentication
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/refresh` - Refresh JWT token
+
+### Rides
+- `POST /rides` - Create ride request
+- `GET /rides/{id}` - Get ride details
+- `PUT /rides/{id}/status` - Update ride status
+
+### Users
+- `GET /users/profile` - Get user profile
+- `PUT /users/profile` - Update user profile
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Check the documentation in `/docs`
+- Review the task specifications in `.kiro/specs`
+- Create an issue in the repository
+
+## 🔄 Status
+
+This project is currently in development. The following tasks have been completed:
+
+- ✅ Task 1: Project structure and core infrastructure setup
+- ⏳ Task 2: Core data models and database schema (Next)
+
+See `.kiro/specs/ride-booking-system/tasks.md` for the complete task list and progress.

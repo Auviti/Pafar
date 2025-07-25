@@ -1,95 +1,124 @@
 #!/bin/bash
 
-# Define color codes
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
+# Pafar Ride Booking System Docker Runner
+# This script provides various options for running the system
 
-# Check if an argument is provided
-if [ -z "$1" ]; then
-    echo -e "${YELLOW}Usage: $0 <environment> [up|down [delete]]${NC}"
-    exit 1
-fi
+set -e
 
-echo -e "${GREEN}✓${NC} Initializing ..."
+# Default values
+ENVIRONMENT="development"
+BUILD=false
+DETACHED=false
+SERVICES=""
 
-# Check if the system is running Linux
-if [ "$(uname)" == "Linux" ]; then
-    echo -e "${GREEN}✓${NC} System OS: Linux Detected"
-    
-    # Get the IP address of the Linux system
-    ip_address=$(hostname -I | awk '{print $1}')
-    echo -e "${GREEN}✓${NC} IP Address: $ip_address"
-    
-    # Step 1: Copy the environment file
-    echo "Step 1: Copying the environment file..."
-    cp ./backend/userservice/.env.local ./backend/userservice/.env
-    cp ./backend/bookingservice/.env.local ./backend/bookingservice/.env
-    cp ./backend/analyticsservice/.env.local ./backend/analytics/.env
-fi
-
-# Function to create the network and volume
-create_network_and_volume() {
-    # Create the Docker network if it doesn't exist
-    docker network create webnet || echo "Network 'webnet' already exists or failed to create"
-
-    # Create the Docker volume if it doesn't exist
-    # docker volume create --name users-db-data || echo "Volume 'users-db-data' already exists or failed to create"
-    # docker volume create --name bookings-db-data || echo "Volume 'bookings-db-data' already exists or failed to create"
-    # docker volume create --name analytics-db-data || echo "Volume 'analytics-db-data' already exists or failed to create"
-
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 [OPTIONS] [SERVICES]"
+    echo ""
+    echo "Options:"
+    echo "  -e, --env ENV        Environment (development|production) [default: development]"
+    echo "  -b, --build          Force rebuild of images"
+    echo "  -d, --detached       Run in detached mode"
+    echo "  -h, --help           Show this help message"
+    echo ""
+    echo "Services (optional):"
+    echo "  backend              Run only backend service"
+    echo "  frontend             Run only frontend service"
+    echo "  db                   Run only database service"
+    echo "  redis                Run only Redis service"
+    echo ""
+    echo "Examples:"
+    echo "  $0                   Start all services in development mode"
+    echo "  $0 -e production     Start all services in production mode"
+    echo "  $0 -b -d             Build and start all services in detached mode"
+    echo "  $0 backend db        Start only backend and database services"
 }
 
-# Function to start containers
-start_containers() {
-    create_network_and_volume
-    # Build docker-compose for development
-    docker-compose -f docker-compose.dev.yml build
-    
-    # Run docker-compose for the specified environment
-    docker-compose -f docker-compose.dev.yml up -d
-}
-
-# Function to stop containers
-stop_containers() {
-    docker-compose down
-}
-
-
-# Function to stop and remove containers, images, volumes, and orphan containers
-stop_and_remove_containers() {
-    docker-compose down --rmi all --volumes --remove-orphans
-}
-
-# Function to handle environment-specific actions
-handle_environment() {
-    case "$1" in
-        "dev")
-            compose_file="docker-compose.dev.yml"
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -e|--env)
+            ENVIRONMENT="$2"
+            shift 2
             ;;
-        "prod")
-            compose_file="docker-compose.prod.yml"
+        -b|--build)
+            BUILD=true
+            shift
+            ;;
+        -d|--detached)
+            DETACHED=true
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        backend|frontend|db|redis)
+            SERVICES="$SERVICES $1"
+            shift
             ;;
         *)
-            echo -e "${RED}Invalid environment! Please specify 'dev' or 'prod'.${NC}"
+            echo "Unknown option: $1"
+            show_usage
             exit 1
             ;;
     esac
-    
-    if [ "$2" == "up" ]; then
-        start_containers
-    elif [ "$2" == "down" ]; then
-        if [ "$3" == "delete" ]; then
-            stop_and_remove_containers
-        else
-            stop_containers
-        fi
-    else
-        echo "Usage: $0 {up|down [delete]}"
-        exit 1
-    fi
-}
+done
 
-# Main script logic
-handle_environment "$1" "$2" "$3"
+# Validate environment
+if [[ "$ENVIRONMENT" != "development" && "$ENVIRONMENT" != "production" ]]; then
+    echo "❌ Invalid environment: $ENVIRONMENT"
+    echo "Valid environments: development, production"
+    exit 1
+fi
+
+# Check if .env file exists
+if [ ! -f .env ]; then
+    echo "⚠️  .env file not found. Creating from template..."
+    cp .env.example .env
+    echo "✅ Please update .env file with your configuration"
+fi
+
+# Build Docker Compose command
+COMPOSE_FILE="docker-compose.yml"
+if [[ "$ENVIRONMENT" == "production" ]]; then
+    COMPOSE_FILE="docker-compose.prod.yml"
+fi
+
+DOCKER_CMD="docker-compose -f $COMPOSE_FILE"
+
+# Add build flag if requested
+if [[ "$BUILD" == true ]]; then
+    DOCKER_CMD="$DOCKER_CMD up --build"
+else
+    DOCKER_CMD="$DOCKER_CMD up"
+fi
+
+# Add detached flag if requested
+if [[ "$DETACHED" == true ]]; then
+    DOCKER_CMD="$DOCKER_CMD -d"
+fi
+
+# Add specific services if provided
+if [[ -n "$SERVICES" ]]; then
+    DOCKER_CMD="$DOCKER_CMD$SERVICES"
+fi
+
+echo "🚀 Starting Pafar Ride Booking System..."
+echo "📝 Environment: $ENVIRONMENT"
+echo "🐳 Command: $DOCKER_CMD"
+echo ""
+
+# Execute the command
+eval $DOCKER_CMD
+
+if [[ "$DETACHED" == true ]]; then
+    echo ""
+    echo "✅ Services started in detached mode"
+    echo "📊 Check status: docker-compose ps"
+    echo "📋 View logs: docker-compose logs -f"
+    echo "🛑 Stop services: docker-compose down"
+else
+    echo ""
+    echo "🛑 Press Ctrl+C to stop all services"
+fi

@@ -1,15 +1,16 @@
 # Implementation Plan
 
-- [ ] 1. Set up project structure and core infrastructure
+- [x] 1. Set up project structure and core infrastructure
   - Create directory structure for backend (FastAPI), frontend (React + Vite), and mobile (Flutter) applications
   - Set up Docker configuration files for development and production environments
   - Configure environment variables and settings management
   - Set up database connection utilities and migration system
   - _Requirements: All requirements depend on proper project structure_
 
-- [ ] 2. Implement core data models and database schema
+- [x] 2. Implement core data models and database schema
   - Create SQLAlchemy models for User, Ride, Location, Payment, and DriverLocation entities
   - Write database migration scripts for all tables with proper indexes and constraints
+  - dont forge to use alembic
   - Implement model validation using Pydantic schemas
   - Create database seeding scripts for development and testing
   - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1_
@@ -87,9 +88,10 @@
   - Build system error logging and alert notification system
   - Implement fraud detection and unusual pattern monitoring
   - Write tests for admin functionality and monitoring systems
+  - give me the proper docs and command to run migrations and run the application
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 11. Build React web application frontend
+- [ ] 11. Build React web application frontend using the template from luxride (https://creativelayers.net/themes/luxride-html/)
   - Set up React + Vite project structure with routing and state management
   - Create responsive layout components (Header, Footer, Navigation)
   - Implement user authentication UI with login, registration, and profile management
@@ -115,6 +117,7 @@
 
 - [ ] 13. Implement comprehensive error handling and logging
   - Create structured error response system with consistent formatting
+  - Rearrange all files into proper standard folders for better structure
   - Implement global error handling for all API endpoints
   - Build client-side error boundaries and retry mechanisms
   - Create comprehensive logging system with correlation IDs

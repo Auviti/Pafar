@@ -1,271 +1,207 @@
-# Pafar Ride Booking System
+# 🚌 Transport Management Platform Implementation Plan (Pafar)
 
-A comprehensive ride booking platform built with FastAPI, React, and Flutter.
+---
 
-## 🏗️ Architecture
+### ✅ 1. System Infrastructure & Project Setup
 
-- **Backend**: FastAPI with kafka, PostgreSQL and Redis
-- **Frontend**: React with Vite and TypeScript
-- **Mobile**: Flutter for iOS and Android
-- **Infrastructure**: Docker, kafka and Docker Compose
+* Set up monorepo structure for:
 
-## 📁 Project Structure
+  * **Backend** (`FastAPI`)
+  * **Frontend** (`React + Vite`)
+  * **Mobile App** (`Flutter`)
+* Define CI/CD pipeline structure and containerization (Docker)
+* Configure `.env`, settings management (prod/stage/dev)
+* Setup PostgreSQL, Redis, and Alembic-based DB migration system
 
-```
-pafar/
-├── backend/                 # FastAPI backend application
-│   ├── app/
-│   │   ├── api/            # API endpoints
-│   │   ├── core/           # Core configuration and database
-│   │   ├── models/         # SQLAlchemy models
-│   │   ├── services/       # Business logic services
-│   │   └── utils/          # Utility functions
-│   ├── migrations/         # Alembic database migrations
-│   ├── scripts/           # Database and utility scripts
-│   └── tests/             # Backend tests
-├── frontend/               # React frontend application
-│   ├── src/
-│   │   ├── components/    # Reusable React components
-│   │   ├── contexts/      # React contexts
-│   │   ├── pages/         # Page components
-│   │   └── test/          # Frontend tests
-│   └── public/            # Static assets
-├── mobile/                 # Flutter mobile application
-│   ├── lib/
-│   │   ├── app/           # App configuration
-│   │   ├── core/          # Core utilities and DI
-│   │   └── features/      # Feature modules
-│   └── test/              # Mobile tests
-└── .kiro/                 # Kiro specifications and tasks
-    └── specs/
-        └── ride-booking-system/
-```
+---
 
-## 🚀 Quick Start
+### ✅ 2. Core Domain Models and Schema
 
-### Prerequisites
+* Design models:
 
-- Python 3.11 or higher
-- Node.js 18 or higher
-- Flutter 3.10 or higher (for mobile development)
-- PostgreSQL 14 or higher
-- Redis 7 or higher
-- Docker and Docker Compose (optional)
+  * `User`, `Booking`, `Bus`, `Terminal`, `Trip`, `Payment`, `DriverLocation`
+* Alembic migrations with indexes & constraints
+* Pydantic schema validation
+* Seed dev database with:
 
-### Setup
+  * Routes, Buses, Terminals, Mock Users
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd pafar
-   ```
+---
 
-2. **Run the setup script**
-   ```bash
-   ./setup.sh
-   ```
+### ✅ 3. Authentication and Passenger Management
 
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+* JWT Auth system (access/refresh tokens)
+* Register/login + Email/SMS OTP verification
+* Password reset + token validation
+* Profile update and preferences
+* Session audit logs per user
 
-### Development
+---
 
-#### Using Docker (Recommended)
+### ✅ 4. Trip Booking and Fleet Management
+
+* Endpoint to:
+
+  * Select route, choose bus seat, reserve trip
+* Integrate fare calculation (distance, tier, timing)
+* Assign bus and driver to each trip
+* Define trip states: `Scheduled`, `En Route`, `Completed`, `Cancelled`
+* Add cancellation support with reason & cutoff time
+
+---
+
+### 🛠️ 5. Live Fleet Tracking (In Progress)
+
+* WebSocket-based live updates
+* Broadcast driver location to customers en route
+* Ride updates (e.g., `bus arrived`, `boarding now`)
+* Endpoint to update driver GPS every 30s
+* Use PostGIS or spatial queries for nearest-terminal logic
+
+---
+
+### 🗺️ 6. Maps & Route Optimization
+
+* Integrate Google Maps or HERE API for:
+
+  * Geocoding terminals
+  * Route & ETA calculation
+* Auto-complete city/terminal names
+* Visual route plotting on booking screens
+
+---
+
+### 💳 7. Secure Payment System
+
+* Integrate **Stripe** or **Paystack**
+* Allow:
+
+  * Card saving (with vault tokenization)
+  * On-trip or pre-trip payment
+* Generate e-receipts with trip summary
+* Handle failed payments + retry queue
+* Allow discounts, vouchers, or loyalty points
+
+---
+
+### 🌟 8. Reviews, Feedback & Ratings
+
+* Allow passengers to:
+
+  * Rate driver/bus after trip
+  * Add textual feedback
+* Admin UI to moderate reviews
+* Average rating on driver/bus profile
+
+---
+
+### 🛠️ 9. Admin Control Center
+
+* Admin login panel
+* Dashboard: revenue, live trips, trip counts, active drivers
+* Search and suspend users, manage terminals/buses
+* Fraud detection triggers (e.g., booking abuse, payment retries)
+
+---
+
+### 💻 10. React Frontend (Web Portal)
+
+* **Luxride HTML Template** (as base theme)
+* Page components:
+
+  * Home, Book Trip, My Bookings, Track Bus, Payment, Profile
+* Admin panel with:
+
+  * Trip mgmt, User mgmt, Reviews
+* WebSocket integration for live tracking
+
+---
+
+### 📱 11. Flutter Mobile App
+
+* Flutter (iOS + Android) setup
+* Screens:
+
+  * Login/Register
+  * Trip Booking (w/ seat map)
+  * Trip Tracking (live location)
+  * Payment and Profile
+* Push notifications for:
+
+  * Booking confirmation
+  * Bus arrival
+  * Delays or cancellations
+
+---
+
+### ⚠️ 12. Error Handling and Observability
+
+* Global exception middleware
+* Consistent API error response schema
+* Logging with trace ID per request
+* Graceful fallback for 3rd-party API failures
+
+---
+
+### 🧪 13. Automated Testing
+
+* `pytest` (backend), `jest` + RTL (frontend), `flutter_test`
+* API and component-level tests
+* E2E tests for:
+
+  * Book Trip → Pay → Ride → Rate
+* GitHub Actions for CI checks
+
+---
+
+### 🚀 14. Deployment
+
+* Dockerize backend, frontend, mobile
+* Nginx + SSL/TLS for web
+* PostgreSQL & Redis containers
+* GitHub Actions workflows for:
+
+  * Dev deploy
+  * Prod deploy
+* Write runbook for:
+
+  * Migration
+  * Rollbacks
+  * Backups
+
+---
+
+### 🔁 Migration & Run Commands
+
+**Initialize Alembic**
 
 ```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
+alembic init migrations
 ```
 
-#### Manual Setup
-
-1. **Start Backend**
-   ```bash
-   cd backend
-   source ../.venv/bin/activate
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-2. **Start Frontend**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
-3. **Start Mobile App**
-   ```bash
-   cd mobile
-   flutter run
-   ```
-
-## 🗄️ Database
-
-### Migrations
+**Generate migration**
 
 ```bash
-cd backend
-source ../.venv/bin/activate
+alembic revision --autogenerate -m "init schema"
+```
 
-# Create a new migration
-alembic revision --autogenerate -m "Description"
+**Apply migration**
 
-# Apply migrations
+```bash
 alembic upgrade head
-
-# Rollback migration
-alembic downgrade -1
 ```
 
-### Database Management
+**Run FastAPI server**
 
 ```bash
-cd backend
-source ../.venv/bin/activate
-
-# Check database connection
-python scripts/manage_db.py check
-
-# Initialize database
-python scripts/manage_db.py init
-
-# Reset database (WARNING: Deletes all data)
-python scripts/manage_db.py reset
-
-# Seed database with initial data
-python scripts/manage_db.py seed
+uvicorn app.main:app --reload
 ```
 
-## 🧪 Testing
+**Run React frontend**
 
-### Backend Tests
-```bash
-cd backend
-source ../.venv/bin/activate
-pytest
-```
-
-### Frontend Tests
 ```bash
 cd frontend
-npm test
+npm install
+npm run dev
 ```
 
-### Mobile Tests
-```bash
-cd mobile
-flutter test
-```
-
-## 📦 Deployment
-
-### Production Build
-
-```bash
-# Build all services for production
-docker-compose -f docker-compose.prod.yml build
-
-# Deploy to production
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Environment Configuration
-
-Create production environment files:
-- `.env.production` - Production environment variables
-- Update `docker-compose.prod.yml` with production settings
-
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://pafar_user:pafar_password@localhost:5432/pafar_db` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
-| `SECRET_KEY` | Application secret key | Required |
-| `JWT_SECRET_KEY` | JWT signing key | Required |
-| `STRIPE_SECRET_KEY` | Stripe payment processing key | Optional |
-| `GOOGLE_MAPS_API_KEY` | Google Maps API key | Optional |
-
-### API Documentation
-
-Once the backend is running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## 🏃‍♂️ Development Workflow
-
-### Task Management
-
-This project uses Kiro specs for feature development:
-
-1. **View Tasks**: Open `.kiro/specs/ride-booking-system/tasks.md`
-2. **Execute Tasks**: Use Kiro to execute individual tasks
-3. **Track Progress**: Tasks are marked as completed when finished
-
-### Code Style
-
-- **Backend**: Black, isort, flake8
-- **Frontend**: ESLint, Prettier
-- **Mobile**: Dart formatter
-
-### Git Workflow
-
-1. Create feature branch from `main`
-2. Implement changes following the task specifications
-3. Run tests and ensure they pass
-4. Submit pull request for review
-
-## 📚 API Reference
-
-### Authentication
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/refresh` - Refresh JWT token
-
-### Rides
-- `POST /rides` - Create ride request
-- `GET /rides/{id}` - Get ride details
-- `PUT /rides/{id}/status` - Update ride status
-
-### Users
-- `GET /users/profile` - Get user profile
-- `PUT /users/profile` - Update user profile
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Check the documentation in `/docs`
-- Review the task specifications in `.kiro/specs`
-- Create an issue in the repository
-
-## 🔄 Status
-
-This project is currently in development. The following tasks have been completed:
-
-- ✅ Task 1: Project structure and core infrastructure setup
-- ⏳ Task 2: Core data models and database schema (Next)
-
-See `.kiro/specs/ride-booking-system/tasks.md` for the complete task list and progress.

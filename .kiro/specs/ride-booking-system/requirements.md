@@ -2,102 +2,126 @@
 
 ## Introduction
 
-The Pafar ride booking system is a comprehensive transportation platform that enables users to book rides, track their journey in real-time, and manage payments seamlessly. The system supports both customers who need transportation and drivers who provide the service, with real-time location tracking, route optimization, and secure payment processing. The platform will be accessible through both web and mobile applications, providing a consistent user experience across all devices.
+The Transport Management Platform (Pafar) is a comprehensive multi-platform system that enables passengers to book bus trips, track vehicles in real-time, make secure payments, and manage their travel experience. The system consists of a FastAPI backend, React web frontend, and Flutter mobile application, serving passengers, drivers, and administrators with different interfaces and capabilities.
 
 ## Requirements
 
-### Requirement 1
+### Requirement 1: User Authentication and Management
 
-**User Story:** As a customer, I want to register and authenticate my account, so that I can access the ride booking platform securely.
-
-#### Acceptance Criteria
-
-1. WHEN a new user visits the registration page THEN the system SHALL display fields for email, password, full name, and phone number
-2. WHEN a user submits valid registration information THEN the system SHALL create a new account and send a verification email
-3. WHEN a user attempts to login with valid credentials THEN the system SHALL authenticate them and provide a JWT token
-4. WHEN a user attempts to login with invalid credentials THEN the system SHALL display an appropriate error message
-5. IF a user's account is not verified THEN the system SHALL prevent login and prompt for email verification
-
-### Requirement 2
-
-**User Story:** As a customer, I want to book a ride by specifying pickup and destination locations, so that I can get transportation from point A to point B.
+**User Story:** As a passenger, I want to create an account and securely log in, so that I can access personalized booking services and manage my travel history.
 
 #### Acceptance Criteria
 
-1. WHEN a customer accesses the booking form THEN the system SHALL display fields for pickup location, destination, and ride preferences
-2. WHEN a customer enters pickup and destination locations THEN the system SHALL calculate and display the estimated route, distance, and fare
-3. WHEN a customer confirms a booking THEN the system SHALL create a ride request and match it with available drivers
-4. WHEN no drivers are available THEN the system SHALL inform the customer and suggest alternative times
-5. IF the pickup or destination location is invalid THEN the system SHALL display an error and request valid locations
+1. WHEN a new user registers THEN the system SHALL create a user account with email/phone verification
+2. WHEN a user logs in with valid credentials THEN the system SHALL provide JWT access and refresh tokens
+3. WHEN a user requests password reset THEN the system SHALL send OTP verification via email/SMS
+4. WHEN a user updates their profile THEN the system SHALL validate and save the changes with audit logging
+5. IF a user session expires THEN the system SHALL automatically refresh tokens or prompt re-authentication
 
-### Requirement 3
+### Requirement 2: Trip Booking and Seat Selection
 
-**User Story:** As a driver, I want to receive and accept ride requests, so that I can provide transportation services and earn income.
-
-#### Acceptance Criteria
-
-1. WHEN a driver is online and available THEN the system SHALL send them nearby ride requests
-2. WHEN a driver receives a ride request THEN the system SHALL display pickup location, destination, estimated fare, and customer details
-3. WHEN a driver accepts a ride request THEN the system SHALL assign the ride to them and notify the customer
-4. WHEN a driver declines a ride request THEN the system SHALL offer the request to other available drivers
-5. IF a driver doesn't respond within 30 seconds THEN the system SHALL automatically offer the request to other drivers
-
-### Requirement 4
-
-**User Story:** As a customer, I want to track my ride in real-time, so that I know the driver's location and estimated arrival time.
+**User Story:** As a passenger, I want to search for available trips and select specific seats, so that I can secure my preferred travel arrangements.
 
 #### Acceptance Criteria
 
-1. WHEN a ride is accepted by a driver THEN the system SHALL display the driver's real-time location on a map
-2. WHEN the driver is en route to pickup THEN the system SHALL show estimated arrival time and update it continuously
-3. WHEN the ride is in progress THEN the system SHALL display the current route and estimated time to destination
-4. WHEN the driver arrives at pickup location THEN the system SHALL notify the customer
-5. IF the driver deviates significantly from the optimal route THEN the system SHALL alert the customer
+1. WHEN a user searches for trips THEN the system SHALL display available routes with departure times and pricing
+2. WHEN a user selects a trip THEN the system SHALL show available seats with visual seat map
+3. WHEN a user selects a seat THEN the system SHALL reserve it temporarily for 10 minutes
+4. WHEN a user confirms booking THEN the system SHALL create a booking record with unique confirmation number
+5. IF seat selection times out THEN the system SHALL release the reserved seat automatically
 
-### Requirement 5
+### Requirement 3: Real-time Fleet Tracking
 
-**User Story:** As a driver, I want to update my location and ride status, so that customers can track their rides accurately.
-
-#### Acceptance Criteria
-
-1. WHEN a driver is online THEN the system SHALL continuously track and update their GPS location
-2. WHEN a driver starts driving to pickup THEN the system SHALL update the ride status to "en route to pickup"
-3. WHEN a driver arrives at pickup THEN the system SHALL allow them to update status to "arrived at pickup"
-4. WHEN a ride begins THEN the system SHALL update status to "in progress" and start tracking the journey
-5. WHEN a ride is completed THEN the system SHALL update status to "completed" and stop location tracking
-
-### Requirement 6
-
-**User Story:** As a customer, I want to make secure payments for my rides, so that I can pay conveniently without handling cash.
+**User Story:** As a passenger, I want to track my booked bus in real-time, so that I can know its current location and estimated arrival time.
 
 #### Acceptance Criteria
 
-1. WHEN a customer books a ride THEN the system SHALL display the estimated fare before confirmation
-2. WHEN a ride is completed THEN the system SHALL calculate the final fare based on distance, time, and any applicable surcharges
-3. WHEN payment is due THEN the system SHALL process payment using the customer's saved payment method
-4. WHEN payment is successful THEN the system SHALL send a receipt to the customer via email
-5. IF payment fails THEN the system SHALL retry payment and notify the customer of any issues
+1. WHEN a driver updates location THEN the system SHALL broadcast position to all passengers on that trip
+2. WHEN a bus is en route THEN the system SHALL provide live location updates every 30 seconds via WebSocket
+3. WHEN a bus approaches terminal THEN the system SHALL notify passengers of arrival status
+4. WHEN trip status changes THEN the system SHALL update all connected clients immediately
+5. IF location service fails THEN the system SHALL gracefully handle the error and show last known position
 
-### Requirement 7
+### Requirement 4: Secure Payment Processing
 
-**User Story:** As a user (customer or driver), I want to rate and review my ride experience, so that I can provide feedback and help maintain service quality.
-
-#### Acceptance Criteria
-
-1. WHEN a ride is completed THEN the system SHALL prompt both customer and driver to rate each other
-2. WHEN a user submits a rating THEN the system SHALL accept ratings from 1 to 5 stars with optional written feedback
-3. WHEN ratings are submitted THEN the system SHALL update the average rating for both customer and driver profiles
-4. WHEN a user views a driver profile THEN the system SHALL display their average rating and recent reviews
-5. IF a user receives consistently low ratings THEN the system SHALL flag their account for review
-
-### Requirement 8
-
-**User Story:** As a system administrator, I want to monitor ride operations and manage users, so that I can ensure platform reliability and handle issues.
+**User Story:** As a passenger, I want to pay for my trip securely using various payment methods, so that I can complete my booking with confidence.
 
 #### Acceptance Criteria
 
-1. WHEN an administrator accesses the admin dashboard THEN the system SHALL display real-time statistics on active rides, users, and system performance
-2. WHEN an administrator searches for a user THEN the system SHALL display their profile, ride history, and account status
-3. WHEN an administrator needs to suspend a user THEN the system SHALL allow account suspension with reason logging
-4. WHEN system errors occur THEN the system SHALL log them and alert administrators
-5. IF unusual patterns are detected THEN the system SHALL generate alerts for potential fraud or system issues
+1. WHEN a user initiates payment THEN the system SHALL integrate with Stripe/Paystack for secure processing
+2. WHEN payment is successful THEN the system SHALL generate an e-receipt with trip details
+3. WHEN a user saves payment method THEN the system SHALL use tokenized vault storage
+4. WHEN payment fails THEN the system SHALL provide retry options and clear error messages
+5. IF payment processing is interrupted THEN the system SHALL maintain booking state for recovery
+
+### Requirement 5: Trip Management and Status Updates
+
+**User Story:** As a passenger, I want to view my booking history and receive updates about my trips, so that I can stay informed about my travel plans.
+
+#### Acceptance Criteria
+
+1. WHEN a user views bookings THEN the system SHALL display all past and upcoming trips with status
+2. WHEN trip status changes THEN the system SHALL send push notifications to mobile users
+3. WHEN a user cancels a trip THEN the system SHALL process cancellation based on policy and timing
+4. WHEN a trip is completed THEN the system SHALL update status and enable rating/feedback
+5. IF a trip is delayed or cancelled THEN the system SHALL notify all affected passengers immediately
+
+### Requirement 6: Rating and Feedback System
+
+**User Story:** As a passenger, I want to rate my trip experience and provide feedback, so that service quality can be maintained and improved.
+
+#### Acceptance Criteria
+
+1. WHEN a trip is completed THEN the system SHALL prompt passenger for rating and feedback
+2. WHEN a user submits rating THEN the system SHALL store it and update driver/bus average ratings
+3. WHEN feedback is submitted THEN the system SHALL make it available for admin moderation
+4. WHEN viewing trip history THEN the system SHALL display user's previous ratings
+5. IF inappropriate content is detected THEN the system SHALL flag it for admin review
+
+### Requirement 7: Administrative Control Center
+
+**User Story:** As an administrator, I want to manage the entire system including users, trips, and fleet operations, so that I can ensure smooth platform operations.
+
+#### Acceptance Criteria
+
+1. WHEN admin logs in THEN the system SHALL provide dashboard with key metrics and live trip data
+2. WHEN admin searches users THEN the system SHALL display user details with action options
+3. WHEN admin manages fleet THEN the system SHALL allow bus/driver assignment and status updates
+4. WHEN admin reviews feedback THEN the system SHALL provide moderation tools and response options
+5. IF fraud is detected THEN the system SHALL trigger alerts and provide investigation tools
+
+### Requirement 8: Multi-platform Accessibility
+
+**User Story:** As a user, I want to access the platform from web browsers and mobile devices, so that I can use the service from any device.
+
+#### Acceptance Criteria
+
+1. WHEN a user accesses the web portal THEN the system SHALL provide responsive React-based interface
+2. WHEN a user uses mobile app THEN the system SHALL provide native Flutter experience for iOS/Android
+3. WHEN features are updated THEN the system SHALL maintain consistency across all platforms
+4. WHEN offline THEN mobile app SHALL cache essential data and sync when connection resumes
+5. IF platform-specific features are needed THEN the system SHALL handle them appropriately
+
+### Requirement 9: Maps and Route Integration
+
+**User Story:** As a passenger, I want to see route information and terminal locations on maps, so that I can better understand my journey.
+
+#### Acceptance Criteria
+
+1. WHEN viewing routes THEN the system SHALL display them on integrated maps (Google Maps/HERE API)
+2. WHEN searching terminals THEN the system SHALL provide auto-complete with geocoded locations
+3. WHEN booking trips THEN the system SHALL show estimated travel time and distance
+4. WHEN tracking buses THEN the system SHALL display real-time position on route map
+5. IF map service is unavailable THEN the system SHALL provide text-based location information
+
+### Requirement 10: System Performance and Reliability
+
+**User Story:** As a user, I want the system to be fast and reliable, so that I can complete my tasks without interruption.
+
+#### Acceptance Criteria
+
+1. WHEN system is under normal load THEN response times SHALL be under 2 seconds for API calls
+2. WHEN database operations occur THEN the system SHALL use proper indexing and optimization
+3. WHEN errors occur THEN the system SHALL log them with trace IDs for debugging
+4. WHEN third-party services fail THEN the system SHALL provide graceful fallbacks
+5. IF system maintenance is needed THEN users SHALL be notified in advance with minimal downtime

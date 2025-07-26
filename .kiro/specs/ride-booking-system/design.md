@@ -2,9 +2,7 @@
 
 ## Overview
 
-The Pafar ride booking system is designed as a modern, scalable transportation platform following a microservices architecture. The system consists of three main client applications (React web app, Flutter mobile apps) communicating with a FastAPI backend through RESTful APIs and WebSocket connections for real-time features. The architecture emphasizes real-time communication, secure payment processing, and efficient location tracking while maintaining high availability and scalability.
-
-The system follows the technology stack outlined in the project plan: React + Vite for web frontend, Flutter for mobile apps, FastAPI for backend APIs, PostgreSQL for production database, and Docker for containerization.
+The Transport Management Platform (Pafar) is designed as a microservices-oriented system with a FastAPI backend, React web frontend, and Flutter mobile application. The architecture emphasizes real-time capabilities, scalability, and security while providing seamless user experiences across all platforms.
 
 ## Architecture
 
@@ -14,323 +12,543 @@ The system follows the technology stack outlined in the project plan: React + Vi
 graph TB
     subgraph "Client Layer"
         WEB[React Web App]
-        IOS[Flutter iOS App]
-        AND[Flutter Android App]
+        MOBILE[Flutter Mobile App]
+        ADMIN[Admin Dashboard]
     end
     
     subgraph "API Gateway"
-        GW[Load Balancer/API Gateway]
+        NGINX[Nginx Load Balancer]
     end
     
-    subgraph "Backend Services"
+    subgraph "Application Layer"
         API[FastAPI Backend]
-        WS[WebSocket Service]
-        AUTH[Authentication Service]
-        PAY[Payment Service]
-        LOC[Location Service]
-        NOTIF[Notification Service]
+        WS[WebSocket Server]
+        WORKER[Celery Workers]
+    end
+    
+    subgraph "Data Layer"
+        DB[(PostgreSQL)]
+        CACHE[(Redis)]
+        FILES[File Storage]
     end
     
     subgraph "External Services"
         MAPS[Google Maps API]
-        STRIPE[Stripe/PayPal]
-        FCM[Firebase Cloud Messaging]
+        PAYMENT[Stripe/Paystack]
+        SMS[SMS Gateway]
+        EMAIL[Email Service]
+        PUSH[Firebase FCM]
     end
     
-    subgraph "Data Layer"
-        PG[(PostgreSQL)]
-        REDIS[(Redis Cache)]
-    end
-    
-    WEB --> GW
-    IOS --> GW
-    AND --> GW
-    
-    GW --> API
-    GW --> WS
-    
-    API --> AUTH
-    API --> PAY
-    API --> LOC
-    API --> NOTIF
-    
-    PAY --> STRIPE
-    LOC --> MAPS
-    NOTIF --> FCM
-    
-    API --> PG
-    API --> REDIS
-    WS --> REDIS
+    WEB --> NGINX
+    MOBILE --> NGINX
+    ADMIN --> NGINX
+    NGINX --> API
+    NGINX --> WS
+    API --> DB
+    API --> CACHE
+    API --> WORKER
+    WS --> CACHE
+    WORKER --> DB
+    WORKER --> CACHE
+    API --> MAPS
+    API --> PAYMENT
+    WORKER --> SMS
+    WORKER --> EMAIL
+    WORKER --> PUSH
 ```
 
-### Service Architecture
+### Technology Stack
 
-The backend follows a modular monolith approach with clear service boundaries that can be extracted into microservices as the system scales:
+**Backend:**
+- FastAPI with async/await for high-performance API
+- SQLAlchemy 2.0 with async support for ORM
+- Alembic for database migrations
+- Redis for caching and session management
+- Celery for background task processing
+- WebSocket support for real-time features
 
-- **Authentication Service**: Handles user registration, login, JWT token management
-- **Ride Service**: Manages ride lifecycle, matching, status updates
-- **Location Service**: Handles GPS tracking, route calculation, geospatial queries
-- **Payment Service**: Processes payments, manages payment methods, handles transactions
-- **Notification Service**: Manages real-time notifications and push messages
-- **User Service**: Manages user profiles, ratings, preferences
+**Frontend:**
+- React 18 with TypeScript
+- Vite for fast development and building
+- TanStack Query for server state management
+- Socket.IO client for real-time updates
+- Tailwind CSS for styling
+- React Hook Form with Zod validation
+
+**Mobile:**
+- Flutter with Dart
+- BLoC pattern for state management
+- Dio for HTTP requests
+- Socket.IO for real-time communication
+- Google Maps integration
+- Firebase for push notifications
+
+**Infrastructure:**
+- PostgreSQL 15 for primary database
+- Redis 7 for caching and real-time data
+- Docker containerization
+- Nginx for load balancing and SSL termination
 
 ## Components and Interfaces
 
-### Frontend Components (React Web App)
+### Backend API Structure
 
-#### Core Components
-- **App**: Main application wrapper with routing and global state
-- **AuthProvider**: Authentication context and JWT token management
-- **BookingForm**: Ride booking interface with location selection
-- **MapComponent**: Interactive map with real-time tracking
-- **RideStatus**: Real-time ride status and tracking display
-- **PaymentForm**: Secure payment processing interface
-- **UserProfile**: User account management and preferences
-- **DriverDashboard**: Driver-specific interface for ride management
-
-#### Shared Components
-- **Header/Navigation**: Responsive navigation with user menu
-- **LocationPicker**: Autocomplete location selection with map integration
-- **RatingComponent**: Star rating system for feedback
-- **NotificationToast**: Real-time notification display
-- **LoadingSpinner**: Loading states and progress indicators
-
-### Mobile App Components (Flutter)
-
-The Flutter apps mirror the web components with platform-specific optimizations:
-
-#### Core Screens
-- **SplashScreen**: App initialization and authentication check
-- **LoginScreen**: User authentication with biometric support
-- **HomeScreen**: Main booking interface with map integration
-- **BookingScreen**: Ride booking flow with location selection
-- **TrackingScreen**: Real-time ride tracking with driver location
-- **PaymentScreen**: Payment method management and processing
-- **ProfileScreen**: User profile and settings management
-- **DriverScreen**: Driver-specific interface for ride management
-
-#### Shared Widgets
-- **CustomAppBar**: Consistent app bar across screens
-- **MapWidget**: Google Maps integration with custom markers
-- **LocationSearchWidget**: Location autocomplete with recent searches
-- **RideStatusCard**: Ride information display component
-- **PaymentMethodCard**: Payment method selection and display
-
-### Backend API Interfaces
-
-#### Authentication Endpoints
 ```
-POST /auth/register - User registration
-POST /auth/login - User authentication
-POST /auth/refresh - Token refresh
-POST /auth/logout - User logout
-GET /auth/verify/{token} - Email verification
+backend/
+├── app/
+│   ├── main.py                 # FastAPI application entry point
+│   ├── core/
+│   │   ├── config.py          # Configuration management
+│   │   ├── security.py        # JWT and authentication utilities
+│   │   ├── database.py        # Database connection and session
+│   │   └── exceptions.py      # Custom exception handlers
+│   ├── models/
+│   │   ├── user.py            # User, Driver, Admin models
+│   │   ├── booking.py         # Booking, Trip, Seat models
+│   │   ├── fleet.py           # Bus, Terminal, Route models
+│   │   ├── payment.py         # Payment, Transaction models
+│   │   └── tracking.py        # Location, Trip Status models
+│   ├── schemas/
+│   │   ├── user.py            # Pydantic schemas for user operations
+│   │   ├── booking.py         # Booking request/response schemas
+│   │   ├── fleet.py           # Fleet management schemas
+│   │   └── payment.py         # Payment processing schemas
+│   ├── api/
+│   │   ├── v1/
+│   │   │   ├── auth.py        # Authentication endpoints
+│   │   │   ├── bookings.py    # Booking management endpoints
+│   │   │   ├── fleet.py       # Fleet tracking endpoints
+│   │   │   ├── payments.py    # Payment processing endpoints
+│   │   │   ├── admin.py       # Admin management endpoints
+│   │   │   └── websocket.py   # WebSocket connection handlers
+│   ├── services/
+│   │   ├── auth_service.py    # Authentication business logic
+│   │   ├── booking_service.py # Booking management logic
+│   │   ├── payment_service.py # Payment processing logic
+│   │   ├── tracking_service.py# Real-time tracking logic
+│   │   └── notification_service.py # Push notification logic
+│   ├── tasks/
+│   │   ├── email_tasks.py     # Email sending tasks
+│   │   ├── sms_tasks.py       # SMS notification tasks
+│   │   └── cleanup_tasks.py   # Data cleanup tasks
+│   └── utils/
+│       ├── maps.py            # Google Maps integration
+│       ├── payments.py        # Payment gateway utilities
+│       └── validators.py      # Custom validation functions
 ```
 
-#### Ride Management Endpoints
+### Frontend Application Structure
+
 ```
-POST /rides - Create new ride request
-GET /rides/{ride_id} - Get ride details
-PUT /rides/{ride_id}/status - Update ride status
-GET /rides/user/{user_id} - Get user's ride history
-POST /rides/{ride_id}/cancel - Cancel ride
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── ui/                # Reusable UI components
+│   │   ├── forms/             # Form components
+│   │   ├── maps/              # Map-related components
+│   │   └── layout/            # Layout components
+│   ├── pages/
+│   │   ├── auth/              # Login, register, reset password
+│   │   ├── booking/           # Trip search, seat selection
+│   │   ├── tracking/          # Live trip tracking
+│   │   ├── profile/           # User profile management
+│   │   ├── payment/           # Payment processing
+│   │   └── admin/             # Admin dashboard pages
+│   ├── hooks/
+│   │   ├── useAuth.ts         # Authentication hook
+│   │   ├── useBooking.ts      # Booking management hook
+│   │   ├── useWebSocket.ts    # WebSocket connection hook
+│   │   └── usePayment.ts      # Payment processing hook
+│   ├── services/
+│   │   ├── api.ts             # API client configuration
+│   │   ├── auth.ts            # Authentication service
+│   │   ├── booking.ts         # Booking service
+│   │   ├── payment.ts         # Payment service
+│   │   └── websocket.ts       # WebSocket service
+│   ├── store/
+│   │   ├── authStore.ts       # Authentication state
+│   │   ├── bookingStore.ts    # Booking state
+│   │   └── uiStore.ts         # UI state management
+│   └── utils/
+│       ├── constants.ts       # Application constants
+│       ├── helpers.ts         # Utility functions
+│       └── validators.ts      # Form validation schemas
 ```
 
-#### Location Endpoints
-```
-POST /location/update - Update driver location
-GET /location/nearby-drivers - Find nearby available drivers
-POST /location/route - Calculate route and fare estimate
-GET /location/geocode - Convert address to coordinates
-```
+### Mobile Application Structure
 
-#### Payment Endpoints
 ```
-POST /payments/methods - Add payment method
-GET /payments/methods - Get user's payment methods
-POST /payments/process - Process ride payment
-GET /payments/history - Get payment history
-POST /payments/refund - Process refund
-```
-
-#### WebSocket Events
-```
-ride_status_update - Real-time ride status changes
-location_update - Driver location updates
-driver_assigned - Driver assignment notification
-ride_completed - Ride completion notification
-payment_processed - Payment confirmation
+mobile/lib/
+├── core/
+│   ├── di/                    # Dependency injection
+│   ├── network/               # HTTP client setup
+│   ├── constants/             # App constants
+│   └── utils/                 # Utility functions
+├── features/
+│   ├── auth/
+│   │   ├── data/              # Auth data sources and repositories
+│   │   ├── domain/            # Auth business logic and entities
+│   │   └── presentation/      # Auth UI and BLoC
+│   ├── booking/
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   ├── tracking/
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   ├── payment/
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   └── profile/
+│       ├── data/
+│       ├── domain/
+│       └── presentation/
+├── shared/
+│   ├── widgets/               # Reusable widgets
+│   ├── theme/                 # App theming
+│   └── extensions/            # Dart extensions
+└── app/
+    ├── app.dart              # App configuration
+    └── routes.dart           # Route definitions
 ```
 
 ## Data Models
 
-### User Model
+### Core Database Schema
+
+```sql
+-- Users table with role-based access
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    role VARCHAR(20) DEFAULT 'passenger',
+    is_verified BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Terminals and routes
+CREATE TABLE terminals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    address TEXT,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE routes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    origin_terminal_id UUID REFERENCES terminals(id),
+    destination_terminal_id UUID REFERENCES terminals(id),
+    distance_km DECIMAL(8, 2),
+    estimated_duration_minutes INTEGER,
+    base_fare DECIMAL(10, 2),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fleet management
+CREATE TABLE buses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    license_plate VARCHAR(20) UNIQUE NOT NULL,
+    model VARCHAR(100),
+    capacity INTEGER NOT NULL,
+    amenities JSONB,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE trips (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    route_id UUID REFERENCES routes(id),
+    bus_id UUID REFERENCES buses(id),
+    driver_id UUID REFERENCES users(id),
+    departure_time TIMESTAMP NOT NULL,
+    arrival_time TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'scheduled',
+    fare DECIMAL(10, 2) NOT NULL,
+    available_seats INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Booking system
+CREATE TABLE bookings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    trip_id UUID REFERENCES trips(id),
+    seat_numbers INTEGER[] NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    booking_reference VARCHAR(20) UNIQUE NOT NULL,
+    payment_status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment tracking
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id UUID REFERENCES bookings(id),
+    amount DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    payment_method VARCHAR(50),
+    payment_gateway VARCHAR(50),
+    gateway_transaction_id VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'pending',
+    processed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Real-time tracking
+CREATE TABLE trip_locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID REFERENCES trips(id),
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    speed DECIMAL(5, 2),
+    heading DECIMAL(5, 2),
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Reviews and ratings
+CREATE TABLE reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id UUID REFERENCES bookings(id),
+    user_id UUID REFERENCES users(id),
+    driver_id UUID REFERENCES users(id),
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    is_moderated BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### API Response Models
+
 ```python
-class User(BaseModel):
+# Pydantic schemas for consistent API responses
+class BookingResponse(BaseModel):
     id: UUID
-    email: str
-    phone: str
-    full_name: str
-    user_type: UserType  # CUSTOMER, DRIVER, ADMIN
-    is_verified: bool
-    is_active: bool
-    profile_image_url: Optional[str]
-    average_rating: float
-    total_rides: int
+    booking_reference: str
+    trip: TripDetails
+    seats: List[int]
+    total_amount: Decimal
+    status: BookingStatus
+    payment_status: PaymentStatus
     created_at: datetime
-    updated_at: datetime
-```
 
-### Ride Model
-```python
-class Ride(BaseModel):
-    id: UUID
-    customer_id: UUID
-    driver_id: Optional[UUID]
-    pickup_location: Location
-    destination_location: Location
-    status: RideStatus  # REQUESTED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED
-    estimated_fare: Decimal
-    actual_fare: Optional[Decimal]
-    estimated_duration: int  # minutes
-    actual_duration: Optional[int]
-    distance: float  # kilometers
-    requested_at: datetime
-    accepted_at: Optional[datetime]
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    cancelled_at: Optional[datetime]
-    cancellation_reason: Optional[str]
-```
+class TripTrackingResponse(BaseModel):
+    trip_id: UUID
+    current_location: LocationPoint
+    status: TripStatus
+    estimated_arrival: Optional[datetime]
+    next_terminal: Optional[TerminalInfo]
+    passengers_count: int
 
-### Location Model
-```python
-class Location(BaseModel):
-    latitude: float
-    longitude: float
-    address: str
-    city: str
-    country: str
-    postal_code: Optional[str]
-```
-
-### Payment Model
-```python
-class Payment(BaseModel):
-    id: UUID
-    ride_id: UUID
-    user_id: UUID
+class PaymentResponse(BaseModel):
+    payment_id: UUID
+    booking_id: UUID
     amount: Decimal
-    currency: str
-    payment_method_id: str
-    stripe_payment_intent_id: str
-    status: PaymentStatus  # PENDING, COMPLETED, FAILED, REFUNDED
-    processed_at: Optional[datetime]
-    refunded_at: Optional[datetime]
-```
-
-### Driver Location Model
-```python
-class DriverLocation(BaseModel):
-    driver_id: UUID
-    latitude: float
-    longitude: float
-    heading: Optional[float]
-    speed: Optional[float]
-    is_available: bool
-    updated_at: datetime
+    status: PaymentStatus
+    payment_method: str
+    transaction_id: Optional[str]
+    receipt_url: Optional[str]
 ```
 
 ## Error Handling
 
-### API Error Response Format
+### Global Exception Handling
+
 ```python
-class ErrorResponse(BaseModel):
-    error: str
-    message: str
-    details: Optional[Dict[str, Any]]
-    timestamp: datetime
-    request_id: str
+# Custom exception classes
+class PafarException(Exception):
+    def __init__(self, message: str, error_code: str, status_code: int = 400):
+        self.message = message
+        self.error_code = error_code
+        self.status_code = status_code
+
+class BookingNotAvailableException(PafarException):
+    def __init__(self, trip_id: str):
+        super().__init__(
+            message=f"No seats available for trip {trip_id}",
+            error_code="BOOKING_NOT_AVAILABLE",
+            status_code=409
+        )
+
+# Global exception handler
+@app.exception_handler(PafarException)
+async def pafar_exception_handler(request: Request, exc: PafarException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": exc.error_code,
+                "message": exc.message,
+                "timestamp": datetime.utcnow().isoformat(),
+                "path": str(request.url)
+            }
+        }
+    )
 ```
 
-### Error Categories
+### Frontend Error Handling
 
-#### Authentication Errors (401)
-- Invalid credentials
-- Expired token
-- Unverified account
-- Insufficient permissions
+```typescript
+// Error boundary for React components
+class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-#### Validation Errors (400)
-- Invalid input data
-- Missing required fields
-- Invalid location coordinates
-- Invalid payment information
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
 
-#### Business Logic Errors (422)
-- No available drivers
-- Ride already in progress
-- Payment processing failed
-- Invalid ride status transition
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    // Send to error reporting service
+  }
 
-#### System Errors (500)
-- Database connection issues
-- External service failures
-- Unexpected server errors
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} />;
+    }
+    return this.props.children;
+  }
+}
 
-### Error Handling Strategy
+// API error handling
+const apiClient = axios.create({
+  baseURL: process.env.VITE_API_URL,
+  timeout: 10000,
+});
 
-#### Frontend Error Handling
-- Global error boundary for React components
-- Retry mechanisms for network failures
-- User-friendly error messages
-- Offline mode support for mobile apps
-
-#### Backend Error Handling
-- Structured logging with correlation IDs
-- Circuit breaker pattern for external services
-- Graceful degradation for non-critical features
-- Automatic retry for transient failures
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle authentication errors
+      authStore.logout();
+      router.push('/login');
+    }
+    return Promise.reject(error);
+  }
+);
+```
 
 ## Testing Strategy
 
-### Unit Testing
-- **Backend**: pytest for API endpoints, business logic, and data models
-- **Frontend**: Jest and React Testing Library for component testing
-- **Mobile**: Flutter test framework for widget and unit testing
-- Target: 80%+ code coverage for critical paths
+### Backend Testing
 
-### Integration Testing
-- API integration tests with test database
-- WebSocket connection and message handling tests
-- Payment gateway integration tests (using test mode)
-- External service integration tests with mocking
+```python
+# Unit tests with pytest
+@pytest.mark.asyncio
+async def test_create_booking_success():
+    # Arrange
+    booking_data = BookingCreate(
+        trip_id=uuid4(),
+        seat_numbers=[1, 2],
+        user_id=uuid4()
+    )
+    
+    # Act
+    result = await booking_service.create_booking(booking_data)
+    
+    # Assert
+    assert result.status == BookingStatus.CONFIRMED
+    assert len(result.seats) == 2
 
-### End-to-End Testing
-- **Web**: Playwright for complete user journey testing
-- **Mobile**: Flutter integration tests for critical user flows
-- **API**: Postman/Newman for API workflow testing
-- Automated testing in CI/CD pipeline
+# Integration tests
+@pytest.mark.asyncio
+async def test_booking_payment_flow():
+    # Test complete booking and payment flow
+    booking = await create_test_booking()
+    payment = await process_test_payment(booking.id)
+    assert payment.status == PaymentStatus.COMPLETED
+    
+    updated_booking = await get_booking(booking.id)
+    assert updated_booking.payment_status == PaymentStatus.COMPLETED
+```
 
-### Performance Testing
-- Load testing for API endpoints under concurrent users
-- WebSocket connection stress testing
-- Database query performance optimization
-- Mobile app performance profiling
+### Frontend Testing
 
-### Security Testing
-- Authentication and authorization testing
-- Input validation and SQL injection prevention
-- Payment security and PCI compliance testing
-- API rate limiting and DDoS protection testing
+```typescript
+// Component testing with React Testing Library
+describe('BookingForm', () => {
+  it('should submit booking with valid data', async () => {
+    const mockSubmit = jest.fn();
+    render(<BookingForm onSubmit={mockSubmit} />);
+    
+    await user.selectOptions(screen.getByLabelText('Route'), 'route-1');
+    await user.click(screen.getByText('Seat 1'));
+    await user.click(screen.getByText('Book Now'));
+    
+    expect(mockSubmit).toHaveBeenCalledWith({
+      routeId: 'route-1',
+      seats: [1]
+    });
+  });
+});
 
-### Testing Environments
-- **Development**: Local testing with SQLite and test data
-- **Staging**: Production-like environment with PostgreSQL
-- **Production**: Monitoring and health checks only
+// E2E testing with Playwright
+test('complete booking flow', async ({ page }) => {
+  await page.goto('/booking');
+  await page.selectOption('[data-testid=route-select]', 'route-1');
+  await page.click('[data-testid=seat-1]');
+  await page.click('[data-testid=book-button]');
+  await page.fill('[data-testid=card-number]', '4242424242424242');
+  await page.click('[data-testid=pay-button]');
+  
+  await expect(page.locator('[data-testid=booking-success]')).toBeVisible();
+});
+```
 
-### Continuous Testing
-- Automated test execution on every commit
-- Integration with GitHub Actions CI/CD pipeline
-- Test result reporting and coverage tracking
-- Automated deployment to staging on test success
+### Mobile Testing
+
+```dart
+// Widget testing
+void main() {
+  group('BookingScreen', () {
+    testWidgets('should display available seats', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(home: BookingScreen(tripId: 'test-trip'))
+      );
+      
+      expect(find.byType(SeatMap), findsOneWidget);
+      expect(find.text('Available'), findsWidgets);
+    });
+  });
+}
+
+// Integration testing
+void main() {
+  group('Booking Flow Integration', () {
+    testWidgets('complete booking process', (tester) async {
+      // Mock API responses
+      when(mockBookingService.getAvailableSeats(any))
+          .thenAnswer((_) async => mockSeats);
+      
+      await tester.pumpWidget(MyApp());
+      await tester.tap(find.text('Book Trip'));
+      await tester.pumpAndSettle();
+      
+      // Verify booking screen loads
+      expect(find.byType(BookingScreen), findsOneWidget);
+    });
+  });
+}
+```
+
+This design provides a comprehensive foundation for building the Transport Management Platform with proper separation of concerns, scalability considerations, and robust error handling across all platforms.

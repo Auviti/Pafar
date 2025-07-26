@@ -1,3 +1,3 @@
 """
-Business logic services for Pafar ride booking system.
+Business logic services for the Pafar Transport Management Platform.
 """

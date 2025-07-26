@@ -1,148 +1,237 @@
 # Implementation Plan
 
-- [x] 1. Set up project structure and core infrastructure
-  - Create directory structure for backend (FastAPI), frontend (React + Vite), and mobile (Flutter) applications
-  - Set up Docker configuration files for development and production environments
-  - Configure environment variables and settings management
-  - Set up database connection utilities and migration system
-  - _Requirements: All requirements depend on proper project structure_
+- [x] 1. Set up core backend infrastructure and database models
+  - Create FastAPI application structure with proper configuration management
+  - Implement database connection setup with SQLAlchemy async support
+  - Create Alembic migration system and initial database schema
+  - Set up Redis connection for caching and session management
+  - _Requirements: 10.2, 10.3_
 
-- [x] 2. Implement core data models and database schema
-  - Create SQLAlchemy models for User, Ride, Location, Payment, and DriverLocation entities
-  - Write database migration scripts for all tables with proper indexes and constraints
-  - dont forge to use alembic
-  - Implement model validation using Pydantic schemas
-  - Create database seeding scripts for development and testing
-  - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1_
-
-- [ ] 3. Build authentication and user management system
-  - Implement JWT-based authentication with token generation and validation
-  - Create user registration endpoint with email verification functionality
-  - Build login endpoint with credential validation and token issuance
-  - Implement password reset and account verification flows
-  - Create user profile management endpoints for updating user information
-  - Write comprehensive tests for authentication flows
+- [x] 2. Implement user authentication and authorization system
+  - Create User model with role-based access control (passenger, driver, admin)
+  - Implement JWT token generation and validation utilities
+  - Build registration endpoint with email/phone verification
+  - Create login endpoint with password validation and token issuance
+  - Implement password reset functionality with OTP verification
+  - Write unit tests for authentication service
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 4. Develop ride booking and management core functionality
-  - Create ride request endpoint that accepts pickup and destination locations
-  - Implement fare calculation logic based on distance and time estimates
-  - Build ride matching algorithm to assign available drivers to ride requests
-  - Create ride status management system with proper state transitions
-  - Implement ride cancellation functionality with reason tracking
-  - Write unit tests for ride booking logic and state management
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+- [ ] 3. Create core fleet management models and endpoints
+  - Implement Terminal, Route, Bus, and Trip models with relationships
+  - Create database migrations for fleet management tables
+  - Build CRUD endpoints for terminal management
+  - Implement route creation and management endpoints
+  - Create bus registration and management endpoints
+  - Add trip scheduling and management endpoints
+  - Write unit tests for fleet management services
+  - _Requirements: 2.1, 5.1_
 
-- [ ] 5. Implement driver management and ride acceptance system
-  - Create driver availability management system with online/offline status
-  - Build ride request notification system for available drivers
-  - Implement ride acceptance and rejection endpoints for drivers
-  - Create driver location update endpoints with real-time tracking
-  - Build automatic request redistribution when drivers don't respond
-  - Write tests for driver workflow and ride assignment logic
+- [ ] 4. Build trip booking system with seat selection
+  - Create Booking model with seat number tracking
+  - Implement seat availability checking logic
+  - Build trip search endpoint with filtering capabilities
+  - Create seat selection endpoint with temporary reservation
+  - Implement booking confirmation with unique reference generation
+  - Add booking cancellation logic with policy enforcement
+  - Write unit tests for booking service
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 5.3_
+
+- [ ] 5. Implement secure payment processing system
+  - Create Payment model with transaction tracking
+  - Integrate Stripe payment gateway for card processing
+  - Build payment initiation endpoint with amount calculation
+  - Implement payment confirmation and webhook handling
+  - Create payment method tokenization for saved cards
+  - Add payment failure handling and retry logic
+  - Generate e-receipts with trip details
+  - Write unit tests for payment service
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+
+- [ ] 6. Create real-time tracking system with WebSocket support
+  - Implement TripLocation model for GPS coordinate storage
+  - Create WebSocket connection handler for real-time updates
+  - Build driver location update endpoint with validation
+  - Implement location broadcasting to connected passengers
+  - Create trip status update system with notifications
+  - Add geofencing logic for terminal arrival detection
+  - Write unit tests for tracking service
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 6. Build real-time location tracking and WebSocket infrastructure
-  - Set up WebSocket connection management for real-time communication
-  - Implement driver location broadcasting to customers during rides
-  - Create ride status update broadcasting system
-  - Build location update endpoints for continuous GPS tracking
-  - Implement geospatial queries for finding nearby drivers
-  - Create WebSocket event handlers for all real-time features
-  - Write tests for WebSocket connections and real-time data flow
-  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 5.5_
-
-- [ ] 7. Integrate external mapping and route optimization services
-  - Integrate Google Maps API for geocoding and reverse geocoding
-  - Implement route calculation and distance estimation using Maps API
-  - Build address autocomplete functionality for location selection
-  - Create route optimization logic for efficient driver-customer matching
-  - Implement fare estimation based on route distance and duration
-  - Write tests for mapping service integration and route calculations
-  - _Requirements: 2.1, 2.2, 4.5_
-
-- [ ] 8. Develop secure payment processing system
-  - Integrate Stripe payment gateway for secure payment processing
-  - Implement payment method management for customers
-  - Create payment processing workflow for completed rides
-  - Build automatic fare calculation and payment charging system
-  - Implement receipt generation and email delivery system
-  - Create payment failure handling and retry mechanisms
-  - Write comprehensive tests for payment flows and error scenarios
+- [ ] 7. Build rating and feedback system
+  - Create Review model with rating and comment fields
+  - Implement post-trip rating submission endpoint
+  - Build feedback retrieval and display endpoints
+  - Create admin moderation system for inappropriate content
+  - Add average rating calculation for drivers and buses
+  - Write unit tests for review service
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 9. Build rating and review system
-  - Create rating submission endpoints for both customers and drivers
-  - Implement rating calculation and average rating updates
-  - Build review display system with filtering and pagination
-  - Create rating-based user account flagging system
-  - Implement rating history and analytics for user profiles
-  - Write tests for rating calculations and review management
+- [ ] 8. Implement administrative control center
+  - Create admin authentication with role-based permissions
+  - Build dashboard endpoint with key metrics and live data
+  - Implement user management endpoints (search, suspend, activate)
+  - Create fleet management interface for bus/driver assignments
+  - Build review moderation endpoints with action capabilities
+  - Add fraud detection triggers and alert system
+  - Write unit tests for admin services
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 10. Develop admin dashboard and monitoring system
-  - Create admin authentication and authorization system
-  - Build real-time dashboard with ride statistics and system metrics
-  - Implement user search and profile management functionality
-  - Create user account suspension and management tools
-  - Build system error logging and alert notification system
-  - Implement fraud detection and unusual pattern monitoring
-  - Write tests for admin functionality and monitoring systems
-  - give me the proper docs and command to run migrations and run the application
-  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+- [ ] 9. Integrate Google Maps API for route and location services
+  - Set up Google Maps API client with authentication
+  - Implement geocoding service for terminal coordinates
+  - Create route calculation service with distance and duration
+  - Build terminal search with auto-complete functionality
+  - Add ETA calculation based on current location and traffic
+  - Write unit tests for maps integration
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [ ] 11. Build React web application frontend using the template from luxride (https://creativelayers.net/themes/luxride-html/)
-  - Set up React + Vite project structure with routing and state management
-  - Create responsive layout components (Header, Footer, Navigation)
-  - Implement user authentication UI with login, registration, and profile management
-  - Build ride booking interface with location selection and fare display
-  - Create real-time ride tracking interface with map integration
-  - Implement payment method management and processing UI
-  - Build rating and review interface for post-ride feedback
-  - Create driver dashboard for ride management and status updates
-  - Write component tests and integration tests for critical user flows
-  - _Requirements: 1.1, 2.1, 4.1, 6.1, 7.1_
+- [ ] 10. Set up background task processing with Celery
+  - Configure Celery worker setup with Redis broker
+  - Create email notification tasks for booking confirmations
+  - Implement SMS notification tasks for trip updates
+  - Build push notification tasks for mobile app alerts
+  - Add periodic cleanup tasks for expired reservations
+  - Create monitoring and error handling for background tasks
+  - Write unit tests for task functions
+  - _Requirements: 5.2, 5.5_
 
-- [ ] 12. Develop Flutter mobile applications
-  - Set up Flutter project structure for both iOS and Android platforms
-  - Implement user authentication screens with biometric support
-  - Create main booking interface with Google Maps integration
-  - Build real-time ride tracking with driver location updates
-  - Implement push notification system for ride updates
-  - Create payment processing interface with secure payment methods
-  - Build user profile management and settings screens
-  - Implement driver-specific interface for ride management
-  - Write widget tests and integration tests for mobile user flows
-  - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1_
+- [ ] 11. Build React frontend authentication components
+  - clone this site 'https://creativelayers.net/themes/luxride-html/index.html'
+  - Create login form component with validation
+  - Implement registration form with email/phone verification
+  - Build password reset flow with OTP input
+  - Create authentication context and hooks
+  - Implement protected route wrapper component
+  - Add token refresh logic with automatic retry
+  - Write component tests for authentication flows
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 8.1, 8.3_
 
-- [ ] 13. Implement comprehensive error handling and logging
-  - Create structured error response system with consistent formatting
-  - Rearrange all files into proper standard folders for better structure
-  - Implement global error handling for all API endpoints
-  - Build client-side error boundaries and retry mechanisms
-  - Create comprehensive logging system with correlation IDs
-  - Implement monitoring and alerting for system errors
-  - Build graceful degradation for external service failures
-  - Write tests for error scenarios and recovery mechanisms
-  - _Requirements: All requirements benefit from proper error handling_
+- [ ] 12. Create trip booking interface for web application
+  - Build trip search form with route and date selection
+  - Implement trip results display with filtering options
+  - Create interactive seat map component with selection
+  - Build booking summary and confirmation components
+  - Add payment form integration with Stripe Elements
+  - Implement booking success and failure handling
+  - Write component tests for booking flow
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 8.1, 8.3_
 
-- [ ] 14. Set up testing infrastructure and automated testing
-  - Configure pytest for backend API testing with test database
-  - Set up Jest and React Testing Library for frontend component testing
-  - Configure Flutter test framework for mobile app testing
-  - Implement integration tests for API workflows and WebSocket connections
-  - Create end-to-end tests for critical user journeys
-  - Set up automated testing in CI/CD pipeline
-  - Configure test coverage reporting and quality gates
-  - _Requirements: All requirements need comprehensive testing coverage_
+- [ ] 13. Implement real-time trip tracking interface
+  - Create WebSocket connection hook for live updates
+  - Build trip tracking map component with bus location
+  - Implement trip status display with progress indicators
+  - Create notification system for trip updates
+  - Add ETA display with automatic updates
+  - Build trip history view with past bookings
+  - Write component tests for tracking features
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.1, 5.4, 8.1, 8.3_
 
-- [ ] 15. Configure deployment and production infrastructure
-  - Set up Docker containers for all application components
-  - Configure PostgreSQL database with proper indexing and optimization
-  - Set up Redis for caching and session management
-  - Configure load balancer and API gateway for scalability
-  - Implement SSL/TLS certificates and security headers
-  - Set up monitoring, logging, and alerting systems
-  - Configure automated deployment pipeline with GitHub Actions
-  - Write deployment documentation and runbooks
-  - _Requirements: All requirements need production-ready deployment_
+- [ ] 14. Create user profile and booking management interface
+  - Build user profile form with editable fields
+  - Implement booking history display with status filters
+  - Create booking cancellation interface with confirmation
+  - Add saved payment methods management
+  - Build rating and feedback submission forms
+  - Implement notification preferences settings
+  - Write component tests for profile features
+  - _Requirements: 1.4, 5.1, 5.3, 6.1, 6.4, 8.1, 8.3_
+
+- [ ] 15. Build administrative dashboard for web
+  - Create admin login with role-based access control
+  - Implement dashboard with key metrics and charts
+  - Build user management interface with search and actions
+  - Create fleet management interface for buses and drivers
+  - Add trip monitoring with real-time status updates
+  - Implement review moderation interface
+  - Write component tests for admin features
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.3_
+
+- [ ] 16. Set up Flutter mobile app foundation
+  - Create Flutter project structure with clean architecture
+  - Set up dependency injection with GetIt
+  - Implement BLoC pattern for state management
+  - Configure HTTP client with Dio and authentication interceptors
+  - Set up local storage with Hive for offline data
+  - Create app routing with GoRouter
+  - Write widget tests for core components
+  - _Requirements: 8.2, 8.4_
+
+- [ ] 17. Implement mobile authentication screens
+  - Create login screen with form validation
+  - Build registration screen with OTP verification
+  - Implement password reset flow
+  - Create authentication BLoC with state management
+  - Add biometric authentication support
+  - Implement secure token storage
+  - Write widget tests for authentication screens
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 8.2, 8.4_
+
+- [ ] 18. Build mobile trip booking interface
+  - Create trip search screen with date and route selection
+  - Implement trip results screen with filtering
+  - Build interactive seat selection screen
+  - Create booking confirmation screen with payment integration
+  - Add Stripe payment processing for mobile
+  - Implement booking success and error handling
+  - Write widget tests for booking screens
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 8.2, 8.4_
+
+- [ ] 19. Create mobile real-time tracking features
+  - Implement WebSocket connection for live updates
+  - Build trip tracking screen with Google Maps integration
+  - Create location permission handling
+  - Add push notification setup with Firebase
+  - Implement trip status notifications
+  - Build trip history screen with booking details
+  - Write widget tests for tracking features
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.2, 5.5, 8.2, 8.4_
+
+- [ ] 20. Implement mobile user profile and settings
+  - Create profile screen with editable user information
+  - Build booking management screen with cancellation
+  - Implement rating and feedback submission
+  - Add notification preferences management
+  - Create saved payment methods screen
+  - Build app settings with theme and language options
+  - Write widget tests for profile screens
+  - _Requirements: 1.4, 5.1, 5.3, 6.1, 6.4, 8.2, 8.4_
+
+- [ ] 21. Set up comprehensive error handling and logging
+  - Implement global exception handlers for FastAPI
+  - Create structured logging with trace IDs
+  - Add error boundary components for React
+  - Implement error handling in Flutter with proper user feedback
+  - Set up error monitoring and alerting
+  - Create fallback mechanisms for third-party service failures
+  - Write tests for error scenarios
+  - _Requirements: 10.3, 10.4, 10.5_
+
+- [ ] 22. Implement comprehensive testing suite
+  - Create unit tests for all backend services and models
+  - Build integration tests for API endpoints
+  - Implement component tests for React components
+  - Create widget tests for Flutter screens
+  - Add end-to-end tests for critical user flows
+  - Set up test data factories and fixtures
+  - Configure continuous integration with automated testing
+  - _Requirements: 10.1, 10.2, 10.3_
+
+- [ ] 23. Set up production deployment and monitoring
+  - Configure Docker containers for all services
+  - Set up Nginx load balancer with SSL termination
+  - Implement database backup and recovery procedures
+  - Create monitoring dashboards for system health
+  - Set up log aggregation and analysis
+  - Configure automated deployment pipelines
+  - Create runbooks for common operational tasks
+  - _Requirements: 10.1, 10.2, 10.4, 10.5_
+
+- [ ] 24. Integrate and test complete system end-to-end
+  - Perform integration testing across all platforms
+  - Test real-time features with multiple concurrent users
+  - Validate payment processing with test transactions
+  - Test mobile app with push notifications
+  - Perform load testing on critical endpoints
+  - Validate data consistency across all services
+  - Create user acceptance test scenarios
+  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_

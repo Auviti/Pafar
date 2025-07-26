@@ -1,3 +1,0 @@
-"""
-Ride API endpoints.
-"""

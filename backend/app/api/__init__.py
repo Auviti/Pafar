@@ -1,3 +1,3 @@
 """
-API package for Pafar ride booking system.
+API routes for the Pafar Transport Management Platform.
 """

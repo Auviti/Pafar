@@ -1,446 +1,408 @@
 """
-Tests for authentication service functionality.
+Unit tests for authentication service.
 """
 import pytest
-from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-
-from app.core.database import Base
-from app.models.user import User, UserType
-from app.services.auth_service import auth_service
-from app.schemas.user import UserCreate, UserUpdate
-
-
-# Test database setup
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-engine = create_async_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-
-TestingSessionLocal = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
+from app.services.auth_service import AuthService
+from app.models.user import User, UserRole
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, PasswordReset, PasswordResetConfirm, EmailVerification
+from app.core.security import get_password_hash, verify_password
 
 
-@pytest.fixture(scope="function")
-async def db_session():
-    """Create a fresh database session for each test."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+@pytest.mark.asyncio
+class TestAuthService:
+    """Test cases for AuthService."""
     
-    async with TestingSessionLocal() as session:
-        yield session
-    
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture
-async def test_user_data():
-    """Test user data."""
-    return {
-        "email": "test@example.com",
-        "password": "TestPassword123",
-        "full_name": "Test User",
-        "phone": "+1234567890",
-        "user_type": "customer"
-    }
-
-
-@pytest.fixture
-async def created_user(db_session: AsyncSession, test_user_data):
-    """Create a test user in the database."""
-    user = User(
-        id=uuid4(),
-        email=test_user_data["email"],
-        phone=test_user_data["phone"],
-        full_name=test_user_data["full_name"],
-        password_hash=auth_service.hash_password(test_user_data["password"]),
-        user_type=UserType.CUSTOMER,
-        is_verified=True,
-        is_active=True,
-        average_rating=0.0,
-        total_rides=0,
-    )
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
-    return user
-
-
-class TestPasswordHashing:
-    """Test password hashing functionality."""
-    
-    def test_hash_password(self):
-        """Test password hashing."""
-        password = "TestPassword123"
-        hashed = auth_service.hash_password(password)
-        
-        assert hashed != password
-        assert len(hashed) > 0
-        assert hashed.startswith("$2b$")  # bcrypt hash format
-    
-    def test_verify_password_correct(self):
-        """Test password verification with correct password."""
-        password = "TestPassword123"
-        hashed = auth_service.hash_password(password)
-        
-        assert auth_service.verify_password(password, hashed) is True
-    
-    def test_verify_password_incorrect(self):
-        """Test password verification with incorrect password."""
-        password = "TestPassword123"
-        wrong_password = "WrongPassword123"
-        hashed = auth_service.hash_password(password)
-        
-        assert auth_service.verify_password(wrong_password, hashed) is False
-
-
-class TestJWTTokens:
-    """Test JWT token functionality."""
-    
-    def test_create_access_token(self):
-        """Test JWT token creation."""
-        user_id = str(uuid4())
-        token = auth_service.create_access_token({"sub": user_id})
-        
-        assert isinstance(token, str)
-        assert len(token) > 0
-        assert "." in token  # JWT format has dots
-    
-    def test_verify_token_valid(self):
-        """Test JWT token verification with valid token."""
-        user_id = str(uuid4())
-        token = auth_service.create_access_token({"sub": user_id})
-        
-        payload = auth_service.verify_token(token)
-        assert payload["sub"] == user_id
-        assert "exp" in payload
-        assert "iat" in payload
-    
-    def test_verify_token_invalid(self):
-        """Test JWT token verification with invalid token."""
-        with pytest.raises(Exception):  # Should raise HTTPException
-            auth_service.verify_token("invalid_token")
-    
-    def test_token_expiration(self):
-        """Test token with custom expiration."""
-        user_id = str(uuid4())
-        short_expiry = timedelta(seconds=1)
-        token = auth_service.create_access_token({"sub": user_id}, short_expiry)
-        
-        # Token should be valid immediately
-        payload = auth_service.verify_token(token)
-        assert payload["sub"] == user_id
-
-
-class TestUserOperations:
-    """Test user database operations."""
-    
-    @pytest.mark.asyncio
-    async def test_get_user_by_email(self, db_session, created_user):
-        """Test getting user by email."""
-        user = await auth_service.get_user_by_email(db_session, created_user.email)
-        assert user is not None
-        assert user.email == created_user.email
-        assert user.id == created_user.id
-    
-    @pytest.mark.asyncio
-    async def test_get_user_by_email_not_found(self, db_session):
-        """Test getting user by email when user doesn't exist."""
-        user = await auth_service.get_user_by_email(db_session, "nonexistent@example.com")
-        assert user is None
-    
-    @pytest.mark.asyncio
-    async def test_get_user_by_id(self, db_session, created_user):
-        """Test getting user by ID."""
-        user = await auth_service.get_user_by_id(db_session, created_user.id)
-        assert user is not None
-        assert user.id == created_user.id
-        assert user.email == created_user.email
-    
-    @pytest.mark.asyncio
-    async def test_get_user_by_id_not_found(self, db_session):
-        """Test getting user by ID when user doesn't exist."""
-        user = await auth_service.get_user_by_id(db_session, uuid4())
-        assert user is None
-    
-    @pytest.mark.asyncio
-    async def test_create_user_success(self, db_session, test_user_data):
-        """Test successful user creation."""
-        user_create = UserCreate(**test_user_data)
-        user = await auth_service.create_user(db_session, user_create)
-        
-        assert user.email == test_user_data["email"]
-        assert user.full_name == test_user_data["full_name"]
-        assert user.phone == test_user_data["phone"]
-        assert user.user_type == UserType.CUSTOMER
-        assert user.is_verified is False  # Should require verification
-        assert user.is_active is True
-        assert user.id is not None
-        
-        # Password should be hashed
-        assert user.password_hash != test_user_data["password"]
-        assert auth_service.verify_password(test_user_data["password"], user.password_hash)
-    
-    @pytest.mark.asyncio
-    async def test_create_user_duplicate_email(self, db_session, test_user_data, created_user):
-        """Test user creation with duplicate email."""
-        user_create = UserCreate(**test_user_data)
-        
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.create_user(db_session, user_create)
-    
-    @pytest.mark.asyncio
-    async def test_create_user_duplicate_phone(self, db_session, test_user_data, created_user):
-        """Test user creation with duplicate phone."""
-        duplicate_data = test_user_data.copy()
-        duplicate_data["email"] = "different@example.com"
-        user_create = UserCreate(**duplicate_data)
-        
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.create_user(db_session, user_create)
-    
-    @pytest.mark.asyncio
-    async def test_authenticate_user_success(self, db_session, test_user_data, created_user):
-        """Test successful user authentication."""
-        user = await auth_service.authenticate_user(
-            db_session, test_user_data["email"], test_user_data["password"]
-        )
-        assert user is not None
-        assert user.id == created_user.id
-        assert user.email == created_user.email
-    
-    @pytest.mark.asyncio
-    async def test_authenticate_user_wrong_password(self, db_session, test_user_data, created_user):
-        """Test user authentication with wrong password."""
-        user = await auth_service.authenticate_user(
-            db_session, test_user_data["email"], "wrongpassword"
-        )
-        assert user is None
-    
-    @pytest.mark.asyncio
-    async def test_authenticate_user_nonexistent(self, db_session):
-        """Test user authentication with non-existent email."""
-        user = await auth_service.authenticate_user(
-            db_session, "nonexistent@example.com", "password"
-        )
-        assert user is None
-    
-    @pytest.mark.asyncio
-    async def test_update_user_success(self, db_session, created_user):
-        """Test successful user update."""
-        update_data = UserUpdate(
-            full_name="Updated Name",
-            phone="+9876543210"
-        )
-        
-        updated_user = await auth_service.update_user(db_session, created_user, update_data)
-        assert updated_user.full_name == "Updated Name"
-        assert updated_user.phone == "+9876543210"
-        assert updated_user.email == created_user.email  # Should remain unchanged
-    
-    @pytest.mark.asyncio
-    async def test_update_user_duplicate_phone(self, db_session, created_user, test_user_data):
-        """Test user update with duplicate phone number."""
-        # Create another user
-        other_user = User(
-            id=uuid4(),
-            email="other@example.com",
-            phone="+1111111111",
-            full_name="Other User",
-            password_hash=auth_service.hash_password("password123"),
-            user_type=UserType.CUSTOMER,
-            is_verified=True,
-            is_active=True,
-            average_rating=0.0,
-            total_rides=0,
-        )
-        db_session.add(other_user)
-        await db_session.commit()
-        
-        # Try to update first user with second user's phone
-        update_data = UserUpdate(phone="+1111111111")
-        
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.update_user(db_session, created_user, update_data)
-    
-    @pytest.mark.asyncio
-    async def test_update_password_success(self, db_session, test_user_data, created_user):
-        """Test successful password update."""
-        new_password = "NewPassword123"
-        success = await auth_service.update_password(
-            db_session, created_user, test_user_data["password"], new_password
-        )
-        
-        assert success is True
-        
-        # Verify old password no longer works
-        assert auth_service.verify_password(test_user_data["password"], created_user.password_hash) is False
-        
-        # Verify new password works
-        assert auth_service.verify_password(new_password, created_user.password_hash) is True
-    
-    @pytest.mark.asyncio
-    async def test_update_password_wrong_current(self, db_session, created_user):
-        """Test password update with wrong current password."""
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.update_password(
-                db_session, created_user, "wrongpassword", "NewPassword123"
+    async def test_register_user_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful user registration."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe",
+                phone="+1234567890"
             )
-
-
-class TestVerificationTokens:
-    """Test email verification token functionality."""
+            
+            user = await auth_service.register_user(user_data)
+            
+            assert user.email == "test@example.com"
+            assert user.first_name == "John"
+            assert user.last_name == "Doe"
+            assert user.phone == "+1234567890"
+            assert user.role == UserRole.PASSENGER
+            assert user.is_verified is False
+            assert user.is_active is True
+            assert verify_password("TestPass123", user.password_hash)
     
-    def test_generate_verification_token(self):
-        """Test verification token generation."""
-        user_id = uuid4()
-        token = auth_service.generate_verification_token(user_id)
-        
-        assert isinstance(token, str)
-        assert len(token) > 0
-        assert token in auth_service.verification_tokens
+    async def test_register_user_duplicate_email(self, db_session: AsyncSession, mock_redis):
+        """Test registration with duplicate email."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Create first user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            await auth_service.register_user(user_data)
+            
+            # Try to create second user with same email
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.register_user(user_data)
+            
+            assert exc_info.value.status_code == 400
+            assert "already exists" in exc_info.value.detail
     
-    def test_verify_verification_token_valid(self):
-        """Test verification token validation with valid token."""
-        user_id = uuid4()
-        token = auth_service.generate_verification_token(user_id)
-        
-        verified_user_id = auth_service.verify_verification_token(token)
-        assert verified_user_id == user_id
+    async def test_register_user_duplicate_phone(self, db_session: AsyncSession, mock_redis):
+        """Test registration with duplicate phone number."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Create first user
+            user_data1 = UserCreate(
+                email="test1@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe",
+                phone="+1234567890"
+            )
+            await auth_service.register_user(user_data1)
+            
+            # Try to create second user with same phone
+            user_data2 = UserCreate(
+                email="test2@example.com",
+                password="TestPass123",
+                first_name="Jane",
+                last_name="Doe",
+                phone="+1234567890"
+            )
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.register_user(user_data2)
+            
+            assert exc_info.value.status_code == 400
+            assert "phone number already exists" in exc_info.value.detail
     
-    def test_verify_verification_token_invalid(self):
-        """Test verification token validation with invalid token."""
-        verified_user_id = auth_service.verify_verification_token("invalid_token")
-        assert verified_user_id is None
+    async def test_login_user_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful user login."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user first
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            user = await auth_service.register_user(user_data)
+            
+            # Login
+            login_data = UserLogin(email="test@example.com", password="TestPass123")
+            result = await auth_service.login_user(login_data)
+            
+            assert "access_token" in result
+            assert "refresh_token" in result
+            assert result["token_type"] == "bearer"
+            assert result["user"].id == user.id
     
-    def test_verification_token_single_use(self):
-        """Test that verification tokens are single-use."""
-        user_id = uuid4()
-        token = auth_service.generate_verification_token(user_id)
-        
-        # First use should work
-        verified_user_id = auth_service.verify_verification_token(token)
-        assert verified_user_id == user_id
-        
-        # Second use should fail
-        verified_user_id = auth_service.verify_verification_token(token)
-        assert verified_user_id is None
+    async def test_login_user_invalid_email(self, db_session: AsyncSession, mock_redis):
+        """Test login with invalid email."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            login_data = UserLogin(email="nonexistent@example.com", password="TestPass123")
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.login_user(login_data)
+            
+            assert exc_info.value.status_code == 401
+            assert "Invalid email or password" in exc_info.value.detail
     
-    @pytest.mark.asyncio
-    async def test_verify_user_email_success(self, db_session, test_user_data):
+    async def test_login_user_invalid_password(self, db_session: AsyncSession, mock_redis):
+        """Test login with invalid password."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user first
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            await auth_service.register_user(user_data)
+            
+            # Login with wrong password
+            login_data = UserLogin(email="test@example.com", password="WrongPass123")
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.login_user(login_data)
+            
+            assert exc_info.value.status_code == 401
+            assert "Invalid email or password" in exc_info.value.detail
+    
+    async def test_login_user_inactive_account(self, db_session: AsyncSession, mock_redis):
+        """Test login with inactive account."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user and deactivate
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            user = await auth_service.register_user(user_data)
+            user.is_active = False
+            await db_session.commit()
+            
+            # Try to login
+            login_data = UserLogin(email="test@example.com", password="TestPass123")
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.login_user(login_data)
+            
+            assert exc_info.value.status_code == 401
+            assert "deactivated" in exc_info.value.detail
+    
+    async def test_verify_email_success(self, db_session: AsyncSession, mock_redis):
         """Test successful email verification."""
-        # Create unverified user
-        user = User(
-            id=uuid4(),
-            email=test_user_data["email"],
-            phone=test_user_data["phone"],
-            full_name=test_user_data["full_name"],
-            password_hash=auth_service.hash_password(test_user_data["password"]),
-            user_type=UserType.CUSTOMER,
-            is_verified=False,
-            is_active=True,
-            average_rating=0.0,
-            total_rides=0,
-        )
-        db_session.add(user)
-        await db_session.commit()
-        
-        # Generate and verify token
-        token = auth_service.generate_verification_token(user.id)
-        success = await auth_service.verify_user_email(db_session, token)
-        
-        assert success is True
-        
-        # Check user is now verified
-        await db_session.refresh(user)
-        assert user.is_verified is True
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            user = await auth_service.register_user(user_data)
+            
+            # Set OTP in mock Redis
+            mock_redis.data["email_otp:test@example.com"] = "123456"
+            
+            # Verify email
+            verification_data = EmailVerification(email="test@example.com", otp="123456")
+            result = await auth_service.verify_email(verification_data)
+            
+            assert result is True
+            await db_session.refresh(user)
+            assert user.is_verified is True
     
-    @pytest.mark.asyncio
-    async def test_verify_user_email_invalid_token(self, db_session):
-        """Test email verification with invalid token."""
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.verify_user_email(db_session, "invalid_token")
-
-
-class TestResetTokens:
-    """Test password reset token functionality."""
+    async def test_verify_email_invalid_otp(self, db_session: AsyncSession, mock_redis):
+        """Test email verification with invalid OTP."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            await auth_service.register_user(user_data)
+            
+            # Set different OTP in mock Redis
+            mock_redis.data["email_otp:test@example.com"] = "123456"
+            
+            # Try to verify with wrong OTP
+            verification_data = EmailVerification(email="test@example.com", otp="654321")
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.verify_email(verification_data)
+            
+            assert exc_info.value.status_code == 400
+            assert "Invalid or expired OTP" in exc_info.value.detail
     
-    def test_generate_reset_token(self):
-        """Test reset token generation."""
-        user_id = uuid4()
-        token = auth_service.generate_reset_token(user_id)
-        
-        assert isinstance(token, str)
-        assert len(token) > 0
-        assert token in auth_service.reset_tokens
+    async def test_request_password_reset_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful password reset request."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            await auth_service.register_user(user_data)
+            
+            # Request password reset
+            reset_data = PasswordReset(email="test@example.com")
+            result = await auth_service.request_password_reset(reset_data)
+            
+            assert result is True
+            # Check that OTP was stored
+            assert "password_reset_otp:test@example.com" in mock_redis.data
     
-    def test_verify_reset_token_valid(self):
-        """Test reset token validation with valid token."""
-        user_id = uuid4()
-        token = auth_service.generate_reset_token(user_id)
-        
-        verified_user_id = auth_service.verify_reset_token(token)
-        assert verified_user_id == user_id
+    async def test_request_password_reset_nonexistent_user(self, db_session: AsyncSession, mock_redis):
+        """Test password reset request for nonexistent user."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Request password reset for nonexistent user
+            reset_data = PasswordReset(email="nonexistent@example.com")
+            result = await auth_service.request_password_reset(reset_data)
+            
+            # Should return True for security (don't reveal if email exists)
+            assert result is True
     
-    def test_verify_reset_token_invalid(self):
-        """Test reset token validation with invalid token."""
-        verified_user_id = auth_service.verify_reset_token("invalid_token")
-        assert verified_user_id is None
+    async def test_confirm_password_reset_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful password reset confirmation."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            user = await auth_service.register_user(user_data)
+            old_password_hash = user.password_hash
+            
+            # Set OTP in mock Redis
+            mock_redis.data["password_reset_otp:test@example.com"] = "123456"
+            
+            # Confirm password reset
+            reset_data = PasswordResetConfirm(
+                email="test@example.com",
+                otp="123456",
+                new_password="NewPass123"
+            )
+            result = await auth_service.confirm_password_reset(reset_data)
+            
+            assert result is True
+            await db_session.refresh(user)
+            assert user.password_hash != old_password_hash
+            assert verify_password("NewPass123", user.password_hash)
     
-    def test_reset_token_reusable(self):
-        """Test that reset tokens can be used multiple times until consumed."""
-        user_id = uuid4()
-        token = auth_service.generate_reset_token(user_id)
-        
-        # Multiple verifications should work
-        verified_user_id = auth_service.verify_reset_token(token)
-        assert verified_user_id == user_id
-        
-        verified_user_id = auth_service.verify_reset_token(token)
-        assert verified_user_id == user_id
+    async def test_confirm_password_reset_invalid_otp(self, db_session: AsyncSession, mock_redis):
+        """Test password reset confirmation with invalid OTP."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            await auth_service.register_user(user_data)
+            
+            # Set different OTP in mock Redis
+            mock_redis.data["password_reset_otp:test@example.com"] = "123456"
+            
+            # Try to confirm with wrong OTP
+            reset_data = PasswordResetConfirm(
+                email="test@example.com",
+                otp="654321",
+                new_password="NewPass123"
+            )
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.confirm_password_reset(reset_data)
+            
+            assert exc_info.value.status_code == 400
+            assert "Invalid or expired OTP" in exc_info.value.detail
     
-    @pytest.mark.asyncio
-    async def test_reset_password_with_token_success(self, db_session, test_user_data, created_user):
-        """Test successful password reset with token."""
-        token = auth_service.generate_reset_token(created_user.id)
-        new_password = "NewPassword123"
-        
-        success = await auth_service.reset_password_with_token(db_session, token, new_password)
-        assert success is True
-        
-        # Verify old password no longer works
-        assert auth_service.verify_password(test_user_data["password"], created_user.password_hash) is False
-        
-        # Verify new password works
-        await db_session.refresh(created_user)
-        assert auth_service.verify_password(new_password, created_user.password_hash) is True
-        
-        # Token should be consumed
-        assert token not in auth_service.reset_tokens
+    async def test_update_user_profile_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful user profile update."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register user
+            user_data = UserCreate(
+                email="test@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe"
+            )
+            user = await auth_service.register_user(user_data)
+            
+            # Update profile
+            update_data = UserUpdate(
+                first_name="Jane",
+                last_name="Smith",
+                phone="+1234567890"
+            )
+            updated_user = await auth_service.update_user_profile(user.id, update_data)
+            
+            assert updated_user.first_name == "Jane"
+            assert updated_user.last_name == "Smith"
+            assert updated_user.phone == "+1234567890"
     
-    @pytest.mark.asyncio
-    async def test_reset_password_with_invalid_token(self, db_session):
-        """Test password reset with invalid token."""
-        with pytest.raises(Exception):  # Should raise HTTPException
-            await auth_service.reset_password_with_token(db_session, "invalid_token", "NewPassword123")
-
-
-class TestEmailFunctions:
-    """Test email sending functions."""
+    async def test_update_user_profile_duplicate_phone(self, db_session: AsyncSession, mock_redis):
+        """Test profile update with duplicate phone number."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            # Register first user
+            user_data1 = UserCreate(
+                email="test1@example.com",
+                password="TestPass123",
+                first_name="John",
+                last_name="Doe",
+                phone="+1234567890"
+            )
+            await auth_service.register_user(user_data1)
+            
+            # Register second user
+            user_data2 = UserCreate(
+                email="test2@example.com",
+                password="TestPass123",
+                first_name="Jane",
+                last_name="Smith"
+            )
+            user2 = await auth_service.register_user(user_data2)
+            
+            # Try to update second user with first user's phone
+            update_data = UserUpdate(phone="+1234567890")
+            
+            with pytest.raises(HTTPException) as exc_info:
+                await auth_service.update_user_profile(user2.id, update_data)
+            
+            assert exc_info.value.status_code == 400
+            assert "already in use" in exc_info.value.detail
     
-    def test_send_verification_email(self):
-        """Test verification email sending (mock)."""
-        success = auth_service.send_verification_email("test@example.com", "test_token")
-        assert success is True  # Should always return True in development mode
+    async def test_logout_user_success(self, db_session: AsyncSession, mock_redis):
+        """Test successful user logout."""
+        with patch('app.services.auth_service.redis_client', mock_redis):
+            auth_service = AuthService(db_session)
+            
+            user_id = uuid4()
+            mock_redis.data[f"refresh_token:{user_id}"] = "some_token"
+            
+            result = await auth_service.logout_user(user_id)
+            
+            assert result is True
+            assert f"refresh_token:{user_id}" not in mock_redis.data
     
-    def test_send_password_reset_email(self):
-        """Test password reset email sending (mock)."""
-        success = auth_service.send_password_reset_email("test@example.com", "test_token")
-        assert success is True  # Should always return True in development mode
+    async def test_generate_otp(self, db_session: AsyncSession):
+        """Test OTP generation."""
+        auth_service = AuthService(db_session)
+        
+        otp = auth_service._generate_otp()
+        
+        assert len(otp) == 6
+        assert otp.isdigit()
+        
+        # Test custom length
+        otp_custom = auth_service._generate_otp(8)
+        assert len(otp_custom) == 8
+        assert otp_custom.isdigit()

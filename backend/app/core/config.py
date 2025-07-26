@@ -1,51 +1,74 @@
 """
-Application configuration settings.
+Configuration management for the Pafar Transport Management Platform.
 """
-from typing import Optional
+import os
+from typing import Optional, List
+from pydantic import validator
 from pydantic_settings import BaseSettings
-from pydantic import Field
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
+    """Application settings with environment variable support."""
     
     # Application
-    app_name: str = "Pafar Ride Booking API"
-    debug: bool = False
-    environment: str = "development"
-    secret_key: str = Field(..., min_length=32)
+    APP_NAME: str = "Pafar Transport Management Platform"
+    APP_VERSION: str = "1.0.0"
+    DEBUG: bool = False
+    API_V1_STR: str = "/api/v1"
+    
+    # Server
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    
+    # Security
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # Database
-    database_url: str = Field(..., description="PostgreSQL database URL")
+    DATABASE_URL: str
+    DATABASE_ECHO: bool = False
     
     # Redis
-    redis_url: str = Field(..., description="Redis connection URL")
+    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_CACHE_TTL: int = 3600  # 1 hour
     
-    # JWT
-    jwt_secret_key: str = Field(..., min_length=32)
-    jwt_algorithm: str = "HS256"
-    jwt_expiration_hours: int = 24
+    # CORS
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    
+    @property
+    def cors_origins(self) -> List[str]:
+        """Get CORS origins as a list."""
+        if isinstance(self.BACKEND_CORS_ORIGINS, str):
+            return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",")]
+        return self.BACKEND_CORS_ORIGINS
     
     # External Services
-    stripe_secret_key: Optional[str] = None
-    stripe_publishable_key: Optional[str] = None
-    google_maps_api_key: Optional[str] = None
+    GOOGLE_MAPS_API_KEY: Optional[str] = None
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
     
     # Email
-    smtp_host: Optional[str] = None
-    smtp_port: int = 587
-    smtp_username: Optional[str] = None
-    smtp_password: Optional[str] = None
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
     
-    # Firebase
-    firebase_project_id: Optional[str] = None
-    firebase_private_key: Optional[str] = None
-    firebase_client_email: Optional[str] = None
+    # SMS
+    SMS_API_KEY: Optional[str] = None
+    SMS_API_URL: Optional[str] = None
+    
+    # Push Notifications
+    FIREBASE_CREDENTIALS_PATH: Optional[str] = None
+    
+    # Celery
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
     
     class Config:
         env_file = ".env"
-        case_sensitive = False
-        extra = "ignore"
+        case_sensitive = True
 
 
 # Global settings instance

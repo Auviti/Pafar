@@ -1,256 +1,323 @@
 """
-Authentication service for user management and JWT operations.
+Authentication service with user management and JWT token handling.
 """
 import secrets
+import string
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from uuid import UUID, uuid4
-
-from fastapi import HTTPException, status
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from typing import Optional
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
-from ..core.config import settings
-from ..models.user import User, UserType
-from ..schemas.user import UserCreate, UserUpdate
+from sqlalchemy import select
+from fastapi import HTTPException, status
+from app.models.user import User, UserRole
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, PasswordReset, PasswordResetConfirm, EmailVerification
+from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, verify_token
+from app.core.config import settings
+from app.core.redis import redis_client
 
 
 class AuthService:
-    """Service class for authentication operations."""
+    """Authentication service for user management."""
     
-    def __init__(self):
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.verification_tokens: Dict[str, Dict[str, Any]] = {}  # In-memory store for demo
-        self.reset_tokens: Dict[str, Dict[str, Any]] = {}  # In-memory store for demo
+    def __init__(self, db: AsyncSession):
+        self.db = db
     
-    def hash_password(self, password: str) -> str:
-        """Hash a password using bcrypt."""
-        return self.pwd_context.hash(password)
-    
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify a password against its hash."""
-        return self.pwd_context.verify(plain_password, hashed_password)
-    
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
-        """Create a JWT access token."""
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(hours=settings.jwt_expiration_hours)
-        
-        to_encode.update({"exp": expire, "iat": datetime.utcnow()})
-        encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
-        return encoded_jwt
-    
-    def verify_token(self, token: str) -> Dict[str, Any]:
-        """Verify and decode a JWT token."""
-        try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-            return payload
-        except JWTError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    
-    async def get_user_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
-        """Get user by email address."""
-        result = await db.execute(select(User).where(User.email == email))
-        return result.scalar_one_or_none()
-    
-    async def get_user_by_id(self, db: AsyncSession, user_id: UUID) -> Optional[User]:
-        """Get user by ID."""
-        result = await db.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
-    
-    async def create_user(self, db: AsyncSession, user_create: UserCreate) -> User:
-        """Create a new user."""
+    async def register_user(self, user_data: UserCreate) -> User:
+        """Register a new user with email verification."""
         # Check if user already exists
-        existing_user = await self.get_user_by_email(db, user_create.email)
+        existing_user = await self._get_user_by_email(user_data.email)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="User with this email already exists"
             )
         
-        # Check if phone already exists
-        result = await db.execute(select(User).where(User.phone == user_create.phone))
-        if result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Phone number already registered"
-            )
-        
-        # Create new user
-        user = User(
-            id=uuid4(),
-            email=user_create.email,
-            phone=user_create.phone,
-            full_name=user_create.full_name,
-            password_hash=self.hash_password(user_create.password),
-            user_type=user_create.user_type,
-            is_verified=False,  # Email verification required
-            is_active=True,
-            average_rating=0.0,
-            total_rides=0,
-        )
-        
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-        
-        return user
-    
-    async def authenticate_user(self, db: AsyncSession, email: str, password: str) -> Optional[User]:
-        """Authenticate user with email and password."""
-        user = await self.get_user_by_email(db, email)
-        if not user:
-            return None
-        if not self.verify_password(password, user.password_hash):
-            return None
-        return user
-    
-    async def update_user(self, db: AsyncSession, user: User, user_update: UserUpdate) -> User:
-        """Update user information."""
-        update_data = user_update.dict(exclude_unset=True)
-        
-        # Check if phone number is being updated and is unique
-        if "phone" in update_data and update_data["phone"] != user.phone:
-            result = await db.execute(select(User).where(User.phone == update_data["phone"]))
-            if result.scalar_one_or_none():
+        # Check if phone number is already used
+        if user_data.phone:
+            existing_phone = await self._get_user_by_phone(user_data.phone)
+            if existing_phone:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Phone number already in use"
+                    detail="User with this phone number already exists"
                 )
         
-        for field, value in update_data.items():
-            setattr(user, field, value)
+        # Create new user
+        hashed_password = get_password_hash(user_data.password)
+        db_user = User(
+            email=user_data.email,
+            phone=user_data.phone,
+            password_hash=hashed_password,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            role=user_data.role,
+            is_verified=False,  # Require email verification
+            is_active=True
+        )
         
-        await db.commit()
-        await db.refresh(user)
+        self.db.add(db_user)
+        await self.db.commit()
+        await self.db.refresh(db_user)
+        
+        # Generate and send verification OTP
+        await self._send_verification_otp(db_user.email)
+        
+        return db_user
+    
+    async def login_user(self, login_data: UserLogin) -> dict:
+        """Authenticate user and return JWT tokens."""
+        user = await self._get_user_by_email(login_data.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        if not verify_password(login_data.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is deactivated"
+            )
+        
+        # Generate tokens
+        token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+        
+        # Store refresh token in Redis
+        await redis_client.setex(
+            f"refresh_token:{user.id}",
+            timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+            refresh_token
+        )
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            "user": user
+        }
+    
+    async def refresh_access_token(self, refresh_token: str) -> dict:
+        """Generate new access token using refresh token."""
+        try:
+            payload = verify_token(refresh_token, "refresh")
+            user_id = payload.get("sub")
+            
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token"
+                )
+            
+            # Check if refresh token exists in Redis
+            stored_token = await redis_client.get(f"refresh_token:{user_id}")
+            if not stored_token or stored_token != refresh_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or expired refresh token"
+                )
+            
+            # Get user and generate new access token
+            user = await self._get_user_by_id(UUID(user_id))
+            if not user or not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found or inactive"
+                )
+            
+            token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
+            access_token = create_access_token(token_data)
+            
+            return {
+                "access_token": access_token,
+                "token_type": "bearer",
+                "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            }
+            
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+    
+    async def logout_user(self, user_id: UUID) -> bool:
+        """Logout user by invalidating refresh token."""
+        await redis_client.delete(f"refresh_token:{user_id}")
+        return True
+    
+    async def verify_email(self, verification_data: EmailVerification) -> bool:
+        """Verify user email with OTP."""
+        user = await self._get_user_by_email(verification_data.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Check OTP
+        stored_otp = await redis_client.get(f"email_otp:{user.email}")
+        if not stored_otp or stored_otp != verification_data.otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP"
+            )
+        
+        # Mark user as verified
+        user.is_verified = True
+        user.updated_at = datetime.utcnow()
+        await self.db.commit()
+        
+        # Remove OTP from Redis
+        await redis_client.delete(f"email_otp:{user.email}")
+        
+        return True
+    
+    async def request_password_reset(self, reset_data: PasswordReset) -> bool:
+        """Request password reset with OTP."""
+        user = await self._get_user_by_email(reset_data.email)
+        if not user:
+            # Don't reveal if email exists for security
+            return True
+        
+        # Generate and send reset OTP
+        await self._send_password_reset_otp(user.email)
+        return True
+    
+    async def confirm_password_reset(self, reset_data: PasswordResetConfirm) -> bool:
+        """Confirm password reset with OTP and set new password."""
+        user = await self._get_user_by_email(reset_data.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Check OTP
+        stored_otp = await redis_client.get(f"password_reset_otp:{user.email}")
+        if not stored_otp or stored_otp != reset_data.otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP"
+            )
+        
+        # Update password
+        user.password_hash = get_password_hash(reset_data.new_password)
+        user.updated_at = datetime.utcnow()
+        await self.db.commit()
+        
+        # Remove OTP from Redis and invalidate all refresh tokens
+        await redis_client.delete(f"password_reset_otp:{user.email}")
+        await redis_client.delete(f"refresh_token:{user.id}")
+        
+        return True
+    
+    async def update_user_profile(self, user_id: UUID, update_data: UserUpdate) -> User:
+        """Update user profile information."""
+        user = await self._get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Check if phone number is already used by another user
+        if update_data.phone and update_data.phone != user.phone:
+            existing_phone = await self._get_user_by_phone(update_data.phone)
+            if existing_phone and existing_phone.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Phone number is already in use"
+                )
+        
+        # Update fields
+        if update_data.first_name is not None:
+            user.first_name = update_data.first_name
+        if update_data.last_name is not None:
+            user.last_name = update_data.last_name
+        if update_data.phone is not None:
+            user.phone = update_data.phone
+        
+        user.updated_at = datetime.utcnow()
+        await self.db.commit()
+        await self.db.refresh(user)
+        
         return user
     
-    async def update_password(self, db: AsyncSession, user: User, current_password: str, new_password: str) -> bool:
-        """Update user password after verifying current password."""
-        if not self.verify_password(current_password, user.password_hash):
+    async def get_current_user(self, token: str) -> User:
+        """Get current user from JWT token."""
+        try:
+            payload = verify_token(token)
+            user_id = payload.get("sub")
+            
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
+            
+            user = await self._get_user_by_id(UUID(user_id))
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found"
+                )
+            
+            if not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User account is deactivated"
+                )
+            
+            return user
+            
+        except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials"
             )
-        
-        user.password_hash = self.hash_password(new_password)
-        await db.commit()
-        return True
     
-    def generate_verification_token(self, user_id: UUID) -> str:
-        """Generate email verification token."""
-        token = secrets.token_urlsafe(32)
-        self.verification_tokens[token] = {
-            "user_id": str(user_id),
-            "expires_at": datetime.utcnow() + timedelta(hours=24),
-            "type": "email_verification"
-        }
-        return token
+    async def _get_user_by_email(self, email: str) -> Optional[User]:
+        """Get user by email address."""
+        result = await self.db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
     
-    def generate_reset_token(self, user_id: UUID) -> str:
-        """Generate password reset token."""
-        token = secrets.token_urlsafe(32)
-        self.reset_tokens[token] = {
-            "user_id": str(user_id),
-            "expires_at": datetime.utcnow() + timedelta(hours=1),
-            "type": "password_reset"
-        }
-        return token
+    async def _get_user_by_phone(self, phone: str) -> Optional[User]:
+        """Get user by phone number."""
+        result = await self.db.execute(select(User).where(User.phone == phone))
+        return result.scalar_one_or_none()
     
-    def verify_verification_token(self, token: str) -> Optional[UUID]:
-        """Verify email verification token."""
-        token_data = self.verification_tokens.get(token)
-        if not token_data:
-            return None
-        
-        if datetime.utcnow() > token_data["expires_at"]:
-            del self.verification_tokens[token]
-            return None
-        
-        user_id = UUID(token_data["user_id"])
-        del self.verification_tokens[token]  # Token is single-use
-        return user_id
+    async def _get_user_by_id(self, user_id: UUID) -> Optional[User]:
+        """Get user by ID."""
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
     
-    def verify_reset_token(self, token: str) -> Optional[UUID]:
-        """Verify password reset token."""
-        token_data = self.reset_tokens.get(token)
-        if not token_data:
-            return None
+    async def _send_verification_otp(self, email: str) -> None:
+        """Generate and store email verification OTP."""
+        otp = self._generate_otp()
         
-        if datetime.utcnow() > token_data["expires_at"]:
-            del self.reset_tokens[token]
-            return None
+        # Store OTP in Redis with 10 minute expiration
+        await redis_client.setex(f"email_otp:{email}", 600, otp)
         
-        return UUID(token_data["user_id"])
+        # TODO: Send email with OTP (implement email service)
+        print(f"Email verification OTP for {email}: {otp}")
     
-    async def verify_user_email(self, db: AsyncSession, token: str) -> bool:
-        """Verify user email with token."""
-        user_id = self.verify_verification_token(token)
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired verification token"
-            )
+    async def _send_password_reset_otp(self, email: str) -> None:
+        """Generate and store password reset OTP."""
+        otp = self._generate_otp()
         
-        user = await self.get_user_by_id(db, user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+        # Store OTP in Redis with 10 minute expiration
+        await redis_client.setex(f"password_reset_otp:{email}", 600, otp)
         
-        user.is_verified = True
-        await db.commit()
-        return True
+        # TODO: Send email with OTP (implement email service)
+        print(f"Password reset OTP for {email}: {otp}")
     
-    async def reset_password_with_token(self, db: AsyncSession, token: str, new_password: str) -> bool:
-        """Reset password using reset token."""
-        user_id = self.verify_reset_token(token)
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired reset token"
-            )
-        
-        user = await self.get_user_by_id(db, user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        user.password_hash = self.hash_password(new_password)
-        await db.commit()
-        
-        # Clean up the token
-        del self.reset_tokens[token]
-        return True
-    
-    def send_verification_email(self, email: str, token: str) -> bool:
-        """Send email verification email (simplified for development)."""
-        verification_url = f"http://localhost:3000/verify-email?token={token}"
-        print(f"Email verification would be sent to {email}")
-        print(f"Verification URL: {verification_url}")
-        print(f"Token: {token}")
-        return True  # Always return True for development
-    
-    def send_password_reset_email(self, email: str, token: str) -> bool:
-        """Send password reset email (simplified for development)."""
-        reset_url = f"http://localhost:3000/reset-password?token={token}"
-        print(f"Password reset email would be sent to {email}")
-        print(f"Reset URL: {reset_url}")
-        print(f"Token: {token}")
-        return True  # Always return True for development
-
-
-# Global auth service instance
-auth_service = AuthService()
+    def _generate_otp(self, length: int = 6) -> str:
+        """Generate random OTP."""
+        return ''.join(secrets.choice(string.digits) for _ in range(length))

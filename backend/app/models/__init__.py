@@ -1,12 +1,20 @@
 """
-Database models package.
+Database models for the Pafar Transport Management Platform.
 """
-from .user import User, UserType
-from .ride import Ride, Location, DriverLocation, RideStatus
-from .payment import Payment, PaymentStatus
+from .user import User
+from .fleet import Terminal, Route, Bus, Trip
+from .booking import Booking
+from .payment import Payment
+from .tracking import TripLocation, Review
 
 __all__ = [
-    "User", "UserType",
-    "Ride", "Location", "DriverLocation", "RideStatus", 
-    "Payment", "PaymentStatus",
+    "User",
+    "Terminal", 
+    "Route", 
+    "Bus", 
+    "Trip",
+    "Booking",
+    "Payment", 
+    "TripLocation",
+    "Review"
 ]

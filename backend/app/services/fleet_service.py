@@ -400,7 +400,7 @@ class TripService:
             select(User).where(
                 and_(
                     User.id == trip_data.driver_id,
-                    User.role == "DRIVER",
+                    User.role == "driver",
                     User.is_active == True
                 )
             )
@@ -517,7 +517,7 @@ class TripService:
                 select(User).where(
                     and_(
                         User.id == update_data['driver_id'],
-                        User.role == "DRIVER",
+                        User.role == "driver",
                         User.is_active == True
                     )
                 )

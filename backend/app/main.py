@@ -52,6 +52,30 @@ app.include_router(auth.router, prefix=settings.API_V1_STR)
 from app.api.v1 import fleet
 app.include_router(fleet.router, prefix=f"{settings.API_V1_STR}/fleet", tags=["fleet"])
 
+# Import and include booking router
+from app.api.v1 import bookings
+app.include_router(bookings.router, prefix=settings.API_V1_STR)
+
+# Import and include payment router
+from app.api.v1 import payments
+app.include_router(payments.router, prefix=f"{settings.API_V1_STR}/payments", tags=["payments"])
+
+# Import and include tracking router
+from app.api.v1 import tracking
+app.include_router(tracking.router, prefix=f"{settings.API_V1_STR}/tracking", tags=["tracking"])
+
+# Import and include websocket router
+from app.api.v1 import websocket
+app.include_router(websocket.router, prefix=f"{settings.API_V1_STR}", tags=["websocket"])
+
+# Import and include reviews router
+from app.api.v1 import reviews
+app.include_router(reviews.router, prefix=f"{settings.API_V1_STR}", tags=["reviews"])
+
+# Import and include admin router
+from app.api.v1 import admin
+app.include_router(admin.router, prefix=settings.API_V1_STR)
+
 
 @app.get("/")
 async def root():

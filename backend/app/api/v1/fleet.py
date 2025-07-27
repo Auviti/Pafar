@@ -11,9 +11,9 @@ from app.api.v1.auth import get_current_user
 from app.models.user import User
 from app.schemas.fleet import (
     Terminal, TerminalCreate, TerminalUpdate, TerminalList,
-    Route, RouteCreate, RouteUpdate, RouteList,
+    Route, RouteCreate, RouteUpdate, RouteList, RouteWithTerminals,
     Bus, BusCreate, BusUpdate, BusList,
-    Trip, TripCreate, TripUpdate, TripList
+    Trip, TripCreate, TripUpdate, TripList, TripWithDetails
 )
 from app.services.fleet_service import (
     TerminalService, RouteService, BusService, TripService
@@ -30,7 +30,7 @@ async def create_terminal(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new terminal. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can create terminals"
@@ -83,7 +83,7 @@ async def update_terminal(
     current_user: User = Depends(get_current_user)
 ):
     """Update a terminal. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can update terminals"
@@ -105,7 +105,7 @@ async def delete_terminal(
     current_user: User = Depends(get_current_user)
 ):
     """Delete a terminal. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete terminals"
@@ -127,7 +127,7 @@ async def create_route(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new route. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can create routes"
@@ -163,7 +163,7 @@ async def get_routes(
     )
 
 
-@router.get("/routes/{route_id}", response_model=Route)
+@router.get("/routes/{route_id}", response_model=RouteWithTerminals)
 async def get_route(
     route_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -186,7 +186,7 @@ async def update_route(
     current_user: User = Depends(get_current_user)
 ):
     """Update a route. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can update routes"
@@ -208,7 +208,7 @@ async def delete_route(
     current_user: User = Depends(get_current_user)
 ):
     """Delete a route. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete routes"
@@ -230,7 +230,7 @@ async def create_bus(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new bus. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can create buses"
@@ -283,7 +283,7 @@ async def update_bus(
     current_user: User = Depends(get_current_user)
 ):
     """Update a bus. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can update buses"
@@ -305,7 +305,7 @@ async def delete_bus(
     current_user: User = Depends(get_current_user)
 ):
     """Delete a bus. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete buses"
@@ -327,7 +327,7 @@ async def create_trip(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new trip. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can create trips"
@@ -365,7 +365,7 @@ async def get_trips(
     )
 
 
-@router.get("/trips/{trip_id}", response_model=Trip)
+@router.get("/trips/{trip_id}", response_model=TripWithDetails)
 async def get_trip(
     trip_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -388,7 +388,7 @@ async def update_trip(
     current_user: User = Depends(get_current_user)
 ):
     """Update a trip. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can update trips"
@@ -410,7 +410,7 @@ async def delete_trip(
     current_user: User = Depends(get_current_user)
 ):
     """Delete a trip. Requires admin role."""
-    if current_user.role != "ADMIN":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete trips"

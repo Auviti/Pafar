@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from app.models.fleet import TripStatus
 
 
@@ -40,8 +40,7 @@ class Terminal(TerminalBase):
     id: UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Route schemas
@@ -54,9 +53,10 @@ class RouteBase(BaseModel):
     base_fare: Decimal = Field(..., gt=0)
     is_active: bool = True
 
-    @validator('destination_terminal_id')
-    def validate_different_terminals(cls, v, values):
-        if 'origin_terminal_id' in values and v == values['origin_terminal_id']:
+    @field_validator('destination_terminal_id')
+    @classmethod
+    def validate_different_terminals(cls, v, info):
+        if info.data.get('origin_terminal_id') and v == info.data.get('origin_terminal_id'):
             raise ValueError('Origin and destination terminals must be different')
         return v
 
@@ -75,9 +75,11 @@ class RouteUpdate(BaseModel):
     base_fare: Optional[Decimal] = Field(None, gt=0)
     is_active: Optional[bool] = None
 
-    @validator('destination_terminal_id')
-    def validate_different_terminals(cls, v, values):
-        if 'origin_terminal_id' in values and v and values['origin_terminal_id'] and v == values['origin_terminal_id']:
+    @field_validator('destination_terminal_id')
+    @classmethod
+    def validate_different_terminals(cls, v, info):
+        origin_id = info.data.get('origin_terminal_id')
+        if origin_id and v and v == origin_id:
             raise ValueError('Origin and destination terminals must be different')
         return v
 
@@ -86,11 +88,14 @@ class Route(RouteBase):
     """Schema for route response."""
     id: UUID
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class RouteWithTerminals(Route):
+    """Schema for route response with terminal details."""
     origin_terminal: Optional[Terminal] = None
     destination_terminal: Optional[Terminal] = None
-
-    class Config:
-        from_attributes = True
 
 
 # Bus schemas
@@ -122,8 +127,7 @@ class Bus(BusBase):
     id: UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Trip schemas
@@ -138,9 +142,11 @@ class TripBase(BaseModel):
     fare: Decimal = Field(..., gt=0)
     available_seats: Optional[int] = Field(None, ge=0)
 
-    @validator('arrival_time')
-    def validate_arrival_after_departure(cls, v, values):
-        if v and 'departure_time' in values and v <= values['departure_time']:
+    @field_validator('arrival_time')
+    @classmethod
+    def validate_arrival_after_departure(cls, v, info):
+        departure_time = info.data.get('departure_time')
+        if v and departure_time and v <= departure_time:
             raise ValueError('Arrival time must be after departure time')
         return v
 
@@ -161,9 +167,11 @@ class TripUpdate(BaseModel):
     fare: Optional[Decimal] = Field(None, gt=0)
     available_seats: Optional[int] = Field(None, ge=0)
 
-    @validator('arrival_time')
-    def validate_arrival_after_departure(cls, v, values):
-        if v and 'departure_time' in values and values['departure_time'] and v <= values['departure_time']:
+    @field_validator('arrival_time')
+    @classmethod
+    def validate_arrival_after_departure(cls, v, info):
+        departure_time = info.data.get('departure_time')
+        if v and departure_time and v <= departure_time:
             raise ValueError('Arrival time must be after departure time')
         return v
 
@@ -172,11 +180,14 @@ class Trip(TripBase):
     """Schema for trip response."""
     id: UUID
     created_at: datetime
-    route: Optional[Route] = None
-    bus: Optional[Bus] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
+
+
+class TripWithDetails(Trip):
+    """Schema for trip response with route and bus details."""
+    route: Optional[RouteWithTerminals] = None
+    bus: Optional[Bus] = None
 
 
 # List response schemas
@@ -190,7 +201,7 @@ class TerminalList(BaseModel):
 
 class RouteList(BaseModel):
     """Schema for route list response."""
-    routes: List[Route]
+    routes: List[RouteWithTerminals]
     total: int
     page: int
     size: int
@@ -206,7 +217,7 @@ class BusList(BaseModel):
 
 class TripList(BaseModel):
     """Schema for trip list response."""
-    trips: List[Trip]
+    trips: List[TripWithDetails]
     total: int
     page: int
     size: int

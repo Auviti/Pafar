@@ -111,6 +111,40 @@ class RedisClient:
             time = int(time.total_seconds())
         
         return await self.redis.setex(key, time, value)
+    
+    async def hset(self, name: str, key: str, value: Union[str, dict, list]) -> int:
+        """Set field in hash."""
+        if not self.redis:
+            return 0
+        
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        
+        return await self.redis.hset(name, key, value)
+    
+    async def hget(self, name: str, key: str) -> Optional[str]:
+        """Get field from hash."""
+        if not self.redis:
+            return None
+        return await self.redis.hget(name, key)
+    
+    async def hgetall(self, name: str) -> dict:
+        """Get all fields from hash."""
+        if not self.redis:
+            return {}
+        return await self.redis.hgetall(name)
+    
+    async def hdel(self, name: str, *keys: str) -> int:
+        """Delete fields from hash."""
+        if not self.redis:
+            return 0
+        return await self.redis.hdel(name, *keys)
+    
+    async def keys(self, pattern: str) -> list:
+        """Get keys matching pattern."""
+        if not self.redis:
+            return []
+        return await self.redis.keys(pattern)
 
 
 # Global Redis client instance

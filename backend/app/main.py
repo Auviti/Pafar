@@ -76,6 +76,10 @@ app.include_router(reviews.router, prefix=f"{settings.API_V1_STR}", tags=["revie
 from app.api.v1 import admin
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 
+# Import and include maps router
+from app.api.v1 import maps
+app.include_router(maps.router, prefix=f"{settings.API_V1_STR}/maps", tags=["maps"])
+
 
 @app.get("/")
 async def root():

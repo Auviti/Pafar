@@ -370,6 +370,9 @@ class TestAdminService:
     
     async def test_get_live_trip_data(self, admin_service, sample_booking):
         """Test getting live trip data."""
+        # Refresh booking to load trip relationship
+        await admin_service.db.refresh(sample_booking, ['trip'])
+        
         # Update trip status to in transit
         trip = sample_booking.trip
         trip.status = TripStatus.IN_TRANSIT
@@ -453,6 +456,7 @@ class TestAdminService:
                 "alert_type": "test_alert",
                 "severity": "medium",
                 "description": "Test alert",
+                "metadata": {},
                 "status": "open",
                 "created_at": datetime.utcnow().isoformat()
             }
@@ -498,7 +502,11 @@ class TestAdminService:
     
     async def test_get_system_health(self, admin_service):
         """Test getting system health metrics."""
-        with patch.object(redis_client, 'ping'):
+        # Mock the redis client's redis attribute to have a ping method
+        mock_redis = AsyncMock()
+        mock_redis.ping = AsyncMock()
+        
+        with patch.object(redis_client, 'redis', mock_redis):
             health = await admin_service.get_system_health()
         
         assert health.database_status in ["healthy", "unhealthy"]

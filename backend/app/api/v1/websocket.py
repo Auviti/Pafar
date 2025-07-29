@@ -260,7 +260,6 @@ async def websocket_driver_updates(
     finally:
         manager.disconnect_driver(websocket, driver_id)
 
-
 async def handle_driver_location_update(message: dict, tracking_service: TrackingService, driver_id: str):
     """Handle location update from driver."""
     data = message.get("data", {})
@@ -295,7 +294,6 @@ async def handle_driver_location_update(message: dict, tracking_service: Trackin
         }
     })
 
-
 async def handle_driver_status_update(message: dict, tracking_service: TrackingService, driver_id: str):
     """Handle trip status update from driver."""
     data = message.get("data", {})
@@ -322,7 +320,6 @@ async def handle_driver_status_update(message: dict, tracking_service: TrackingS
             "updated_at": datetime.utcnow().isoformat()
         }
     })
-
 
 # Background task to handle Redis pub/sub for cross-instance communication
 async def redis_message_handler():

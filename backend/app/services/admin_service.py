@@ -560,8 +560,11 @@ class AdminService:
         
         # Redis status
         try:
-            await redis_client.ping()
-            redis_status = "healthy"
+            if redis_client.redis:
+                await redis_client.redis.ping()
+                redis_status = "healthy"
+            else:
+                redis_status = "unhealthy"
         except Exception:
             redis_status = "unhealthy"
         

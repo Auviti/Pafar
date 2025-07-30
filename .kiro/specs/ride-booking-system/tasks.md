@@ -145,7 +145,7 @@
   - Write component tests for admin features
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.3_
 
-- [ ] 16. Set up Flutter mobile app foundation
+- [x] 16. Set up Flutter mobile app foundation
   - Create Flutter project structure with clean architecture
   - Set up dependency injection with GetIt
   - Implement BLoC pattern for state management
@@ -155,7 +155,7 @@
   - Write widget tests for core components
   - _Requirements: 8.2, 8.4_
 
-- [ ] 17. Implement mobile authentication screens
+- [x] 17. Implement mobile authentication screens
   - Create login screen with form validation
   - Build registration screen with OTP verification
   - Implement password reset flow

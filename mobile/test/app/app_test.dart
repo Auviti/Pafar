@@ -111,21 +111,23 @@ void main() {
 
       // Assert
       expect(find.byType(BottomNavigationBar), findsOneWidget);
-      expect(find.text('Home'), findsOneWidget);
       expect(find.text('Book'), findsOneWidget);
       expect(find.text('Track'), findsOneWidget);
       expect(find.text('Profile'), findsOneWidget);
+      
+      // Check that there are navigation items (Home appears in both AppBar and BottomNav)
+      expect(find.text('Home'), findsAtLeastNWidgets(1));
     });
   });
 
   group('ErrorScreen', () {
     testWidgets('should display error message', (tester) async {
       // Arrange
-      const error = Exception('Test error');
+      final error = Exception('Test error');
 
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: ErrorScreen(error: error),
         ),
       );

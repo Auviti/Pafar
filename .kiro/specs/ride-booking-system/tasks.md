@@ -165,7 +165,7 @@
   - Write widget tests for authentication screens
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 8.2, 8.4_
 
-- [ ] 18. Build mobile trip booking interface
+- [x] 18. Build mobile trip booking interface
   - Create trip search screen with date and route selection
   - Implement trip results screen with filtering
   - Build interactive seat selection screen
@@ -175,7 +175,7 @@
   - Write widget tests for booking screens
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 8.2, 8.4_
 
-- [ ] 19. Create mobile real-time tracking features
+- [x] 19. Create mobile real-time tracking features
   - Implement WebSocket connection for live updates
   - Build trip tracking screen with Google Maps integration
   - Create location permission handling

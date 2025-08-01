@@ -1,241 +1,287 @@
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TripSearchForm from '../TripSearchForm';
-import { bookingService } from '../../../services/booking';
 
 // Mock the booking service
+const mockSearchTrips = vi.fn();
 vi.mock('../../../services/booking', () => ({
-  bookingService: {
-    getTerminals: vi.fn()
-  }
+  searchTrips: mockSearchTrips,
 }));
 
+// Mock terminals data
 const mockTerminals = [
-  { id: '1', name: 'Central Terminal', city: 'New York' },
-  { id: '2', name: 'Airport Terminal', city: 'Los Angeles' },
-  { id: '3', name: 'Downtown Station', city: 'Chicago' }
+  { id: '1', name: 'Terminal A', city: 'City A' },
+  { id: '2', name: 'Terminal B', city: 'City B' },
+  { id: '3', name: 'Terminal C', city: 'City C' },
 ];
 
-describe('TripSearchForm', () => {
-  const mockOnSearch = vi.fn();
-  const user = userEvent.setup();
+const mockOnSearch = vi.fn();
 
+const renderTripSearchForm = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <TripSearchForm terminals={mockTerminals} onSearch={mockOnSearch} />
+    </QueryClientProvider>
+  );
+};
+
+describe('TripSearchForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    bookingService.getTerminals.mockResolvedValue({ terminals: mockTerminals });
   });
 
-  it('renders search form with all fields', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('renders search form with all required fields', () => {
+    renderTripSearchForm();
 
-    expect(screen.getByRole('heading', { name: 'Search Trips' })).toBeInTheDocument();
-    expect(screen.getByText('Find and book your perfect journey')).toBeInTheDocument();
-    
-    expect(screen.getByLabelText('From')).toBeInTheDocument();
-    expect(screen.getByLabelText('To')).toBeInTheDocument();
-    expect(screen.getByLabelText('Departure Date')).toBeInTheDocument();
-    expect(screen.getByLabelText('Passengers')).toBeInTheDocument();
-    
-    expect(screen.getByRole('button', { name: 'Search Trips' })).toBeInTheDocument();
+    expect(screen.getByText('Search Trips')).toBeInTheDocument();
+    expect(screen.getByLabelText(/from/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/to/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/departure date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/passengers/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search trips/i })).toBeInTheDocument();
   });
 
-  it('loads terminals on mount', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('populates terminal options', () => {
+    renderTripSearchForm();
 
-    await waitFor(() => {
-      expect(bookingService.getTerminals).toHaveBeenCalledTimes(1);
-    });
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
 
-    await waitFor(() => {
-      expect(screen.getAllByText('Central Terminal - New York')).toHaveLength(2);
-      expect(screen.getAllByText('Airport Terminal - Los Angeles')).toHaveLength(2);
-      expect(screen.getAllByText('Downtown Station - Chicago')).toHaveLength(2);
-    });
+    fireEvent.click(fromSelect);
+    expect(screen.getByText('Terminal A - City A')).toBeInTheDocument();
+    expect(screen.getByText('Terminal B - City B')).toBeInTheDocument();
+    expect(screen.getByText('Terminal C - City C')).toBeInTheDocument();
+
+    fireEvent.click(toSelect);
+    expect(screen.getAllByText('Terminal A - City A')).toHaveLength(2);
   });
 
   it('validates required fields', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+    const user = userEvent.setup();
+    renderTripSearchForm();
 
-    const searchButton = screen.getByRole('button', { name: 'Search Trips' });
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
     await user.click(searchButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Please select origin terminal')).toBeInTheDocument();
-      expect(screen.getByText('Please select destination terminal')).toBeInTheDocument();
+      expect(screen.getByText(/origin terminal is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/destination terminal is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/departure date is required/i)).toBeInTheDocument();
     });
-
-    expect(mockOnSearch).not.toHaveBeenCalled();
   });
 
-  it('prevents same origin and destination selection', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('validates that origin and destination are different', async () => {
+    const user = userEvent.setup();
+    renderTripSearchForm();
 
-    await waitFor(() => {
-      expect(screen.getAllByText('Central Terminal - New York')).toHaveLength(2);
-    });
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
 
-    const originSelect = screen.getByLabelText('From');
-    const destinationSelect = screen.getByLabelText('To');
-    const searchButton = screen.getByRole('button', { name: 'Search Trips' });
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '1');
 
-    await user.selectOptions(originSelect, '1');
-    await user.selectOptions(destinationSelect, '1');
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
     await user.click(searchButton);
 
-    expect(alertSpy).toHaveBeenCalledWith('Origin and destination terminals cannot be the same');
-    expect(mockOnSearch).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText(/origin and destination must be different/i)).toBeInTheDocument();
+    });
+  });
 
-    alertSpy.mockRestore();
+  it('validates departure date is not in the past', async () => {
+    const user = userEvent.setup();
+    renderTripSearchForm();
+
+    const dateInput = screen.getByLabelText(/departure date/i);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    await user.type(dateInput, yesterday.toISOString().split('T')[0]);
+
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
+    await user.click(searchButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/departure date cannot be in the past/i)).toBeInTheDocument();
+    });
+  });
+
+  it('validates passenger count range', async () => {
+    const user = userEvent.setup();
+    renderTripSearchForm();
+
+    const passengersInput = screen.getByLabelText(/passengers/i);
+    
+    // Test minimum
+    await user.clear(passengersInput);
+    await user.type(passengersInput, '0');
+
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
+    await user.click(searchButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/at least 1 passenger required/i)).toBeInTheDocument();
+    });
+
+    // Test maximum
+    await user.clear(passengersInput);
+    await user.type(passengersInput, '11');
+    await user.click(searchButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/maximum 10 passengers allowed/i)).toBeInTheDocument();
+    });
   });
 
   it('submits form with valid data', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+    const user = userEvent.setup();
+    mockSearchTrips.mockResolvedValue([]);
+    
+    renderTripSearchForm();
 
-    await waitFor(() => {
-      expect(screen.getAllByText('Central Terminal - New York')).toHaveLength(2);
-    });
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
+    const dateInput = screen.getByLabelText(/departure date/i);
+    const passengersInput = screen.getByLabelText(/passengers/i);
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
 
-    const originSelect = screen.getByLabelText('From');
-    const destinationSelect = screen.getByLabelText('To');
-    const dateInput = screen.getByLabelText('Departure Date');
-    const passengersSelect = screen.getByLabelText('Passengers');
-    const searchButton = screen.getByRole('button', { name: 'Search Trips' });
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowString = tomorrow.toISOString().split('T')[0];
 
-    await user.selectOptions(originSelect, '1');
-    await user.selectOptions(destinationSelect, '2');
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 7);
-    const futureDateStr = futureDate.toISOString().split('T')[0];
-    fireEvent.change(dateInput, { target: { value: futureDateStr } });
-    await user.selectOptions(passengersSelect, '2');
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '2');
+    await user.type(dateInput, tomorrowString);
+    await user.clear(passengersInput);
+    await user.type(passengersInput, '2');
     await user.click(searchButton);
 
     await waitFor(() => {
       expect(mockOnSearch).toHaveBeenCalledWith({
         originTerminalId: '1',
         destinationTerminalId: '2',
-        departureDate: '2024-12-25',
-        passengers: 2
+        departureDate: tomorrowString,
+        passengers: 2,
       });
     });
   });
 
-  it('swaps terminals when swap button is clicked', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('shows loading state during search', async () => {
+    const user = userEvent.setup();
+    mockSearchTrips.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
+    
+    renderTripSearchForm();
 
-    await waitFor(() => {
-      expect(screen.getAllByText('Central Terminal - New York')).toHaveLength(2);
-    });
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
+    const dateInput = screen.getByLabelText(/departure date/i);
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
 
-    const originSelect = screen.getByLabelText('From');
-    const destinationSelect = screen.getByLabelText('To');
-    const swapButton = screen.getByTitle('Swap origin and destination');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    await user.selectOptions(originSelect, '1');
-    await user.selectOptions(destinationSelect, '2');
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '2');
+    await user.type(dateInput, tomorrow.toISOString().split('T')[0]);
+    await user.click(searchButton);
 
-    expect(originSelect.value).toBe('1');
-    expect(destinationSelect.value).toBe('2');
+    expect(screen.getByRole('button', { name: /searching/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /searching/i })).toBeDisabled();
+  });
 
+  it('swaps origin and destination when swap button is clicked', async () => {
+    const user = userEvent.setup();
+    renderTripSearchForm();
+
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
+    const swapButton = screen.getByRole('button', { name: /swap/i });
+
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '2');
     await user.click(swapButton);
 
-    expect(originSelect.value).toBe('2');
-    expect(destinationSelect.value).toBe('1');
+    expect(fromSelect.value).toBe('2');
+    expect(toSelect.value).toBe('1');
   });
 
-  it('disables swap button when terminals are not selected', async () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('sets default departure date to today', () => {
+    renderTripSearchForm();
 
-    const swapButton = screen.getByTitle('Swap origin and destination');
-    expect(swapButton).toBeDisabled();
-
-    await waitFor(() => {
-      expect(screen.getAllByText('Central Terminal - New York')).toHaveLength(2);
-    });
-
-    const originSelect = screen.getByLabelText('From');
-    await user.selectOptions(originSelect, '1');
-
-    expect(swapButton).toBeDisabled();
-
-    const destinationSelect = screen.getByLabelText('To');
-    await user.selectOptions(destinationSelect, '2');
-
-    expect(swapButton).not.toBeDisabled();
-  });
-
-  it('sets default values correctly', () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
-
-    const dateInput = screen.getByLabelText('Departure Date');
-    const passengersSelect = screen.getByLabelText('Passengers');
-
+    const dateInput = screen.getByLabelText(/departure date/i);
     const today = new Date().toISOString().split('T')[0];
+    
     expect(dateInput.value).toBe(today);
-    expect(passengersSelect.value).toBe('1');
   });
 
-  it('shows loading state', () => {
-    render(<TripSearchForm onSearch={mockOnSearch} loading={true} />);
+  it('sets default passenger count to 1', () => {
+    renderTripSearchForm();
 
-    const searchButton = screen.getByRole('button', { name: 'Searching...' });
-    expect(searchButton).toBeDisabled();
+    const passengersInput = screen.getByLabelText(/passengers/i);
+    expect(passengersInput.value).toBe('1');
   });
 
-  it('handles terminal loading error gracefully', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    bookingService.getTerminals.mockRejectedValue(new Error('Network error'));
+  it('displays search results count', async () => {
+    const user = userEvent.setup();
+    const mockResults = [
+      { id: '1', departure_time: '2024-01-01T10:00:00Z' },
+      { id: '2', departure_time: '2024-01-01T14:00:00Z' },
+    ];
+    mockSearchTrips.mockResolvedValue(mockResults);
+    
+    renderTripSearchForm();
 
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
+    const dateInput = screen.getByLabelText(/departure date/i);
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '2');
+    await user.type(dateInput, tomorrow.toISOString().split('T')[0]);
+    await user.click(searchButton);
 
     await waitFor(() => {
-      expect(bookingService.getTerminals).toHaveBeenCalledTimes(1);
+      expect(mockOnSearch).toHaveBeenCalledWith(expect.objectContaining({
+        originTerminalId: '1',
+        destinationTerminalId: '2',
+      }));
     });
-
-    // Form should still be rendered even if terminals fail to load
-    expect(screen.getByRole('heading', { name: 'Search Trips' })).toBeInTheDocument();
-    expect(screen.getByLabelText('From')).toBeInTheDocument();
-
-    consoleErrorSpy.mockRestore();
   });
 
-  it('validates date range', () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+  it('handles search error gracefully', async () => {
+    const user = userEvent.setup();
+    mockSearchTrips.mockRejectedValue(new Error('Search failed'));
+    
+    renderTripSearchForm();
 
-    const dateInput = screen.getByLabelText('Departure Date');
-    const today = new Date().toISOString().split('T')[0];
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 90);
-    const maxDateStr = maxDate.toISOString().split('T')[0];
+    const fromSelect = screen.getByLabelText(/from/i);
+    const toSelect = screen.getByLabelText(/to/i);
+    const dateInput = screen.getByLabelText(/departure date/i);
+    const searchButton = screen.getByRole('button', { name: /search trips/i });
 
-    expect(dateInput.getAttribute('min')).toBe(today);
-    expect(dateInput.getAttribute('max')).toBe(maxDateStr);
-  });
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  it('validates passenger count options', () => {
-    render(<TripSearchForm onSearch={mockOnSearch} />);
+    await user.selectOptions(fromSelect, '1');
+    await user.selectOptions(toSelect, '2');
+    await user.type(dateInput, tomorrow.toISOString().split('T')[0]);
+    await user.click(searchButton);
 
-    const passengersSelect = screen.getByLabelText('Passengers');
-    const options = Array.from(passengersSelect.options).map(option => ({
-      value: option.value,
-      text: option.text
-    }));
-
-    expect(options).toEqual([
-      { value: '1', text: '1 Passenger' },
-      { value: '2', text: '2 Passengers' },
-      { value: '3', text: '3 Passengers' },
-      { value: '4', text: '4 Passengers' },
-      { value: '5', text: '5 Passengers' },
-      { value: '6', text: '6 Passengers' },
-      { value: '7', text: '7 Passengers' },
-      { value: '8', text: '8 Passengers' },
-      { value: '9', text: '9 Passengers' },
-      { value: '10', text: '10 Passengers' }
-    ]);
+    await waitFor(() => {
+      expect(screen.getByText(/search failed/i)).toBeInTheDocument();
+    });
   });
 });

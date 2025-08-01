@@ -2,12 +2,23 @@
 Main FastAPI application for the Pafar Transport Management Platform.
 """
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from pydantic import ValidationError
+
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis import redis_client
+from app.core.logging import setup_logging
+from app.core.middleware import TraceIDMiddleware, RequestLoggingMiddleware, ErrorTrackingMiddleware
+from app.core.exceptions import (
+    PafarException,
+    pafar_exception_handler,
+    http_exception_handler,
+    general_exception_handler,
+    validation_exception_handler
+)
 from app.api.v1 import auth
 
 
@@ -21,6 +32,12 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await redis_client.disconnect()
 
+
+# Setup logging
+setup_logging(
+    log_level=settings.LOG_LEVEL,
+    log_format=settings.LOG_FORMAT
+)
 
 # Create FastAPI application
 app = FastAPI(
@@ -44,6 +61,17 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["localhost", "127.0.0.1", "*.pafar.com"]
 )
+
+# Add custom middleware
+app.add_middleware(TraceIDMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(ErrorTrackingMiddleware)
+
+# Add exception handlers
+app.add_exception_handler(PafarException, pafar_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(ValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 # Include API routes
 app.include_router(auth.router, prefix=settings.API_V1_STR)
@@ -94,10 +122,22 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "timestamp": "2024-01-01T00:00:00Z"
-    }
+    from app.core.fallbacks import get_service_health_status
+    return await get_service_health_status()
+
+
+@app.get("/monitoring/errors")
+async def get_error_summary():
+    """Get error monitoring summary."""
+    from app.core.monitoring import error_monitor
+    return error_monitor.get_error_summary()
+
+
+@app.get("/monitoring/errors/recent")
+async def get_recent_errors():
+    """Get recent error events."""
+    from app.core.monitoring import error_monitor
+    return error_monitor.get_recent_errors()
 
 
 if __name__ == "__main__":

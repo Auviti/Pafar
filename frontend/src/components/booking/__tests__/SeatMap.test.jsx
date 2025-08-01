@@ -1,335 +1,261 @@
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
 import SeatMap from '../SeatMap';
 
 const mockTrip = {
   id: '1',
-  origin_terminal: { name: 'Central Terminal', city: 'New York' },
-  destination_terminal: { name: 'Airport Terminal', city: 'Los Angeles' },
   bus: {
+    id: '1',
+    capacity: 50,
     model: 'Mercedes Sprinter',
-    license_plate: 'ABC-123',
-    capacity: 20
   },
-  occupied_seats: [1, 3, 5, 10, 15]
+  available_seats: 45,
+};
+
+const mockOccupiedSeats = [1, 5, 10, 15, 20];
+const mockSelectedSeats = [2, 3];
+const mockOnSeatSelect = vi.fn();
+const mockOnSeatDeselect = vi.fn();
+
+const defaultProps = {
+  trip: mockTrip,
+  occupiedSeats: mockOccupiedSeats,
+  selectedSeats: mockSelectedSeats,
+  onSeatSelect: mockOnSeatSelect,
+  onSeatDeselect: mockOnSeatDeselect,
+  maxSeats: 4,
 };
 
 describe('SeatMap', () => {
-  const mockOnSeatSelect = vi.fn();
-  const user = userEvent.setup();
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('shows loading state', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-        loading={true} 
-      />
-    );
-
-    expect(screen.getByText('Loading seat map...')).toBeInTheDocument();
-  });
-
-  it('shows empty state when no trip is provided', () => {
-    render(
-      <SeatMap 
-        trip={null} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
-    expect(screen.getByText('Please select a trip to view seat map')).toBeInTheDocument();
-  });
-
-  it('displays trip information correctly', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('renders seat map with correct layout', () => {
+    render(<SeatMap {...defaultProps} />);
 
     expect(screen.getByText('Select Your Seats')).toBeInTheDocument();
-    expect(screen.getByText('Central Terminal → Airport Terminal')).toBeInTheDocument();
-    expect(screen.getByText('Mercedes Sprinter - ABC-123')).toBeInTheDocument();
-  });
-
-  it('displays seat legend', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
+    expect(screen.getByText('Mercedes Sprinter')).toBeInTheDocument();
+    expect(screen.getByText('45 seats available')).toBeInTheDocument();
+    
+    // Check seat legend
     expect(screen.getByText('Available')).toBeInTheDocument();
     expect(screen.getByText('Selected')).toBeInTheDocument();
     expect(screen.getByText('Occupied')).toBeInTheDocument();
   });
 
-  it('generates correct seat layout', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('displays seats in correct grid layout', () => {
+    render(<SeatMap {...defaultProps} />);
 
-    // Should have seats 1-20 for capacity of 20
-    for (let i = 1; i <= 20; i++) {
-      expect(screen.getByTitle(new RegExp(`Seat ${i}`))).toBeInTheDocument();
-    }
+    // Should have 50 seats (capacity)
+    const seats = screen.getAllByRole('button', { name: /seat/i });
+    expect(seats).toHaveLength(50);
 
-    // Should have 5 rows (20 seats / 4 seats per row)
-    const rows = screen.getAllByText(/^\d+$/);
-    expect(rows).toHaveLength(5);
+    // Check first few seat numbers
+    expect(screen.getByRole('button', { name: /seat 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /seat 2/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /seat 50/i })).toBeInTheDocument();
   });
 
-  it('shows occupied seats correctly', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('shows correct seat states', () => {
+    render(<SeatMap {...defaultProps} />);
 
-    // Check occupied seats
-    const occupiedSeats = [1, 3, 5, 10, 15];
-    occupiedSeats.forEach(seatNumber => {
-      const seat = screen.getByTitle(new RegExp(`Seat ${seatNumber}.*occupied`));
-      expect(seat).toBeInTheDocument();
-      expect(seat).toBeDisabled();
-    });
+    // Occupied seats should be disabled
+    const occupiedSeat = screen.getByRole('button', { name: /seat 1/i });
+    expect(occupiedSeat).toBeDisabled();
+    expect(occupiedSeat).toHaveClass('seat-occupied');
+
+    // Selected seats should have selected class
+    const selectedSeat = screen.getByRole('button', { name: /seat 2/i });
+    expect(selectedSeat).toHaveClass('seat-selected');
+
+    // Available seats should be clickable
+    const availableSeat = screen.getByRole('button', { name: /seat 4/i });
+    expect(availableSeat).not.toBeDisabled();
+    expect(availableSeat).toHaveClass('seat-available');
   });
 
-  it('allows selecting available seats', async () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('handles seat selection', async () => {
+    const user = userEvent.setup();
+    render(<SeatMap {...defaultProps} />);
 
-    const availableSeat = screen.getByTitle('Seat 2A - available');
+    const availableSeat = screen.getByRole('button', { name: /seat 4/i });
     await user.click(availableSeat);
 
-    expect(mockOnSeatSelect).toHaveBeenCalledWith([2]);
+    expect(mockOnSeatSelect).toHaveBeenCalledWith(4);
   });
 
-  it('allows deselecting selected seats', async () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[2]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('handles seat deselection', async () => {
+    const user = userEvent.setup();
+    render(<SeatMap {...defaultProps} />);
 
-    const selectedSeat = screen.getByTitle('Seat 2A - selected');
+    const selectedSeat = screen.getByRole('button', { name: /seat 2/i });
     await user.click(selectedSeat);
 
-    expect(mockOnSeatSelect).toHaveBeenCalledWith([]);
+    expect(mockOnSeatDeselect).toHaveBeenCalledWith(2);
   });
 
-  it('prevents selecting occupied seats', async () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+  it('prevents selection when max seats reached', async () => {
+    const user = userEvent.setup();
+    const propsWithMaxSeats = {
+      ...defaultProps,
+      selectedSeats: [2, 3, 6, 7], // Already at max (4 seats)
+    };
+    
+    render(<SeatMap {...propsWithMaxSeats} />);
 
-    const occupiedSeat = screen.getByTitle('Seat 1A - occupied');
-    expect(occupiedSeat).toBeDisabled();
-
-    await user.click(occupiedSeat);
-    expect(mockOnSeatSelect).not.toHaveBeenCalled();
-  });
-
-  it('respects maximum seat selection limit', async () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[2]} 
-        onSeatSelect={mockOnSeatSelect} 
-        maxSeats={2}
-      />
-    );
-
-    const availableSeat = screen.getByTitle('Seat 4B - available');
+    const availableSeat = screen.getByRole('button', { name: /seat 4/i });
     await user.click(availableSeat);
 
-    expect(mockOnSeatSelect).toHaveBeenCalledWith([2, 4]);
-
-    // Try to select a third seat
-    const anotherSeat = screen.getByTitle('Seat 6B - available');
-    await user.click(anotherSeat);
-
-    // Should replace the first selected seat
-    expect(mockOnSeatSelect).toHaveBeenCalledWith([4, 6]);
+    expect(mockOnSeatSelect).not.toHaveBeenCalled();
+    expect(screen.getByText(/maximum 4 seats can be selected/i)).toBeInTheDocument();
   });
 
-  it('displays selected seats in summary', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[2, 4, 6]} 
-        onSeatSelect={mockOnSeatSelect} 
-        maxSeats={5}
-      />
-    );
+  it('shows seat selection counter', () => {
+    render(<SeatMap {...defaultProps} />);
 
-    expect(screen.getByText('Selected Seats (3/5):')).toBeInTheDocument();
-    expect(screen.getByText('Seat 2')).toBeInTheDocument();
-    expect(screen.getByText('Seat 4')).toBeInTheDocument();
-    expect(screen.getByText('Seat 6')).toBeInTheDocument();
+    expect(screen.getByText('2 of 4 seats selected')).toBeInTheDocument();
   });
 
-  it('shows no seats selected message when none selected', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
-    expect(screen.getByText('Selected Seats (0/1):')).toBeInTheDocument();
-    expect(screen.getByText('No seats selected')).toBeInTheDocument();
-  });
-
-  it('allows removing seats from selection summary', async () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[2, 4]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
-    const removeButtons = screen.getAllByText('×');
-    await user.click(removeButtons[0]); // Remove first seat
-
-    expect(mockOnSeatSelect).toHaveBeenCalledWith([4]);
-  });
-
-  it('shows selection tip for multiple seats', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-        maxSeats={3}
-      />
-    );
-
-    expect(screen.getByText('💡 You can select up to 3 seats for your booking')).toBeInTheDocument();
-  });
-
-  it('does not show selection tip for single seat', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-        maxSeats={1}
-      />
-    );
-
-    expect(screen.queryByText(/You can select up to/)).not.toBeInTheDocument();
-  });
-
-  it('displays bus layout with driver area', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
-    expect(screen.getByText('🚗 Driver')).toBeInTheDocument();
-    expect(screen.getByText('Back')).toBeInTheDocument();
-  });
-
-  it('shows correct seat icons based on status', () => {
-    render(
-      <SeatMap 
-        trip={mockTrip} 
-        selectedSeats={[2]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
-
-    // Available seat should show 💺
-    const availableSeat = screen.getByTitle('Seat 4B - available');
-    expect(availableSeat).toHaveTextContent('💺');
-
-    // Selected seat should show ✅
-    const selectedSeat = screen.getByTitle('Seat 2A - selected');
-    expect(selectedSeat).toHaveTextContent('✅');
-
-    // Occupied seat should show 🚫
-    const occupiedSeat = screen.getByTitle('Seat 1A - occupied');
-    expect(occupiedSeat).toHaveTextContent('🚫');
-  });
-
-  it('handles different bus capacities correctly', () => {
-    const smallBusTrip = {
-      ...mockTrip,
-      bus: {
-        ...mockTrip.bus,
-        capacity: 8
-      }
+  it('displays seat prices', () => {
+    const propsWithPricing = {
+      ...defaultProps,
+      trip: {
+        ...mockTrip,
+        fare: 25.00,
+      },
     };
 
-    render(
-      <SeatMap 
-        trip={smallBusTrip} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+    render(<SeatMap {...propsWithPricing} />);
 
-    // Should have seats 1-8
-    for (let i = 1; i <= 8; i++) {
-      expect(screen.getByTitle(new RegExp(`Seat ${i}`))).toBeInTheDocument();
-    }
+    expect(screen.getByText('$25.00 per seat')).toBeInTheDocument();
+    expect(screen.getByText('Total: $50.00')).toBeInTheDocument(); // 2 selected seats
+  });
 
-    // Should not have seat 9
-    expect(screen.queryByTitle(new RegExp('Seat 9'))).not.toBeInTheDocument();
+  it('handles different bus layouts', () => {
+    const propsWithSmallBus = {
+      ...defaultProps,
+      trip: {
+        ...mockTrip,
+        bus: {
+          ...mockTrip.bus,
+          capacity: 20,
+        },
+      },
+    };
+
+    render(<SeatMap {...propsWithSmallBus} />);
+
+    const seats = screen.getAllByRole('button', { name: /seat/i });
+    expect(seats).toHaveLength(20);
+  });
+
+  it('shows driver seat as unavailable', () => {
+    render(<SeatMap {...defaultProps} />);
+
+    // Assuming seat 1 is driver seat in this layout
+    const driverArea = screen.getByText('Driver');
+    expect(driverArea).toBeInTheDocument();
+  });
+
+  it('displays seat tooltips on hover', async () => {
+    const user = userEvent.setup();
+    render(<SeatMap {...defaultProps} />);
+
+    const availableSeat = screen.getByRole('button', { name: /seat 4/i });
+    await user.hover(availableSeat);
+
+    expect(screen.getByText('Seat 4 - Available')).toBeInTheDocument();
+  });
+
+  it('shows occupied seat tooltips', async () => {
+    const user = userEvent.setup();
+    render(<SeatMap {...defaultProps} />);
+
+    const occupiedSeat = screen.getByRole('button', { name: /seat 1/i });
+    await user.hover(occupiedSeat);
+
+    expect(screen.getByText('Seat 1 - Occupied')).toBeInTheDocument();
+  });
+
+  it('handles keyboard navigation', async () => {
+    const user = userEvent.setup();
+    render(<SeatMap {...defaultProps} />);
+
+    const firstAvailableSeat = screen.getByRole('button', { name: /seat 4/i });
+    firstAvailableSeat.focus();
+
+    await user.keyboard('{Enter}');
+    expect(mockOnSeatSelect).toHaveBeenCalledWith(4);
+
+    await user.keyboard('{Space}');
+    expect(mockOnSeatSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows seat map in different views', () => {
+    const propsWithView = {
+      ...defaultProps,
+      view: 'compact',
+    };
+
+    render(<SeatMap {...propsWithView} />);
+
+    const seatMap = screen.getByTestId('seat-map');
+    expect(seatMap).toHaveClass('seat-map-compact');
   });
 
   it('handles empty occupied seats array', () => {
-    const tripWithNoOccupiedSeats = {
-      ...mockTrip,
-      occupied_seats: []
+    const propsWithNoOccupied = {
+      ...defaultProps,
+      occupiedSeats: [],
     };
 
-    render(
-      <SeatMap 
-        trip={tripWithNoOccupiedSeats} 
-        selectedSeats={[]} 
-        onSeatSelect={mockOnSeatSelect} 
-      />
-    );
+    render(<SeatMap {...propsWithNoOccupied} />);
 
-    // All seats should be available
-    const seat1 = screen.getByTitle('Seat 1A - available');
-    expect(seat1).not.toBeDisabled();
+    expect(screen.getByText('50 seats available')).toBeInTheDocument();
+  });
+
+  it('handles empty selected seats array', () => {
+    const propsWithNoSelected = {
+      ...defaultProps,
+      selectedSeats: [],
+    };
+
+    render(<SeatMap {...propsWithNoSelected} />);
+
+    expect(screen.getByText('0 of 4 seats selected')).toBeInTheDocument();
+    expect(screen.getByText('Total: $0.00')).toBeInTheDocument();
+  });
+
+  it('shows accessibility information', () => {
+    render(<SeatMap {...defaultProps} />);
+
+    expect(screen.getByText(/use arrow keys to navigate/i)).toBeInTheDocument();
+    expect(screen.getByText(/press enter or space to select/i)).toBeInTheDocument();
+  });
+
+  it('handles seat map loading state', () => {
+    const propsWithLoading = {
+      ...defaultProps,
+      isLoading: true,
+    };
+
+    render(<SeatMap {...propsWithLoading} />);
+
+    expect(screen.getByText('Loading seat map...')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('handles seat map error state', () => {
+    const propsWithError = {
+      ...defaultProps,
+      error: 'Failed to load seat map',
+    };
+
+    render(<SeatMap {...propsWithError} />);
+
+    expect(screen.getByText('Failed to load seat map')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 });

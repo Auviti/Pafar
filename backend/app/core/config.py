@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     API_V1_STR: str = "/api/v1"
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"
     
     # Server
     HOST: str = "0.0.0.0"

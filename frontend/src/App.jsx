@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import ErrorBoundary from './components/error/ErrorBoundary';
+import ErrorFallback from './components/error/ErrorFallback';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
@@ -18,6 +20,7 @@ import ReviewModeration from './components/admin/ReviewModeration';
 import './assets/css/auth.css';
 import './assets/css/booking.css';
 import './assets/css/admin.css';
+import './assets/css/error.css';
 import './App.css';
 
 // Create a client for React Query
@@ -41,10 +44,18 @@ const Dashboard = () => (
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <div className="App">
+    <ErrorBoundary fallback={(error, errorInfo, retry) => (
+      <ErrorFallback 
+        error={error} 
+        errorInfo={errorInfo} 
+        retry={retry}
+        errorId={Date.now().toString(36) + Math.random().toString(36).substr(2)}
+      />
+    )}>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AuthProvider>
+            <div className="App">
             <Routes>
               {/* Public routes - redirect to dashboard if authenticated */}
               <Route
@@ -136,6 +147,7 @@ function App() {
         </AuthProvider>
       </Router>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

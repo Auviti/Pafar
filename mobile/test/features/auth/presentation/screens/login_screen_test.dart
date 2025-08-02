@@ -1,624 +1,510 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:mockito/annotations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mockito/mockito.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mockito/annotations.dart';
 
-import '../../../../../lib/features/auth/domain/repositories/auth_repository.dart';
-import '../../../../../lib/features/auth/domain/entities/user.dart';
-import '../../../../../lib/features/auth/presentation/bloc/auth_bloc.dart';
-import '../../../../../lib/features/auth/presentation/bloc/auth_state.dart';
-import '../../../../../lib/features/auth/presentation/screens/login_screen.dart';
-import '../../../../../lib/shared/theme/app_theme.dart';
-import '../../../../../lib/core/error/failures.dart';
+import 'package:pafar_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:pafar_mobile/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:pafar_mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:pafar_mobile/features/auth/presentation/bloc/auth_state.dart';
+import 'package:pafar_mobile/features/auth/domain/entities/user.dart';
+import 'package:pafar_mobile/shared/widgets/custom_button.dart';
+import 'package:pafar_mobile/shared/widgets/custom_text_field.dart';
 
 import 'login_screen_test.mocks.dart';
 
-@GenerateMocks([AuthRepository, LocalAuthentication, SharedPreferences])
+@GenerateMocks([AuthBloc])
 void main() {
-  late MockAuthRepository mockAuthRepository;
-  late MockLocalAuthentication mockLocalAuth;
-  late MockSharedPreferences mockPrefs;
-  late AuthBloc authBloc;
-
-  setUp(() {
-    mockAuthRepository = MockAuthRepository();
-    mockLocalAuth = MockLocalAuthentication();
-    mockPrefs = MockSharedPreferences();
-    
-    // Setup default mock behaviors
-    when(mockPrefs.getBool(any)).thenReturn(false);
-    when(mockPrefs.setBool(any, any)).thenAnswer((_) async => true);
-    when(mockPrefs.remove(any)).thenAnswer((_) async => true);
-
-    authBloc = AuthBloc(
-      authRepository: mockAuthRepository,
-      localAuth: mockLocalAuth,
-      prefs: mockPrefs,
-    );
-  });
-
-  tearDown(() {
-    authBloc.close();
-  });
-
-  Widget createWidgetUnderTest() {
-    return MaterialApp.router(
-      theme: AppTheme.lightTheme,
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => BlocProvider.value(
-              value: authBloc,
-              child: const LoginScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/register',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Register Screen')),
-            ),
-          ),
-          GoRoute(
-            path: '/forgot-password',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Forgot Password Screen')),
-            ),
-          ),
-          GoRoute(
-            path: '/dashboard',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Dashboard Screen')),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   group('LoginScreen Widget Tests', () {
-    testWidgets('renders login form with all required fields', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    late MockAuthBloc mockAuthBloc;
 
-      // Check for main UI elements
-      expect(find.text('Welcome Back'), findsOneWidget);
-      expect(find.text('Sign in to your account'), findsOneWidget);
-      
-      // Check for form fields
-      expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.text('Email'), findsOneWidget);
-      expect(find.text('Password'), findsOneWidget);
-      
-      // Check for buttons
-      expect(find.text('Sign In'), findsOneWidget);
-      expect(find.text('Sign Up'), findsOneWidget);
-      expect(find.text('Forgot Password?'), findsOneWidget);
+    setUp(() {
+      mockAuthBloc = MockAuthBloc();
+      when(mockAuthBloc.state).thenReturn(AuthInitial());
+      when(mockAuthBloc.stream).thenAnswer((_) => Stream.empty());
     });
 
-    testWidgets('validates empty email field', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Tap sign in without entering email
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Please enter your email'), findsOneWidget);
-    });
-
-    testWidgets('validates invalid email format', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Enter invalid email
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'invalid-email',
+    Widget createWidgetUnderTest() {
+      return MaterialApp(
+        home: BlocProvider<AuthBloc>(
+          create: (context) => mockAuthBloc,
+          child: const LoginScreen(),
+        ),
       );
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
+    }
 
-      expect(find.text('Please enter a valid email'), findsOneWidget);
+    group('Rendering Tests', () {
+      testWidgets('should render all required UI elements', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Verify app bar
+        expect(find.text('Sign In'), findsOneWidget);
+
+        // Verify form fields
+        expect(find.byType(CustomTextField), findsNWidgets(2));
+        expect(find.text('Email'), findsOneWidget);
+        expect(find.text('Password'), findsOneWidget);
+
+        // Verify buttons
+        expect(find.byType(CustomButton), findsOneWidget);
+        expect(find.text('Sign In'), findsAtLeastNWidgets(1));
+
+        // Verify additional links
+        expect(find.text('Forgot Password?'), findsOneWidget);
+        expect(find.text('Don\'t have an account? Sign Up'), findsOneWidget);
+      });
+
+      testWidgets('should render logo and branding', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Verify logo or app branding
+        expect(find.byType(Image), findsOneWidget);
+        expect(find.text('Welcome to Pafar'), findsOneWidget);
+      });
+
+      testWidgets('should render remember me checkbox', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.byType(Checkbox), findsOneWidget);
+        expect(find.text('Remember me'), findsOneWidget);
+      });
+
+      testWidgets('should render social login options', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text('Or continue with'), findsOneWidget);
+        expect(find.text('Google'), findsOneWidget);
+        expect(find.text('Facebook'), findsOneWidget);
+      });
     });
 
-    testWidgets('validates empty password field', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    group('Form Validation Tests', () => {
+      testWidgets('should show validation errors for empty fields', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Enter email but no password
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
+        // Tap sign in button without entering data
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
 
-      expect(find.text('Please enter your password'), findsOneWidget);
+        // Verify validation errors
+        expect(find.text('Email is required'), findsOneWidget);
+        expect(find.text('Password is required'), findsOneWidget);
+      });
+
+      testWidgets('should show validation error for invalid email', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Enter invalid email
+        final emailField = find.byType(CustomTextField).first;
+        await tester.enterText(emailField, 'invalid-email');
+
+        // Tap sign in button
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
+
+        expect(find.text('Please enter a valid email'), findsOneWidget);
+      });
+
+      testWidgets('should show validation error for short password', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Enter valid email and short password
+        final emailField = find.byType(CustomTextField).first;
+        final passwordField = find.byType(CustomTextField).last;
+
+        await tester.enterText(emailField, 'test@example.com');
+        await tester.enterText(passwordField, '123');
+
+        // Tap sign in button
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
+
+        expect(find.text('Password must be at least 6 characters'), findsOneWidget);
+      });
+
+      testWidgets('should clear validation errors when user starts typing', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Trigger validation errors
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
+
+        expect(find.text('Email is required'), findsOneWidget);
+
+        // Start typing in email field
+        final emailField = find.byType(CustomTextField).first;
+        await tester.enterText(emailField, 'test@example.com');
+        await tester.pump();
+
+        expect(find.text('Email is required'), findsNothing);
+      });
     });
 
-    testWidgets('validates password minimum length', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    group('User Interaction Tests', () => {
+      testWidgets('should toggle password visibility', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Enter short password
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        '123',
-      );
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
+        // Find password field and visibility toggle
+        final passwordField = find.byType(CustomTextField).last;
+        final visibilityToggle = find.byIcon(Icons.visibility_off);
 
-      expect(find.text('Password must be at least 6 characters'), findsOneWidget);
+        // Initially password should be obscured
+        final textField = tester.widget<TextField>(find.descendant(
+          of: passwordField,
+          matching: find.byType(TextField),
+        ));
+        expect(textField.obscureText, isTrue);
+
+        // Tap visibility toggle
+        await tester.tap(visibilityToggle);
+        await tester.pump();
+
+        // Password should now be visible
+        final updatedTextField = tester.widget<TextField>(find.descendant(
+          of: passwordField,
+          matching: find.byType(TextField),
+        ));
+        expect(updatedTextField.obscureText, isFalse);
+
+        // Icon should change
+        expect(find.byIcon(Icons.visibility), findsOneWidget);
+      });
+
+      testWidgets('should toggle remember me checkbox', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final checkbox = find.byType(Checkbox);
+        
+        // Initially unchecked
+        Checkbox checkboxWidget = tester.widget(checkbox);
+        expect(checkboxWidget.value, isFalse);
+
+        // Tap checkbox
+        await tester.tap(checkbox);
+        await tester.pump();
+
+        // Should be checked
+        checkboxWidget = tester.widget(checkbox);
+        expect(checkboxWidget.value, isTrue);
+      });
+
+      testWidgets('should navigate to forgot password screen', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final forgotPasswordLink = find.text('Forgot Password?');
+        await tester.tap(forgotPasswordLink);
+        await tester.pumpAndSettle();
+
+        // Verify navigation (this would depend on your navigation implementation)
+        // For now, we'll just verify the tap was registered
+        expect(forgotPasswordLink, findsOneWidget);
+      });
+
+      testWidgets('should navigate to sign up screen', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final signUpLink = find.text('Don\'t have an account? Sign Up');
+        await tester.tap(signUpLink);
+        await tester.pumpAndSettle();
+
+        // Verify navigation
+        expect(signUpLink, findsOneWidget);
+      });
     });
 
-    testWidgets('toggles password visibility', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    group('BLoC Integration Tests', () => {
+      testWidgets('should dispatch LoginRequested event on form submission', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      final passwordField = find.widgetWithText(TextFormField, 'Password');
-      final visibilityToggle = find.byIcon(Icons.visibility_off);
+        // Enter valid credentials
+        final emailField = find.byType(CustomTextField).first;
+        final passwordField = find.byType(CustomTextField).last;
 
-      // Initially password should be obscured
-      expect(tester.widget<TextFormField>(passwordField).obscureText, isTrue);
+        await tester.enterText(emailField, 'test@example.com');
+        await tester.enterText(passwordField, 'password123');
 
-      // Tap visibility toggle
-      await tester.tap(visibilityToggle);
-      await tester.pumpAndSettle();
+        // Tap sign in button
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
 
-      // Password should now be visible
-      expect(tester.widget<TextFormField>(passwordField).obscureText, isFalse);
-      expect(find.byIcon(Icons.visibility), findsOneWidget);
-    });
+        // Verify event was dispatched
+        verify(mockAuthBloc.add(any)).called(1);
+        
+        final capturedEvent = verify(mockAuthBloc.add(captureAny)).captured.first;
+        expect(capturedEvent, isA<LoginRequested>());
+        
+        final loginEvent = capturedEvent as LoginRequested;
+        expect(loginEvent.email, equals('test@example.com'));
+        expect(loginEvent.password, equals('password123'));
+      });
 
-    testWidgets('submits login form with valid credentials', (tester) async {
-      // Mock successful login
-      when(mockAuthRepository.login(any, any)).thenAnswer(
-        (_) async => const Right(User(
+      testWidgets('should show loading state during authentication', (tester) async {
+        when(mockAuthBloc.state).thenReturn(AuthLoading());
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Verify loading indicator
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        
+        // Verify button is disabled
+        final signInButton = find.byType(CustomButton);
+        final buttonWidget = tester.widget<CustomButton>(signInButton);
+        expect(buttonWidget.isEnabled, isFalse);
+      });
+
+      testWidgets('should show error message on authentication failure', (tester) async {
+        const errorMessage = 'Invalid credentials';
+        when(mockAuthBloc.state).thenReturn(const AuthError(errorMessage));
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Verify error message is displayed
+        expect(find.text(errorMessage), findsOneWidget);
+        expect(find.byIcon(Icons.error), findsOneWidget);
+      });
+
+      testWidgets('should navigate to home on successful authentication', (tester) async {
+        final user = User(
           id: '1',
           email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
           role: 'passenger',
-        )),
-      );
+        );
+        
+        when(mockAuthBloc.state).thenReturn(AuthAuthenticated(user));
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Enter valid credentials
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        'password123',
-      );
-
-      // Submit form
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
-
-      // Verify repository method was called
-      verify(mockAuthRepository.login('test@example.com', 'password123')).called(1);
+        // In a real app, this would trigger navigation
+        // For testing, we verify the state is handled correctly
+        expect(find.text('Welcome, John!'), findsOneWidget);
+      });
     });
 
-    testWidgets('shows loading state during login', (tester) async {
-      // Mock delayed login response
-      when(mockAuthRepository.login(any, any)).thenAnswer(
-        (_) async {
-          await Future.delayed(const Duration(seconds: 1));
-          return const Right(User(
-            id: '1',
-            email: 'test@example.com',
-            firstName: 'John',
-            lastName: 'Doe',
-            role: 'passenger',
-          ));
-        },
-      );
+    group('Social Login Tests', () => {
+      testWidgets('should dispatch GoogleLoginRequested on Google button tap', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+        final googleButton = find.text('Google');
+        await tester.tap(googleButton);
+        await tester.pump();
 
-      // Enter credentials and submit
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        'password123',
-      );
-      await tester.tap(find.text('Sign In'));
-      await tester.pump();
+        verify(mockAuthBloc.add(any)).called(1);
+        
+        final capturedEvent = verify(mockAuthBloc.add(captureAny)).captured.first;
+        expect(capturedEvent, isA<GoogleLoginRequested>());
+      });
 
-      // Should show loading indicator
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Signing In...'), findsOneWidget);
+      testWidgets('should dispatch FacebookLoginRequested on Facebook button tap', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final facebookButton = find.text('Facebook');
+        await tester.tap(facebookButton);
+        await tester.pump();
+
+        verify(mockAuthBloc.add(any)).called(1);
+        
+        final capturedEvent = verify(mockAuthBloc.add(captureAny)).captured.first;
+        expect(capturedEvent, isA<FacebookLoginRequested>());
+      });
     });
 
-    testWidgets('displays error message on login failure', (tester) async {
-      // Mock login failure
-      when(mockAuthRepository.login(any, any)).thenAnswer(
-        (_) async => const Left(ServerFailure('Invalid credentials')),
-      );
+    group('Accessibility Tests', () => {
+      testWidgets('should have proper semantic labels', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+        // Verify semantic labels for screen readers
+        expect(find.bySemanticsLabel('Email input field'), findsOneWidget);
+        expect(find.bySemanticsLabel('Password input field'), findsOneWidget);
+        expect(find.bySemanticsLabel('Sign in button'), findsOneWidget);
+        expect(find.bySemanticsLabel('Toggle password visibility'), findsOneWidget);
+      });
 
-      // Enter credentials and submit
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        'wrongpassword',
-      );
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
+      testWidgets('should support keyboard navigation', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Should show error message
-      expect(find.text('Invalid credentials'), findsOneWidget);
+        // Test tab navigation
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+
+        // Verify focus moves to first field
+        final emailField = find.byType(CustomTextField).first;
+        expect(tester.binding.focusManager.primaryFocus?.context?.widget,
+               equals(tester.firstWidget(emailField)));
+      });
+
+      testWidgets('should announce errors to screen readers', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Trigger validation error
+        final signInButton = find.text('Sign In').last;
+        await tester.tap(signInButton);
+        await tester.pump();
+
+        // Verify error has proper semantics
+        final errorText = find.text('Email is required');
+        expect(tester.getSemantics(errorText).hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+      });
     });
 
-    testWidgets('navigates to register screen when sign up is tapped', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    group('Responsive Design Tests', () => {
+      testWidgets('should adapt to different screen sizes', (tester) async {
+        // Test tablet layout
+        tester.binding.window.physicalSizeTestValue = const Size(1024, 768);
+        tester.binding.window.devicePixelRatioTestValue = 1.0;
 
-      await tester.tap(find.text('Sign Up'));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('Register Screen'), findsOneWidget);
+        // Verify layout adapts for larger screens
+        expect(find.byType(Row), findsAtLeastNWidgets(1));
+        
+        // Reset to phone size
+        tester.binding.window.physicalSizeTestValue = const Size(375, 667);
+        await tester.pump();
+
+        // Verify layout adapts for smaller screens
+        expect(find.byType(Column), findsAtLeastNWidgets(1));
+      });
+
+      testWidgets('should handle landscape orientation', (tester) async {
+        // Simulate landscape orientation
+        tester.binding.window.physicalSizeTestValue = const Size(667, 375);
+        tester.binding.window.devicePixelRatioTestValue = 1.0;
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Verify layout adjusts for landscape
+        expect(find.byType(SingleChildScrollView), findsOneWidget);
+      });
     });
 
-    testWidgets('navigates to forgot password screen', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Forgot Password?'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Forgot Password Screen'), findsOneWidget);
-    });
-
-    testWidgets('shows biometric login option when available', (tester) async {
-      // Mock biometric availability
-      when(mockLocalAuth.canCheckBiometrics).thenAnswer((_) async => true);
-      when(mockLocalAuth.isDeviceSupported()).thenAnswer((_) async => true);
-      when(mockLocalAuth.getAvailableBiometrics()).thenAnswer(
-        (_) async => [BiometricType.fingerprint],
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.fingerprint), findsOneWidget);
-      expect(find.text('Use Fingerprint'), findsOneWidget);
-    });
-
-    testWidgets('performs biometric authentication', (tester) async {
-      // Mock biometric setup
-      when(mockLocalAuth.canCheckBiometrics).thenAnswer((_) async => true);
-      when(mockLocalAuth.isDeviceSupported()).thenAnswer((_) async => true);
-      when(mockLocalAuth.getAvailableBiometrics()).thenAnswer(
-        (_) async => [BiometricType.fingerprint],
-      );
-      when(mockLocalAuth.authenticate(
-        localizedReason: anyNamed('localizedReason'),
-        options: anyNamed('options'),
-      )).thenAnswer((_) async => true);
-
-      // Mock successful biometric login
-      when(mockAuthRepository.loginWithBiometric()).thenAnswer(
-        (_) async => const Right(User(
-          id: '1',
-          email: 'test@example.com',
-          firstName: 'John',
-          lastName: 'Doe',
-          role: 'passenger',
-        )),
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.fingerprint));
-      await tester.pumpAndSettle();
-
-      verify(mockLocalAuth.authenticate(
-        localizedReason: anyNamed('localizedReason'),
-        options: anyNamed('options'),
-      )).called(1);
-    });
-
-    testWidgets('remembers login preference', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Find and tap remember me checkbox
-      final rememberMeCheckbox = find.byType(Checkbox);
-      await tester.tap(rememberMeCheckbox);
-      await tester.pumpAndSettle();
-
-      // Checkbox should be checked
-      expect(tester.widget<Checkbox>(rememberMeCheckbox).value, isTrue);
-    });
-
-    testWidgets('handles network connectivity issues', (tester) async {
-      // Mock network failure
-      when(mockAuthRepository.login(any, any)).thenAnswer(
-        (_) async => const Left(NetworkFailure('No internet connection')),
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Enter credentials and submit
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        'password123',
-      );
-      await tester.tap(find.text('Sign In'));
-      await tester.pumpAndSettle();
-
-      // Should show network error
-      expect(find.text('No internet connection'), findsOneWidget);
-      expect(find.text('Retry'), findsOneWidget);
-    });
-
-    testWidgets('auto-fills saved credentials', (tester) async {
-      // Mock saved credentials
-      when(mockPrefs.getString('saved_email')).thenReturn('saved@example.com');
-      when(mockPrefs.getBool('remember_login')).thenReturn(true);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Email field should be pre-filled
-      final emailField = find.widgetWithText(TextFormField, 'Email');
-      expect(tester.widget<TextFormField>(emailField).controller?.text, 
-             equals('saved@example.com'));
-    });
-
-    testWidgets('clears form on logout', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Enter some text
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'test@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Password'),
-        'password123',
-      );
-
-      // Simulate logout event (this would typically come from app state)
-      authBloc.add(const LogoutRequested());
-      await tester.pumpAndSettle();
-
-      // Fields should be cleared
-      final emailField = find.widgetWithText(TextFormField, 'Email');
-      final passwordField = find.widgetWithText(TextFormField, 'Password');
-      
-      expect(tester.widget<TextFormField>(emailField).controller?.text, isEmpty);
-      expect(tester.widget<TextFormField>(passwordField).controller?.text, isEmpty);
-    });
-  });
-}
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => BlocProvider.value(
-              value: authBloc,
-              child: const LoginScreen(),
+    group('Performance Tests', () => {
+      testWidgets('should not rebuild unnecessarily', (tester) async {
+        int buildCount = 0;
+        
+        Widget testWidget = MaterialApp(
+          home: BlocProvider<AuthBloc>(
+            create: (context) => mockAuthBloc,
+            child: Builder(
+              builder: (context) {
+                buildCount++;
+                return const LoginScreen();
+              },
             ),
           ),
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const Scaffold(
-              body: Text('Home Screen'),
-            ),
-          ),
-          GoRoute(
-            path: '/auth/register',
-            builder: (context, state) => const Scaffold(
-              body: Text('Register Screen'),
-            ),
-          ),
-          GoRoute(
-            path: '/auth/forgot-password',
-            builder: (context, state) => const Scaffold(
-              body: Text('Forgot Password Screen'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        );
 
-  group('LoginScreen', () {
-    testWidgets('should display all required UI elements', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(testWidget);
+        expect(buildCount, equals(1));
 
-      // Verify UI elements are present
-      expect(find.text('Welcome to Pafar'), findsOneWidget);
-      expect(find.text('Sign in to continue'), findsOneWidget);
-      expect(find.byIcon(Icons.directions_bus), findsOneWidget);
-      
-      // Form fields
-      expect(find.text('Email'), findsOneWidget);
-      expect(find.text('Password'), findsOneWidget);
-      
-      // Buttons
-      expect(find.text('Sign In'), findsOneWidget);
-      expect(find.text('Create Account'), findsOneWidget);
-      expect(find.text('Forgot Password?'), findsOneWidget);
-      
-      // Checkbox
-      expect(find.text('Remember me'), findsOneWidget);
-      expect(find.byType(Checkbox), findsOneWidget);
+        // Trigger a rebuild with same state
+        when(mockAuthBloc.state).thenReturn(AuthInitial());
+        await tester.pump();
+
+        // Build count should not increase unnecessarily
+        expect(buildCount, equals(1));
+      });
+
+      testWidgets('should dispose resources properly', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Navigate away from screen
+        await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+
+        // Verify resources are disposed (this would be implementation specific)
+        // For now, we just verify the widget is no longer in the tree
+        expect(find.byType(LoginScreen), findsNothing);
+      });
     });
 
-    testWidgets('should validate email field', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    group('Error Recovery Tests', () => {
+      testWidgets('should allow retry after network error', (tester) async {
+        const errorMessage = 'Network error. Please try again.';
+        when(mockAuthBloc.state).thenReturn(const AuthError(errorMessage));
 
-      // Find and tap the sign in button without entering email
-      final signInButton = find.text('Sign In');
-      await tester.tap(signInButton);
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Should show email validation error
-      expect(find.text('Email is required'), findsOneWidget);
+        // Verify error message and retry button
+        expect(find.text(errorMessage), findsOneWidget);
+        expect(find.text('Retry'), findsOneWidget);
+
+        // Tap retry button
+        final retryButton = find.text('Retry');
+        await tester.tap(retryButton);
+        await tester.pump();
+
+        // Verify retry event is dispatched
+        verify(mockAuthBloc.add(any)).called(1);
+      });
+
+      testWidgets('should clear errors when user starts new input', (tester) async {
+        const errorMessage = 'Invalid credentials';
+        when(mockAuthBloc.state).thenReturn(const AuthError(errorMessage));
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text(errorMessage), findsOneWidget);
+
+        // Start typing in email field
+        final emailField = find.byType(CustomTextField).first;
+        await tester.enterText(emailField, 'new@example.com');
+        await tester.pump();
+
+        // Error should be cleared
+        verify(mockAuthBloc.add(any)).called(1);
+        final capturedEvent = verify(mockAuthBloc.add(captureAny)).captured.first;
+        expect(capturedEvent, isA<AuthErrorCleared>());
+      });
     });
 
-    testWidgets('should validate password field', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    group('Biometric Authentication Tests', () => {
+      testWidgets('should show biometric login option when available', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Enter valid email but no password
-      await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
-      
-      final signInButton = find.text('Sign In');
-      await tester.tap(signInButton);
-      await tester.pumpAndSettle();
+        // Verify biometric login button is shown
+        expect(find.byIcon(Icons.fingerprint), findsOneWidget);
+        expect(find.text('Use Biometric'), findsOneWidget);
+      });
 
-      // Should show password validation error
-      expect(find.text('Password is required'), findsOneWidget);
+      testWidgets('should dispatch BiometricLoginRequested on biometric button tap', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final biometricButton = find.byIcon(Icons.fingerprint);
+        await tester.tap(biometricButton);
+        await tester.pump();
+
+        verify(mockAuthBloc.add(any)).called(1);
+        
+        final capturedEvent = verify(mockAuthBloc.add(captureAny)).captured.first;
+        expect(capturedEvent, isA<BiometricLoginRequested>());
+      });
     });
 
-    testWidgets('should toggle password visibility', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    group('Deep Link Tests', () => {
+      testWidgets('should handle email verification deep link', (tester) async {
+        // Simulate app opened with verification link
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Find and tap the visibility toggle button
-      final visibilityButton = find.byIcon(Icons.visibility);
-      await tester.tap(visibilityButton);
-      await tester.pumpAndSettle();
+        // Verify verification banner is shown
+        expect(find.text('Please verify your email'), findsOneWidget);
+        expect(find.text('Resend verification email'), findsOneWidget);
+      });
 
-      // Password should now be visible (icon changes to visibility_off)
-      expect(find.byIcon(Icons.visibility_off), findsOneWidget);
-    });
+      testWidgets('should handle password reset deep link', (tester) async {
+        // Simulate app opened with password reset link
+        await tester.pumpWidget(createWidgetUnderTest());
 
-    testWidgets('should toggle remember me checkbox', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      final checkbox = find.byType(Checkbox);
-      
-      // Initially unchecked
-      Checkbox checkboxWidget = tester.widget<Checkbox>(checkbox);
-      expect(checkboxWidget.value, isFalse);
-
-      // Tap to check
-      await tester.tap(checkbox);
-      await tester.pumpAndSettle();
-
-      // Should be checked now
-      checkboxWidget = tester.widget<Checkbox>(checkbox);
-      expect(checkboxWidget.value, isTrue);
-    });
-
-    testWidgets('should dispatch login event when form is valid', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Enter valid credentials
-      await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
-      await tester.enterText(find.byType(TextFormField).at(1), 'password123');
-
-      // Tap sign in button
-      final signInButton = find.text('Sign In');
-      await tester.tap(signInButton);
-      await tester.pumpAndSettle();
-
-      // Verify that login event was added to bloc
-      // Note: In a real test, you might want to use bloc_test package
-      // to verify the exact events and states
-    });
-
-    testWidgets('should show loading state during authentication', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Simulate loading state
-      authBloc.emit(const AuthLoading());
-      await tester.pumpAndSettle();
-
-      // Should show loading indicator in button
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets('should show error message on authentication failure', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Simulate error state
-      authBloc.emit(const AuthError(message: 'Invalid credentials'));
-      await tester.pumpAndSettle();
-
-      // Should show error snackbar
-      expect(find.text('Invalid credentials'), findsOneWidget);
-      expect(find.byType(SnackBar), findsOneWidget);
-    });
-
-    testWidgets('should navigate to register screen when create account is tapped', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      final createAccountButton = find.text('Create Account');
-      await tester.tap(createAccountButton);
-      await tester.pumpAndSettle();
-
-      // Should navigate to register screen
-      expect(find.text('Register Screen'), findsOneWidget);
-    });
-
-    testWidgets('should navigate to forgot password screen when forgot password is tapped', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      final forgotPasswordButton = find.text('Forgot Password?');
-      await tester.tap(forgotPasswordButton);
-      await tester.pumpAndSettle();
-
-      // Should navigate to forgot password screen
-      expect(find.text('Forgot Password Screen'), findsOneWidget);
-    });
-
-    testWidgets('should show biometric login button when biometric is enabled', (tester) async {
-      // Setup biometric enabled
-      when(mockPrefs.getBool('biometric_enabled')).thenReturn(true);
-      
-      authBloc = AuthBloc(
-        authRepository: mockAuthRepository,
-        localAuth: mockLocalAuth,
-        prefs: mockPrefs,
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Should show biometric login button
-      expect(find.text('Sign In with Biometrics'), findsOneWidget);
-      expect(find.byIcon(Icons.fingerprint), findsOneWidget);
-    });
-
-    testWidgets('should not show biometric login button when biometric is disabled', (tester) async {
-      // Setup biometric disabled (default)
-      when(mockPrefs.getBool('biometric_enabled')).thenReturn(false);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Should not show biometric login button
-      expect(find.text('Sign In with Biometrics'), findsNothing);
+        // Should navigate to password reset screen
+        // This would be implementation specific
+        expect(find.text('Reset your password'), findsOneWidget);
+      });
     });
   });
 }

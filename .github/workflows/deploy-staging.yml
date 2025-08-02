@@ -1,0 +1,135 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and test
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  # Build Docker images for staging
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=branch,suffix=-staging
+          type=ref,event=pr,suffix=-staging
+          type=sha,prefix=staging-
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./${{ matrix.service }}
+        file: ./${{ matrix.service }}/Dockerfile.prod
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # Deploy to staging environment
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    environment: 
+      name: staging
+      url: https://staging.${{ vars.DOMAIN_NAME }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+    - name: Deploy to staging
+      run: |
+        ssh ${{ vars.STAGING_USER }}@${{ vars.STAGING_HOST }} "
+          cd /opt/pafar-staging
+          
+          # Pull latest staging images
+          docker login ${{ env.REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker-compose -f docker-compose.staging.yml pull
+          
+          # Deploy
+          docker-compose -f docker-compose.staging.yml up -d --remove-orphans
+          
+          # Run migrations
+          docker-compose -f docker-compose.staging.yml exec -T backend alembic upgrade head
+        "
+
+    - name: Run integration tests
+      run: |
+        # Wait for staging to be ready
+        sleep 30
+        
+        # Run integration tests against staging
+        curl -f https://staging.${{ vars.DOMAIN_NAME }}/health
+        
+        # Run API tests
+        npm install -g newman
+        newman run tests/postman/pafar-api-tests.json \
+          --environment tests/postman/staging-environment.json \
+          --reporters cli,json \
+          --reporter-json-export test-results.json
+
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const testResults = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+          
+          const comment = `## 🚀 Staging Deployment Complete
+          
+          **Environment:** https://staging.${{ vars.DOMAIN_NAME }}
+          
+          **Test Results:**
+          - ✅ Tests Passed: ${testResults.run.stats.tests.passed}
+          - ❌ Tests Failed: ${testResults.run.stats.tests.failed}
+          - 📊 Total Requests: ${testResults.run.stats.requests.total}
+          
+          **Deployment Details:**
+          - Commit: ${context.sha.substring(0, 7)}
+          - Branch: ${context.ref.replace('refs/heads/', '')}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

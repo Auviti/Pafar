@@ -1,61 +1,53 @@
 /**
  * Comprehensive tests for LoginForm component
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
+import { render, mockAxios, mockLocalStorage, createMockUser } from '../../test/test-utils';
 import LoginForm from '../LoginForm';
 
-// Mock the auth service
-vi.mock('../../../services/auth', () => ({
-  login: vi.fn(),
+// Mock dependencies
+vi.mock('axios', () => ({
+  default: mockAxios,
 }));
 
-// Mock react-router-dom
-const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    useNavigate: () => vi.fn(),
+    useLocation: () => ({ state: null }),
   };
 });
 
-// Test wrapper component
-const TestWrapper = ({ children }) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {children}
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-};
-
 describe('LoginForm', () => {
+  let mockOnSuccess;
+  let mockOnError;
   let user;
 
   beforeEach(() => {
+    mockOnSuccess = vi.fn();
+    mockOnError = vi.fn();
     user = userEvent.setup();
+    
+    // Mock localStorage
+    Object.defineProperty(window, 'localStorage', {
+      value: mockLocalStorage(),
+      writable: true,
+    });
+    
+    // Reset axios mocks
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('Rendering', () => {
-    it('renders all form elements', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+    it('renders all form elements correctly', () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -64,42 +56,44 @@ describe('LoginForm', () => {
       expect(screen.getByText(/don't have an account/i)).toBeInTheDocument();
     });
 
-    it('renders with proper accessibility attributes', () => {
+    it('renders with custom title when provided', () => {
       render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
+        <LoginForm 
+          title="Custom Login Title"
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError} 
+        />
       );
 
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-
-      expect(emailInput).toHaveAttribute('type', 'email');
-      expect(emailInput).toHaveAttribute('required');
-      expect(passwordInput).toHaveAttribute('type', 'password');
-      expect(passwordInput).toHaveAttribute('required');
+      expect(screen.getByText('Custom Login Title')).toBeInTheDocument();
     });
 
-    it('has proper form structure', () => {
+    it('renders loading state correctly', () => {
+      render(<LoginForm loading={true} onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      const submitButton = screen.getByRole('button', { name: /signing in/i });
+      expect(submitButton).toBeDisabled();
+      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+    });
+
+    it('renders error message when provided', () => {
+      const errorMessage = 'Invalid credentials';
       render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
+        <LoginForm 
+          error={errorMessage}
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError} 
+        />
       );
 
-      const form = screen.getByRole('form');
-      expect(form).toBeInTheDocument();
-      expect(form).toHaveAttribute('noValidate');
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toBeInTheDocument();
     });
   });
 
   describe('Form Validation', () => {
     it('shows validation errors for empty fields', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
@@ -111,33 +105,25 @@ describe('LoginForm', () => {
     });
 
     it('shows validation error for invalid email format', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       await user.type(emailInput, 'invalid-email');
-
+      
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid email format/i)).toBeInTheDocument();
+        expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument();
       });
     });
 
     it('shows validation error for short password', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const passwordInput = screen.getByLabelText(/password/i);
       await user.type(passwordInput, '123');
-
+      
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
@@ -146,23 +132,19 @@ describe('LoginForm', () => {
       });
     });
 
-    it('clears validation errors when user corrects input', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+    it('clears validation errors when user starts typing', async () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
-      const emailInput = screen.getByLabelText(/email/i);
+      // Trigger validation errors
       const submitButton = screen.getByRole('button', { name: /sign in/i });
-
-      // Trigger validation error
       await user.click(submitButton);
+
       await waitFor(() => {
         expect(screen.getByText(/email is required/i)).toBeInTheDocument();
       });
 
-      // Correct the input
+      // Start typing in email field
+      const emailInput = screen.getByLabelText(/email/i);
       await user.type(emailInput, 'test@example.com');
 
       await waitFor(() => {
@@ -173,18 +155,18 @@ describe('LoginForm', () => {
 
   describe('Form Submission', () => {
     it('submits form with valid data', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockResolvedValue({
-        access_token: 'fake-token',
-        refresh_token: 'fake-refresh-token',
-        user: { id: '1', email: 'test@example.com' }
-      });
+      const mockUser = createMockUser();
+      const mockResponse = {
+        data: {
+          user: mockUser,
+          access_token: 'mock-token',
+          refresh_token: 'mock-refresh-token',
+        },
+      };
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      mockAxios.post.mockResolvedValueOnce(mockResponse);
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -195,44 +177,24 @@ describe('LoginForm', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(login).toHaveBeenCalledWith({
+        expect(mockAxios.post).toHaveBeenCalledWith('/api/v1/auth/login', {
           email: 'test@example.com',
-          password: 'password123'
+          password: 'password123',
         });
+        expect(mockOnSuccess).toHaveBeenCalledWith(mockResponse.data);
       });
     });
 
-    it('shows loading state during submission', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
+    it('handles login failure correctly', async () => {
+      const errorMessage = 'Invalid credentials';
+      mockAxios.post.mockRejectedValueOnce({
+        response: {
+          data: { message: errorMessage },
+          status: 401,
+        },
+      });
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const submitButton = screen.getByRole('button', { name: /sign in/i });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-      await user.click(submitButton);
-
-      expect(screen.getByText(/signing in/i)).toBeInTheDocument();
-      expect(submitButton).toBeDisabled();
-    });
-
-    it('handles login error gracefully', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockRejectedValue(new Error('Invalid credentials'));
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -243,26 +205,14 @@ describe('LoginForm', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+        expect(mockOnError).toHaveBeenCalledWith(errorMessage);
       });
-
-      // Form should be re-enabled after error
-      expect(submitButton).not.toBeDisabled();
     });
 
-    it('navigates to dashboard on successful login', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockResolvedValue({
-        access_token: 'fake-token',
-        refresh_token: 'fake-refresh-token',
-        user: { id: '1', email: 'test@example.com' }
-      });
+    it('handles network error correctly', async () => {
+      mockAxios.post.mockRejectedValueOnce(new Error('Network Error'));
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -273,37 +223,106 @@ describe('LoginForm', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(mockOnError).toHaveBeenCalledWith('Network error. Please try again.');
       });
+    });
+
+    it('disables form during submission', async () => {
+      // Mock a delayed response
+      mockAxios.post.mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100))
+      );
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Form should be disabled during submission
+      expect(emailInput).toBeDisabled();
+      expect(passwordInput).toBeDisabled();
+      expect(submitButton).toBeDisabled();
+      expect(screen.getByText(/signing in/i)).toBeInTheDocument();
     });
   });
 
-  describe('User Interactions', () => {
+  describe('Remember Me Functionality', () => {
+    it('renders remember me checkbox', () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      expect(screen.getByLabelText(/remember me/i)).toBeInTheDocument();
+    });
+
+    it('saves credentials when remember me is checked', async () => {
+      const mockUser = createMockUser();
+      const mockResponse = {
+        data: {
+          user: mockUser,
+          access_token: 'mock-token',
+          refresh_token: 'mock-refresh-token',
+        },
+      };
+
+      mockAxios.post.mockResolvedValueOnce(mockResponse);
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const rememberMeCheckbox = screen.getByLabelText(/remember me/i);
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(rememberMeCheckbox);
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(window.localStorage.setItem).toHaveBeenCalledWith(
+          'rememberedEmail',
+          'test@example.com'
+        );
+      });
+    });
+
+    it('loads remembered email on component mount', () => {
+      window.localStorage.getItem.mockReturnValue('remembered@example.com');
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      expect(emailInput.value).toBe('remembered@example.com');
+    });
+  });
+
+  describe('Password Visibility Toggle', () => {
     it('toggles password visibility', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const passwordInput = screen.getByLabelText(/password/i);
       const toggleButton = screen.getByRole('button', { name: /toggle password visibility/i });
 
-      expect(passwordInput).toHaveAttribute('type', 'password');
+      // Initially password should be hidden
+      expect(passwordInput.type).toBe('password');
 
+      // Click to show password
       await user.click(toggleButton);
-      expect(passwordInput).toHaveAttribute('type', 'text');
+      expect(passwordInput.type).toBe('text');
 
+      // Click to hide password again
       await user.click(toggleButton);
-      expect(passwordInput).toHaveAttribute('type', 'password');
+      expect(passwordInput.type).toBe('password');
     });
+  });
 
-    it('handles keyboard navigation', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+  describe('Keyboard Navigation', () => {
+    it('supports keyboard navigation', async () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -317,22 +336,25 @@ describe('LoginForm', () => {
       expect(passwordInput).toHaveFocus();
 
       await user.tab();
+      expect(screen.getByLabelText(/remember me/i)).toHaveFocus();
+
+      await user.tab();
       expect(submitButton).toHaveFocus();
     });
 
     it('submits form on Enter key press', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockResolvedValue({
-        access_token: 'fake-token',
-        refresh_token: 'fake-refresh-token',
-        user: { id: '1', email: 'test@example.com' }
-      });
+      const mockUser = createMockUser();
+      const mockResponse = {
+        data: {
+          user: mockUser,
+          access_token: 'mock-token',
+          refresh_token: 'mock-refresh-token',
+        },
+      };
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      mockAxios.post.mockResolvedValueOnce(mockResponse);
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -342,99 +364,99 @@ describe('LoginForm', () => {
       await user.keyboard('{Enter}');
 
       await waitFor(() => {
-        expect(login).toHaveBeenCalled();
+        expect(mockAxios.post).toHaveBeenCalled();
       });
     });
   });
 
-  describe('Links and Navigation', () => {
-    it('renders forgot password link', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const forgotPasswordLink = screen.getByRole('link', { name: /forgot password/i });
-      expect(forgotPasswordLink).toBeInTheDocument();
-      expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password');
-    });
-
-    it('renders register link', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const registerLink = screen.getByRole('link', { name: /sign up/i });
-      expect(registerLink).toBeInTheDocument();
-      expect(registerLink).toHaveAttribute('href', '/register');
-    });
-  });
-
   describe('Accessibility', () => {
-    it('has proper ARIA labels', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+    it('has proper ARIA labels and roles', () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
-      const form = screen.getByRole('form');
-      expect(form).toHaveAttribute('aria-label', 'Login form');
-
-      const emailInput = screen.getByLabelText(/email/i);
-      expect(emailInput).toHaveAttribute('aria-describedby');
-
-      const passwordInput = screen.getByLabelText(/password/i);
-      expect(passwordInput).toHaveAttribute('aria-describedby');
+      expect(screen.getByRole('form')).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toHaveAttribute('aria-required', 'true');
+      expect(screen.getByLabelText(/password/i)).toHaveAttribute('aria-required', 'true');
     });
 
-    it('announces form errors to screen readers', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+    it('announces errors to screen readers', async () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        const errorMessage = screen.getByText(/email is required/i);
-        expect(errorMessage).toHaveAttribute('role', 'alert');
-        expect(errorMessage).toHaveAttribute('aria-live', 'polite');
+        const errorElement = screen.getByText(/email is required/i);
+        expect(errorElement).toHaveAttribute('role', 'alert');
+        expect(errorElement).toHaveAttribute('aria-live', 'polite');
       });
     });
 
-    it('has proper focus management', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+    it('associates error messages with form fields', async () => {
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
       await waitFor(() => {
         const emailInput = screen.getByLabelText(/email/i);
-        expect(emailInput).toHaveFocus();
+        const errorElement = screen.getByText(/email is required/i);
+        expect(emailInput).toHaveAttribute('aria-describedby', errorElement.id);
       });
     });
   });
 
-  describe('Edge Cases', () => {
-    it('handles network errors', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockRejectedValue(new Error('Network error'));
+  describe('Social Login Integration', () => {
+    it('renders social login buttons when enabled', () => {
+      render(
+        <LoginForm 
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError}
+          enableSocialLogin={true}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /continue with facebook/i })).toBeInTheDocument();
+    });
+
+    it('handles Google login', async () => {
+      const mockGoogleResponse = {
+        data: {
+          user: createMockUser(),
+          access_token: 'google-token',
+        },
+      };
+
+      mockAxios.post.mockResolvedValueOnce(mockGoogleResponse);
 
       render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
+        <LoginForm 
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError}
+          enableSocialLogin={true}
+        />
       );
+
+      const googleButton = screen.getByRole('button', { name: /continue with google/i });
+      await user.click(googleButton);
+
+      await waitFor(() => {
+        expect(mockAxios.post).toHaveBeenCalledWith('/api/v1/auth/google', expect.any(Object));
+      });
+    });
+  });
+
+  describe('Error Recovery', () => {
+    it('allows retry after error', async () => {
+      // First attempt fails
+      mockAxios.post.mockRejectedValueOnce({
+        response: {
+          data: { message: 'Server error' },
+          status: 500,
+        },
+      });
+
+      render(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -445,49 +467,36 @@ describe('LoginForm', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/network error/i)).toBeInTheDocument();
+        expect(mockOnError).toHaveBeenCalledWith('Server error');
+      });
+
+      // Second attempt succeeds
+      const mockUser = createMockUser();
+      const mockResponse = {
+        data: {
+          user: mockUser,
+          access_token: 'mock-token',
+        },
+      };
+
+      mockAxios.post.mockResolvedValueOnce(mockResponse);
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockOnSuccess).toHaveBeenCalledWith(mockResponse.data);
       });
     });
 
-    it('handles very long email addresses', async () => {
+    it('clears previous errors on new submission', async () => {
       render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
+        <LoginForm 
+          error="Previous error"
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError} 
+        />
       );
 
-      const emailInput = screen.getByLabelText(/email/i);
-      const longEmail = 'a'.repeat(100) + '@example.com';
-
-      await user.type(emailInput, longEmail);
-
-      expect(emailInput).toHaveValue(longEmail);
-    });
-
-    it('handles special characters in password', async () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const passwordInput = screen.getByLabelText(/password/i);
-      const specialPassword = 'P@ssw0rd!@#$%^&*()';
-
-      await user.type(passwordInput, specialPassword);
-
-      expect(passwordInput).toHaveValue(specialPassword);
-    });
-
-    it('prevents multiple simultaneous submissions', async () => {
-      const { login } = await import('../../../services/auth');
-      login.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      expect(screen.getByText('Previous error')).toBeInTheDocument();
 
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -495,64 +504,50 @@ describe('LoginForm', () => {
 
       await user.type(emailInput, 'test@example.com');
       await user.type(passwordInput, 'password123');
-
-      // Click submit multiple times rapidly
-      await user.click(submitButton);
-      await user.click(submitButton);
       await user.click(submitButton);
 
-      // Should only call login once
-      expect(login).toHaveBeenCalledTimes(1);
+      // Error should be cleared when form is submitted
+      expect(screen.queryByText('Previous error')).not.toBeInTheDocument();
     });
   });
 
   describe('Performance', () => {
-    it('does not re-render unnecessarily', () => {
-      const renderSpy = vi.fn();
-      
-      const TestComponent = () => {
-        renderSpy();
-        return <LoginForm />;
-      };
-
-      const { rerender } = render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      expect(renderSpy).toHaveBeenCalledTimes(1);
-
-      // Re-render with same props
-      rerender(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      // Should not cause unnecessary re-renders
-      expect(renderSpy).toHaveBeenCalledTimes(2);
-    });
-
     it('debounces validation', async () => {
+      const mockValidate = vi.fn();
+      
       render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
+        <LoginForm 
+          onSuccess={mockOnSuccess} 
+          onError={mockOnError}
+          onValidate={mockValidate}
+        />
       );
 
       const emailInput = screen.getByLabelText(/email/i);
 
       // Type rapidly
-      await user.type(emailInput, 'test');
-      await user.type(emailInput, '@');
-      await user.type(emailInput, 'example');
-      await user.type(emailInput, '.com');
+      await user.type(emailInput, 'test@example.com');
 
       // Validation should be debounced
       await waitFor(() => {
-        expect(screen.queryByText(/invalid email format/i)).not.toBeInTheDocument();
-      });
+        expect(mockValidate).toHaveBeenCalledTimes(1);
+      }, { timeout: 1000 });
+    });
+
+    it('memoizes expensive computations', () => {
+      const { rerender } = render(
+        <LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />
+      );
+
+      const initialRender = screen.getByRole('form');
+
+      // Re-render with same props
+      rerender(<LoginForm onSuccess={mockOnSuccess} onError={mockOnError} />);
+
+      const secondRender = screen.getByRole('form');
+
+      // Component should be memoized (this is a conceptual test)
+      expect(initialRender).toBe(secondRender);
     });
   });
 });

@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Staging Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    environment:
+      - DATABASE_URL=${STAGING_DATABASE_URL}
+      - REDIS_URL=${STAGING_REDIS_URL}
+      - ENVIRONMENT=staging
+      - SECRET_KEY=${STAGING_SECRET_KEY}
+      - STRIPE_SECRET_KEY=${STAGING_STRIPE_SECRET_KEY}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    networks:
+      - staging-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Celery Worker for staging
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    command: celery -A app.core.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=${STAGING_DATABASE_URL}
+      - REDIS_URL=${STAGING_REDIS_URL}
+      - ENVIRONMENT=staging
+      - SECRET_KEY=${STAGING_SECRET_KEY}
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    networks:
+      - staging-network
+
+  # Staging Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    environment:
+      - VITE_API_URL=${STAGING_API_URL}
+      - VITE_WS_URL=${STAGING_WS_URL}
+      - VITE_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  # Staging Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${STAGING_POSTGRES_DB}
+      - POSTGRES_USER=${STAGING_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${STAGING_POSTGRES_PASSWORD}
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  # Staging Redis
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - staging_redis_data:/data
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  # Nginx for staging
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.staging.conf:/etc/nginx/nginx.conf
+      - ./ssl-staging:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+networks:
+  staging-network:
+    driver: bridge
+
+volumes:
+  staging_postgres_data:
+  staging_redis_data:

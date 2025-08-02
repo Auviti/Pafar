@@ -7,9 +7,7 @@ import pytest_asyncio
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-from app.core.database import Base, get_db
-from app.core.redis import RedisClient
-from app.main import app
+from sqlalchemy.ext.declarative import declarative_base
 
 
 # Test database URL (SQLite in memory)
